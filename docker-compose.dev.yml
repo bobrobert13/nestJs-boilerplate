@@ -1,0 +1,26 @@
+# Docker Compose override for development
+services:
+  boilerplate-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: boilerplate-service-dev
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - MONGODB_URI=mongodb://admin:admin123@mongodb:27017/boilerplate_db?authSource=admin
+      - PLAYWRIGHT_HEADLESS=false
+      - PLAYWRIGHT_TIMEOUT=30000
+      - PLAYWRIGHT_RETRIES=0
+      - INNGEST_EVENT_KEY=${INNGEST_EVENT_KEY:-your_event_key}
+      - INNGEST_SIGNING_KEY=${INNGEST_SIGNING_KEY:-your_signing_key}
+      - INNGEST_BASE_URL=${INNGEST_BASE_URL:-https://inngest.treborjs-dev.online/}
+    ports:
+      - '3000:3000'
+      - '9229:9229' # Debug port
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - ./logs:/app/logs
+    command: npm run start:dev

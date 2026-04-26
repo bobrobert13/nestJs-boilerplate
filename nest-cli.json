@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json.schemastore.org/nest-cli",
+  "collection": "@nestjs/schematics",
+  "sourceRoot": "apps/nominas/src",
+  "compilerOptions": {
+    "deleteOutDir": true,
+    "webpack": true,
+    "tsConfigPath": "apps/nominas/tsconfig.app.json"
+  },
+  "monorepo": true,
+  "root": "apps/nominas",
+  "projects": {
+    "nominas": {
+      "type": "application",
+      "root": "apps/nominas",
+      "entryFile": "main",
+      "sourceRoot": "apps/nominas/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/nominas/tsconfig.app.json"
+      }
+    },
+    "database": {
+      "type": "library",
+      "root": "packages/database",
+      "entryFile": "index",
+      "sourceRoot": "packages/database/src",
+      "compilerOptions": {
+        "tsConfigPath": "packages/database/tsconfig.json"
+      }
+    },
+    "inngest": {
+      "type": "library",
+      "root": "packages/inngest",
+      "entryFile": "index",
+      "sourceRoot": "packages/inngest/src",
+      "compilerOptions": {
+        "tsConfigPath": "packages/inngest/tsconfig.json"
+      }
+    },
+    "playwright": {
+      "type": "library",
+      "root": "packages/playwright",
+      "entryFile": "index",
+      "sourceRoot": "packages/playwright/src",
+      "compilerOptions": {
+        "tsConfigPath": "packages/playwright/tsconfig.json"
+      }
+    },
+    "common": {
+      "type": "library",
+      "root": "packages/common",
+      "entryFile": "index",
+      "sourceRoot": "packages/common/src",
+      "compilerOptions": {
+        "tsConfigPath": "packages/common/tsconfig.json"
+      }
+    }
+  }
+}

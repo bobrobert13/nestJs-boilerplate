@@ -1,0 +1,17 @@
+{
+  "name": "@common/common",
+  "version": "1.0.0",
+  "description": "Common utilities for NestJS - adapters, filters, interfaces",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "peerDependencies": {
+    "@nestjs/common": "^10.0.0 || ^11.0.0"
+  },
+  "dependencies": {}
+}

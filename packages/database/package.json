@@ -1,0 +1,24 @@
+{
+  "name": "@common/database",
+  "version": "1.0.0",
+  "description": "MongoDB database module for NestJS",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "peerDependencies": {
+    "@nestjs/common": "^10.0.0 || ^11.0.0",
+    "@nestjs/config": "^3.0.0 || ^4.0.0",
+    "@nestjs/mongoose": "^10.0.0 || ^11.0.0",
+    "mongoose": "^7.0.0 || ^8.0.0 || ^9.0.0"
+  },
+  "dependencies": {
+    "@nestjs/config": "^4.0.4",
+    "@nestjs/mongoose": "^11.0.4",
+    "mongoose": "^9.4.1"
+  }
+}
