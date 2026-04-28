@@ -28,6 +28,11 @@ export interface ScrappingEvents {
     message: string;
     timestamp: string;
   };
+  'manga/chapters-scrape': {
+    mangaId: string;
+    chapters: { title: string; link: string }[];
+    timestamp: string;
+  };
 }
 
 export type ScrappingEventName = keyof ScrappingEvents;
