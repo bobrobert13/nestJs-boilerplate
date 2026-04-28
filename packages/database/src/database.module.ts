@@ -2,6 +2,7 @@ import { Global, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { DatabaseService } from './database.service';
+import { TransactionManager } from './transaction';
 import databaseConfig from './config/database.config';
 
 interface DatabaseConfig {
@@ -32,7 +33,7 @@ interface DatabaseConfig {
       inject: [ConfigService],
     }),
   ],
-  providers: [DatabaseService],
-  exports: [DatabaseService, MongooseModule],
+  providers: [DatabaseService, TransactionManager],
+  exports: [DatabaseService, MongooseModule, TransactionManager],
 })
 export class DatabaseModule {}

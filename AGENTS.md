@@ -204,6 +204,33 @@ export class AppModule {}
 
 MongoDB connection with retry logic.
 
+**Transaction Support:**
+The database package provides a transaction wrapper for atomic operations:
+
+```typescript
+import { TransactionService } from '@common/database';
+
+// In any service
+constructor(private readonly transaction: TransactionService) {}
+
+async createOrderWithInventory(dto: CreateOrderDto) {
+  return this.transaction.withTransaction(async (session) => {
+    // All operations inside use the same transaction
+    const order = await this.orderRepo.create(dto, { session });
+    await this.inventoryService.decrementStock(dto.items, { session });
+    return order;
+  });
+}
+```
+
+**Transaction Options:**
+```typescript
+await this.transaction.withTransaction(operation, {
+  retry: true,        // Auto-retry on transient errors (default: true)
+  maxRetries: 3,       // Maximum retry attempts (default: 3)
+});
+```
+
 ### @common/inngest
 
 Event-driven task queue.
