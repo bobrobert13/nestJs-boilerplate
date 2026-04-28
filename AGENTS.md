@@ -25,6 +25,7 @@
 **Database:** MongoDB via Mongoose
 **Task Queue:** Inngest (self-hosted)
 **Browser Automation:** Playwright
+**HTTP Client:** Axios-based HttpService (`@common/http`)
 **API Docs:** Swagger at `/api`
 
 ### Structure
@@ -46,10 +47,16 @@ api-nominas/
 │   │       ├── inngest.module.ts
 │   │       ├── inngest.service.ts
 │   │       └── functions/
-│   └── playwright/             # Playwright module
+│   ├── playwright/             # Playwright module
+│   │   └── src/
+│   │       ├── playwright.module.ts
+│   │       └── playwright.service.ts
+│   └── http/                   # HTTP client module (Axios-based)
 │       └── src/
-│           ├── playwright.module.ts
-│           └── playwright.service.ts
+│           ├── http.module.ts
+│           ├── http.service.ts
+│           ├── download.service.ts
+│           └── interfaces/
 │
 ├── apps/
 │   └── nominas/      # Main application
@@ -75,6 +82,7 @@ Imports use `@common/*` paths:
 import { DatabaseModule } from '@common/database';
 import { InngestModule } from '@common/inngest';
 import { PlaywrightModule } from '@common/playwright';
+import { HttpModule } from '@common/http';
 import { DatabaseExceptionFilter } from '@common/common';
 ```
 
@@ -216,9 +224,76 @@ Event-driven task queue.
 
 Browser automation for web scraping.
 
+### @common/http
+
+HTTP client based on Axios for API requests and web scraping.
+
 ---
 
-## 7. Creating New Modules
+## 7. Mangas Module - Scraping Strategies
+
+The `mangas` module supports multiple scraping strategies based on the site.
+
+### Available Strategies
+
+| Strategy | Package | Use Case |
+|----------|---------|----------|
+| `leermanga` | Playwright | Browser automation for JS-rendered sites |
+| `manhwaweb` | HttpService | HTTP requests for static sites |
+
+### Creating a New Strategy
+
+```
+apps/nominas/src/modules/mangas/strategies/<site-name>/
+├── <site-name>.strategy.ts
+└── <site-name>-strategy.module.ts
+```
+
+### Example: Strategy Implementation
+
+```typescript
+@Injectable()
+export class ManhwawebStrategy implements ScrappingStrategy {
+  readonly siteName = 'manhwaweb';
+
+  constructor(private readonly http: HttpService) {}
+
+  async scrapeManga(link: string) {
+    const response = await this.http.get(link);
+    const html = response.data as string;
+    return { name: '', description: '', genres: [], chapters: [] };
+  }
+
+  async scrapeChapterImages(chapterLink: string): Promise<string[]> {
+    return [];
+  }
+}
+```
+
+### Module Registration
+
+```typescript
+@Module({
+  imports: [HttpModule],  // or PlaywrightModule
+  providers: [ManhwawebStrategy],
+  exports: [ManhwawebStrategy],
+})
+export class ManhwawebStrategyModule {}
+```
+
+### Endpoint Usage
+
+```bash
+POST /mangas/scrape
+{ "link": "https://site.com/manga/xxx", "site": "manhwaweb" }
+```
+
+- `site` is optional (defaults to `leermanga`)
+- Supported sites: `leermanga`, `manhwaweb`
+
+---
+
+## 8. Creating New Modules
 
 ### Step 1: Create structure
 
@@ -270,7 +345,7 @@ export class AppModule {}
 
 ---
 
-## 8. Extracting Packages
+## 9. Extracting Packages
 
 Packages in `packages/` are **self-contained and reusable**.
 
@@ -303,7 +378,7 @@ import { DatabaseModule } from '@common/database';
 
 ---
 
-## 9. Troubleshooting
+## 10. Troubleshooting
 
 **Port already in use:**
 
@@ -326,7 +401,7 @@ npx playwright install
 
 ---
 
-## 10. Deployment Checklist
+## 11. Deployment Checklist
 
 - [ ] Environment variables configured
 - [ ] MongoDB connection string set
@@ -340,11 +415,11 @@ npx playwright install
 
 ---
 
-**Last Updated:** 2026-04-26
+**Last Updated:** 2026-04-27
 **NestJS Version:** 11.x
 **TypeScript Version:** 5.7.x
 
-## 11. Key Files
+## 12. Key Files
 
 | File | Purpose |
 |------|---------|
@@ -355,7 +430,7 @@ npx playwright install
 
 ---
 
-## 12. Docker
+## 13. Docker
 
 ```bash
 # Build image
