@@ -276,7 +276,8 @@ function generateEnvFile(envValues, selectedPackages, config) {
   content += '# ============================================\n';
   content += '# Package Selection Summary\n';
   content += '# ============================================\n';
-  content += '# Selected packages: ' + Object.entries(selectedPackages)\n    .filter(([_, v]) => v)
+  content += '# Selected packages: ' + Object.entries(selectedPackages)
+    .filter(([_, v]) => v)
     .map(([k]) => k)
     .join(', ') + '\n';
 

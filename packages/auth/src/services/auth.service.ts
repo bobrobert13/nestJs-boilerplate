@@ -1,9 +1,18 @@
-import { Injectable, Logger, UnauthorizedException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  UnauthorizedException,
+  ConflictException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { randomBytes } from 'crypto';
 import argon2 from 'argon2';
-import { JwtPayload, TokenResponse, AuthenticatedUser } from '../interfaces/auth.interfaces';
+import {
+  JwtPayload,
+  TokenResponse,
+  AuthenticatedUser,
+} from '../interfaces/auth.interfaces';
 
 interface AuthConfig {
   jwt: {
@@ -24,16 +33,22 @@ interface AuthConfig {
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
-  private readonly refreshTokenStore: Map<string, { userId: string; expiresAt: Date }> = new Map();
+  private readonly refreshTokenStore: Map<
+    string,
+    { userId: string; expiresAt: Date }
+  > = new Map();
 
   constructor(
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
   ) {}
 
-  async validateUser(email: string, password: string): Promise<AuthenticatedUser | null> {
+  async validateUser(
+    email: string,
+    password: string,
+  ): Promise<AuthenticatedUser | null> {
     this.logger.log(`Validating user: ${email}`);
-    
+
     if (email === 'demo@example.com' && password === 'demo123') {
       return {
         id: 'demo-user-id',
@@ -45,7 +60,11 @@ export class AuthService {
     return null;
   }
 
-  async register(email: string, password: string, name?: string): Promise<AuthenticatedUser> {
+  async register(
+    email: string,
+    password: string,
+    name?: string,
+  ): Promise<AuthenticatedUser> {
     this.logger.log(`Registering user: ${email}`);
 
     if (email === 'demo@example.com') {
@@ -129,7 +148,9 @@ export class AuthService {
     try {
       return await argon2.verify(hash, password);
     } catch (error) {
-      this.logger.error(`Password comparison failed: ${error instanceof Error ? error.message : String(error)}`);
+      this.logger.error(
+        `Password comparison failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
       return false;
     }
   }

@@ -71,9 +71,21 @@ export class OpenAICompatibleProvider implements IAIProvider {
       case 'google':
         return { ...defaults, vision: true, functionCalling: true };
       case 'moonshot':
-        return { chat: true, embeddings: true, vision: false, streaming: true, functionCalling: true };
+        return {
+          chat: true,
+          embeddings: true,
+          vision: false,
+          streaming: true,
+          functionCalling: true,
+        };
       case 'minimax':
-        return { chat: true, embeddings: true, vision: false, streaming: true, functionCalling: false };
+        return {
+          chat: true,
+          embeddings: true,
+          vision: false,
+          streaming: true,
+          functionCalling: false,
+        };
       default:
         return defaults;
     }
@@ -102,7 +114,11 @@ export class OpenAICompatibleProvider implements IAIProvider {
       });
 
       const data = response.data as Record<string, unknown>;
-      const choices = (data.choices as Array<{ message: { role: string; content: string }; finish_reason: string }>) || [];
+      const choices =
+        (data.choices as Array<{
+          message: { role: string; content: string };
+          finish_reason: string;
+        }>) || [];
       const usage = data.usage as Record<string, number> | undefined;
 
       return {
@@ -118,11 +134,13 @@ export class OpenAICompatibleProvider implements IAIProvider {
         },
         provider: this.config.provider,
         model: String(data.model || model),
-        usage: usage ? {
-          promptTokens: usage.prompt_tokens,
-          completionTokens: usage.completion_tokens,
-          totalTokens: usage.total_tokens,
-        } : undefined,
+        usage: usage
+          ? {
+              promptTokens: usage.prompt_tokens,
+              completionTokens: usage.completion_tokens,
+              totalTokens: usage.total_tokens,
+            }
+          : undefined,
       };
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Unknown error';
@@ -201,7 +219,9 @@ export class OpenAICompatibleProvider implements IAIProvider {
   async embeddings(options: EmbeddingOptions): Promise<AIResponse> {
     try {
       const model = options.model || this.getDefaultEmbeddingModel();
-      const input = Array.isArray(options.input) ? options.input : [options.input];
+      const input = Array.isArray(options.input)
+        ? options.input
+        : [options.input];
 
       const response = await this.client.post('/embeddings', {
         model,
@@ -211,7 +231,8 @@ export class OpenAICompatibleProvider implements IAIProvider {
       });
 
       const data = response.data as Record<string, unknown>;
-      const embeddingData = (data.data as Array<{ embedding: number[]; index: number }>) || [];
+      const embeddingData =
+        (data.data as Array<{ embedding: number[]; index: number }>) || [];
       const usage = data.usage as Record<string, number> | undefined;
 
       return {
@@ -226,11 +247,13 @@ export class OpenAICompatibleProvider implements IAIProvider {
         },
         provider: this.config.provider,
         model: String(data.model || model),
-        usage: usage ? {
-          promptTokens: usage.prompt_tokens,
-          completionTokens: usage.completion_tokens,
-          totalTokens: usage.total_tokens,
-        } : undefined,
+        usage: usage
+          ? {
+              promptTokens: usage.prompt_tokens,
+              completionTokens: usage.completion_tokens,
+              totalTokens: usage.total_tokens,
+            }
+          : undefined,
       };
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Unknown error';

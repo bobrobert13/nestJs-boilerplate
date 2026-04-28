@@ -13,7 +13,11 @@ import {
 import { PasskeysService } from './passkeys.service';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { Public } from '../decorators/public.decorator';
-import { RegisterPasskeyDto, VerifyPasskeyDto, LoginWithPasskeyDto } from './dto/passkeys.dto';
+import {
+  RegisterPasskeyDto,
+  VerifyPasskeyDto,
+  LoginWithPasskeyDto,
+} from './dto/passkeys.dto';
 
 @Controller('auth/passkeys')
 export class PasskeysController {
@@ -21,7 +25,10 @@ export class PasskeysController {
 
   @UseGuards(JwtAuthGuard)
   @Post('register-options')
-  async generateRegistrationOptions(@Request() req: any, @Body() dto: RegisterPasskeyDto) {
+  async generateRegistrationOptions(
+    @Request() req: any,
+    @Body() dto: RegisterPasskeyDto,
+  ) {
     const options = await this.passkeysService.generateRegistrationOptions(
       req.user.id,
       dto.username,
@@ -34,7 +41,10 @@ export class PasskeysController {
 
   @UseGuards(JwtAuthGuard)
   @Post('register-verify')
-  async verifyRegistration(@Request() req: any, @Body() body: { response: any }) {
+  async verifyRegistration(
+    @Request() req: any,
+    @Body() body: { response: any },
+  ) {
     const result = await this.passkeysService.verifyRegistration(
       req.user.id,
       req.user.email,
@@ -49,7 +59,9 @@ export class PasskeysController {
   @Public()
   @Post('login-options')
   async generateLoginOptions(@Body() dto: LoginWithPasskeyDto) {
-    const options = await this.passkeysService.generateAuthenticationOptions(dto.userId);
+    const options = await this.passkeysService.generateAuthenticationOptions(
+      dto.userId,
+    );
     return {
       success: true,
       data: options,
@@ -87,8 +99,14 @@ export class PasskeysController {
 
   @UseGuards(JwtAuthGuard)
   @Delete('delete/:credentialId')
-  async deletePasskey(@Request() req: any, @Param('credentialId') credentialId: string) {
-    const deleted = await this.passkeysService.deletePasskey(req.user.id, credentialId);
+  async deletePasskey(
+    @Request() req: any,
+    @Param('credentialId') credentialId: string,
+  ) {
+    const deleted = await this.passkeysService.deletePasskey(
+      req.user.id,
+      credentialId,
+    );
     return {
       success: deleted,
       message: deleted ? 'Passkey deleted' : 'Passkey not found',

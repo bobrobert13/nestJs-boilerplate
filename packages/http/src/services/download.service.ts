@@ -3,7 +3,10 @@ import * as fs from 'fs';
 import * as path from 'path';
 import sharp from 'sharp';
 import { createHttpError, HttpError } from '../http-error';
-import { DownloadOptions, ImageOptimizationOptions } from '../interfaces/http-options.interface';
+import {
+  DownloadOptions,
+  ImageOptimizationOptions,
+} from '../interfaces/http-options.interface';
 
 interface DownloadResult {
   filepath: string;
@@ -17,7 +20,10 @@ export class DownloadService {
     private readonly baseFolder?: string,
   ) {}
 
-  async file(url: string, options: DownloadOptions = {}): Promise<DownloadResult> {
+  async file(
+    url: string,
+    options: DownloadOptions = {},
+  ): Promise<DownloadResult> {
     const { folder = '', filename, headers } = options;
     const savePath = this.resolvePath(folder);
     const name = filename ?? this.extractFilename(url);
@@ -47,7 +53,12 @@ export class DownloadService {
         const message = error.response?.statusText ?? error.message;
         throw createHttpError(status, message, url);
       }
-      throw new HttpError(500, 'Internal Server Error', error instanceof Error ? error.message : 'Download failed', url);
+      throw new HttpError(
+        500,
+        'Internal Server Error',
+        error instanceof Error ? error.message : 'Download failed',
+        url,
+      );
     }
   }
 
@@ -74,7 +85,9 @@ export class DownloadService {
         const { quality = 80, width, height, format = 'webp' } = optimize;
         sharpInstance = sharpInstance[format]({ quality });
         if (width || height) {
-          sharpInstance = sharpInstance.resize(width, height, { fit: 'inside' });
+          sharpInstance = sharpInstance.resize(width, height, {
+            fit: 'inside',
+          });
         }
         const ext = path.extname(name);
         const baseName = path.basename(name, ext);
@@ -103,11 +116,19 @@ export class DownloadService {
         const message = error.response?.statusText ?? error.message;
         throw createHttpError(status, message, url);
       }
-      throw new HttpError(500, 'Internal Server Error', error instanceof Error ? error.message : 'Image download failed', url);
+      throw new HttpError(
+        500,
+        'Internal Server Error',
+        error instanceof Error ? error.message : 'Image download failed',
+        url,
+      );
     }
   }
 
-  async video(url: string, options: DownloadOptions = {}): Promise<DownloadResult> {
+  async video(
+    url: string,
+    options: DownloadOptions = {},
+  ): Promise<DownloadResult> {
     return this.file(url, options);
   }
 

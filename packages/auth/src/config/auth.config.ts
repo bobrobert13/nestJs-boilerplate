@@ -52,7 +52,10 @@ export default registerAs('auth', () => ({
   jwt: {
     secret: process.env.JWT_SECRET || 'dev-secret-change-in-production',
     accessTokenTtl: parseInt(process.env.JWT_ACCESS_TOKEN_TTL || '900', 10),
-    refreshTokenTtl: parseInt(process.env.JWT_REFRESH_TOKEN_TTL || '604800', 10),
+    refreshTokenTtl: parseInt(
+      process.env.JWT_REFRESH_TOKEN_TTL || '604800',
+      10,
+    ),
     issuer: process.env.JWT_ISSUER || 'api-nominas',
     audience: process.env.JWT_AUDIENCE || 'api-nominas',
   },
@@ -64,12 +67,16 @@ export default registerAs('auth', () => ({
     google: {
       clientId: process.env.OAUTH_GOOGLE_CLIENT_ID || '',
       clientSecret: process.env.OAUTH_GOOGLE_CLIENT_SECRET || '',
-      callbackUrl: process.env.OAUTH_GOOGLE_CALLBACK_URL || 'http://localhost:3000/auth/google/callback',
+      callbackUrl:
+        process.env.OAUTH_GOOGLE_CALLBACK_URL ||
+        'http://localhost:3000/auth/google/callback',
     },
     github: {
       clientId: process.env.OAUTH_GITHUB_CLIENT_ID || '',
       clientSecret: process.env.OAUTH_GITHUB_CLIENT_SECRET || '',
-      callbackUrl: process.env.OAUTH_GITHUB_CALLBACK_URL || 'http://localhost:3000/auth/github/callback',
+      callbackUrl:
+        process.env.OAUTH_GITHUB_CALLBACK_URL ||
+        'http://localhost:3000/auth/github/callback',
     },
   },
   argon2: {
@@ -80,7 +87,9 @@ export default registerAs('auth', () => ({
   },
   twoFactor: {
     issuer: process.env.TWO_FACTOR_ISSUER || 'MyApp',
-    algorithm: (process.env.TWO_FACTOR_ALGORITHM as 'SHA1' | 'SHA256' | 'SHA512') || 'SHA1',
+    algorithm:
+      (process.env.TWO_FACTOR_ALGORITHM as 'SHA1' | 'SHA256' | 'SHA512') ||
+      'SHA1',
     digits: parseInt(process.env.TWO_FACTOR_DIGITS || '6', 10) as 6 | 8,
     period: parseInt(process.env.TWO_FACTOR_PERIOD || '30', 10),
     step: parseInt(process.env.TWO_FACTOR_STEP || '30', 10),

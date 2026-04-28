@@ -8,7 +8,6 @@ export default tseslint.config(
     ignores: ['eslint.config.mjs', 'dist/', 'node_modules/', 'coverage/'],
   },
   eslint.configs.recommended,
-  // ...tseslint.configs.recommendedTypeChecked,
   eslintPluginPrettierRecommended,
   {
     languageOptions: {
@@ -16,11 +15,10 @@ export default tseslint.config(
         ...globals.node,
         ...globals.jest,
       },
-      sourceType: 'commonjs',
-      parserOptions: {
-        projectService: true,
-        tsconfigRootDir: import.meta.dirname,
-      },
+      parser: tseslint.parser,
+    },
+    plugins: {
+      '@typescript-eslint': tseslint,
     },
   },
   {
@@ -37,5 +35,8 @@ export default tseslint.config(
       '@typescript-eslint/ban-types': 'off',
       'prettier/prettier': ['error', { endOfLine: 'auto' }],
     },
+  },
+  {
+    files: ['**/*.ts'],
   },
 );

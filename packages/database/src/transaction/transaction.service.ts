@@ -35,9 +35,12 @@ export class TransactionService {
         return result;
       } catch (error) {
         await session.abortTransaction();
-        this.logger.warn(`Transaction aborted (attempt ${attempt}): ${error instanceof Error ? error.message : String(error)}`);
+        this.logger.warn(
+          `Transaction aborted (attempt ${attempt}): ${error instanceof Error ? error.message : String(error)}`,
+        );
 
-        const shouldRetry = retry && attempt < maxRetries && this.isTransientError(error);
+        const shouldRetry =
+          retry && attempt < maxRetries && this.isTransientError(error);
 
         if (shouldRetry) {
           session.endSession();
@@ -72,14 +75,15 @@ export class TransactionService {
       return true;
     }
     const message = error?.message?.toLowerCase() ?? '';
-    return message.includes('transaction') && (
-      message.includes('retry') ||
-      message.includes('abort') ||
-      message.includes('commit')
+    return (
+      message.includes('transaction') &&
+      (message.includes('retry') ||
+        message.includes('abort') ||
+        message.includes('commit'))
     );
   }
 
   private sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }

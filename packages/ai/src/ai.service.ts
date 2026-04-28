@@ -120,13 +120,17 @@ export class Product extends Document {
 export const ProductSchema = SchemaFactory.createForClass(Product);
 \`\`\``;
 
-    return this.chat(providerName, [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: description },
-    ], {
-      temperature: options?.temperature ?? 0.3,
-      model: options?.model,
-    });
+    return this.chat(
+      providerName,
+      [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: description },
+      ],
+      {
+        temperature: options?.temperature ?? 0.3,
+        model: options?.model,
+      },
+    );
   }
 
   async generateTemplate(
@@ -145,13 +149,17 @@ export const ProductSchema = SchemaFactory.createForClass(Product);
       code: `Genera código fuente completo y funcional basado en la descripción. Especifica el lenguaje si no está claro. Responde SOLO con el código.`,
     };
 
-    return this.chat(providerName, [
-      { role: 'system', content: prompts[templateType] || prompts.code },
-      { role: 'user', content: description },
-    ], {
-      temperature: options?.temperature ?? 0.3,
-      model: options?.model,
-    });
+    return this.chat(
+      providerName,
+      [
+        { role: 'system', content: prompts[templateType] || prompts.code },
+        { role: 'user', content: description },
+      ],
+      {
+        temperature: options?.temperature ?? 0.3,
+        model: options?.model,
+      },
+    );
   }
 
   async generateText(

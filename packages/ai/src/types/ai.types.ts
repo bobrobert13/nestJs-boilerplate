@@ -1,4 +1,11 @@
-export type AIProvider = 'openai' | 'anthropic' | 'google' | 'moonshot' | 'minimax' | 'custom' | string;
+export type AIProvider =
+  | 'openai'
+  | 'anthropic'
+  | 'google'
+  | 'moonshot'
+  | 'minimax'
+  | 'custom'
+  | string;
 
 export type ModelType = 'chat' | 'embedding' | 'vision' | 'code';
 

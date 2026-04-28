@@ -3,7 +3,10 @@ import { ConfigService } from '@nestjs/config';
 import { Inngest } from 'inngest';
 import { serve } from 'inngest/express';
 import { functions } from './functions';
-import type { ScrappingEventName, InngestEventPayload } from './serve/interfaces/inngest.interfaces';
+import type {
+  ScrappingEventName,
+  InngestEventPayload,
+} from './serve/interfaces/inngest.interfaces';
 @Injectable()
 export class InngestService implements OnModuleInit {
   private readonly logger = new Logger(InngestService.name);

@@ -1,6 +1,9 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { createHttpError, HttpError } from '../http-error';
-import { HttpRequestOptions, HttpResponse } from '../interfaces/http-options.interface';
+import {
+  HttpRequestOptions,
+  HttpResponse,
+} from '../interfaces/http-options.interface';
 import { DownloadService } from './download.service';
 
 export class HttpService {
@@ -39,11 +42,19 @@ export class HttpService {
         const message = error.response?.statusText ?? error.message;
         throw createHttpError(status, message, url, error.response?.data);
       }
-      throw new HttpError(500, 'Internal Server Error', error instanceof Error ? error.message : 'Unknown error', url);
+      throw new HttpError(
+        500,
+        'Internal Server Error',
+        error instanceof Error ? error.message : 'Unknown error',
+        url,
+      );
     }
   }
 
-  async get<T = unknown>(url: string, headers?: Record<string, string>): Promise<HttpResponse<T>> {
+  async get<T = unknown>(
+    url: string,
+    headers?: Record<string, string>,
+  ): Promise<HttpResponse<T>> {
     return this.request<T>(url, { method: 'GET', headers });
   }
 
@@ -71,7 +82,10 @@ export class HttpService {
     return this.request<T>(url, { method: 'PATCH', headers, data });
   }
 
-  async delete<T = unknown>(url: string, headers?: Record<string, string>): Promise<HttpResponse<T>> {
+  async delete<T = unknown>(
+    url: string,
+    headers?: Record<string, string>,
+  ): Promise<HttpResponse<T>> {
     return this.request<T>(url, { method: 'DELETE', headers });
   }
 

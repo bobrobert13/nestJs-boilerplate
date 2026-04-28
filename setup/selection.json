@@ -1,0 +1,14 @@
+{
+  "selectedPackages": {
+    "ai": true,
+    "auth": false,
+    "database": false,
+    "http": false,
+    "inngest": false,
+    "playwright": false,
+    "resend": true,
+    "serve-static": true,
+    "common": true
+  },
+  "timestamp": "2026-04-28T20:54:54.320Z"
+}

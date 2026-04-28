@@ -1,6 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ResendService } from '../../services/resend.service';
-import { NewsletterSubscriber, SubscribeDto, UnsubscribeDto } from './interfaces/newsletter.interfaces';
+import {
+  NewsletterSubscriber,
+  SubscribeDto,
+  UnsubscribeDto,
+} from './interfaces/newsletter.interfaces';
 
 @Injectable()
 export class NewsletterService {
@@ -52,8 +56,8 @@ export class NewsletterService {
   ): Promise<{ sent: number; failed: number }> {
     const { onlyActive } = options;
 
-    const recipients = Array.from(this.subscribers.values()).filter(
-      (sub) => onlyActive ? sub.isActive : true,
+    const recipients = Array.from(this.subscribers.values()).filter((sub) =>
+      onlyActive ? sub.isActive : true,
     );
 
     let sent = 0;
@@ -68,7 +72,9 @@ export class NewsletterService {
         });
         sent++;
       } catch (error) {
-        this.logger.error(`Failed to send to ${subscriber.email}: ${error instanceof Error ? error.message : String(error)}`);
+        this.logger.error(
+          `Failed to send to ${subscriber.email}: ${error instanceof Error ? error.message : String(error)}`,
+        );
         failed++;
       }
     }
@@ -78,8 +84,8 @@ export class NewsletterService {
   }
 
   getSubscribers(onlyActive = true): NewsletterSubscriber[] {
-    return Array.from(this.subscribers.values()).filter(
-      (sub) => onlyActive ? sub.isActive : true,
+    return Array.from(this.subscribers.values()).filter((sub) =>
+      onlyActive ? sub.isActive : true,
     );
   }
 

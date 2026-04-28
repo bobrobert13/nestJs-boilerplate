@@ -71,7 +71,7 @@ list_packages() {
     fi
 
     node -e "
-        const config = require('./package-config.json');
+        const config = require('$SETUP_DIR/package-config.json');
         config.packages.forEach(pkg => {
             const selected = pkg.selected ? '${GREEN}[x]${NC}' : '${RED}[ ]${NC}';
             console.log('  ' + selected + ' ${BOLD}' + pkg.name + '${NC}');

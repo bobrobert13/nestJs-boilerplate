@@ -1,4 +1,12 @@
-import { Controller, Post, Body, UseGuards, Request, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  UseGuards,
+  Request,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
 import { AuthService } from '../services/auth.service';
 import { MagicLinkService } from '../services/magic-link.service';
 import { Public } from '../decorators/public.decorator';
@@ -23,7 +31,11 @@ export class AuthController {
   @Public()
   @Post('register')
   async register(@Body() dto: RegisterDto) {
-    const user = await this.authService.register(dto.email, dto.password, dto.name);
+    const user = await this.authService.register(
+      dto.email,
+      dto.password,
+      dto.name,
+    );
     return {
       success: true,
       data: user,
@@ -71,7 +83,7 @@ export class AuthController {
     }
 
     const token = await this.magicLinkService.generateMagicLink(dto.email);
-    
+
     return {
       success: true,
       data: {
@@ -88,7 +100,7 @@ export class AuthController {
     try {
       const email = await this.magicLinkService.verifyMagicLink(dto.token);
       const user = await this.authService.validateUser(email, '');
-      
+
       if (user) {
         const tokens = await this.authService.login(user);
         return {

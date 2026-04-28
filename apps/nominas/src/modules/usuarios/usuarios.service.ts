@@ -25,7 +25,9 @@ export class UsuariosService {
 
     const existing = await this.repository.findByEmail(createDto.email);
     if (existing) {
-      throw new ConflictException(`Usuario with email ${createDto.email} already exists`);
+      throw new ConflictException(
+        `Usuario with email ${createDto.email} already exists`,
+      );
     }
 
     return this.repository.create(createDto);
@@ -41,7 +43,10 @@ export class UsuariosService {
     return this.repository.findOne(id);
   }
 
-  async update(id: string, updateDto: UpdateUsuarioDto): Promise<UsuarioPublic> {
+  async update(
+    id: string,
+    updateDto: UpdateUsuarioDto,
+  ): Promise<UsuarioPublic> {
     this.logger.log(`Updating usuario: ${id}`);
     return this.repository.update(id, updateDto);
   }

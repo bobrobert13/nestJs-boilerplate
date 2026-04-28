@@ -8,7 +8,10 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { NewsletterService } from './newsletter.service';
-import type { SubscribeDto, UnsubscribeDto } from './interfaces/newsletter.interfaces';
+import type {
+  SubscribeDto,
+  UnsubscribeDto,
+} from './interfaces/newsletter.interfaces';
 
 @Controller('newsletter')
 export class NewsletterController {
@@ -56,7 +59,10 @@ export class NewsletterController {
 
   @Delete('subscribers/:email')
   async removeSubscriber(@Body('email') email: string) {
-    await this.newsletterService.unsubscribe({ email, reason: 'manual_removal' });
+    await this.newsletterService.unsubscribe({
+      email,
+      reason: 'manual_removal',
+    });
     return {
       success: true,
       message: 'Subscriber removed',

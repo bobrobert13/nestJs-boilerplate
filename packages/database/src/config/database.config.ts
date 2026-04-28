@@ -2,7 +2,8 @@ import { registerAs } from '@nestjs/config';
 
 export default registerAs('database', () => {
   const mongodbUri =
-    process.env.MONGODB_URI || 'mongodb://localhost:27017/manga_scrapping?replicaSet=rs0';
+    process.env.MONGODB_URI ||
+    'mongodb://localhost:27017/manga_scrapping?replicaSet=rs0';
 
   if (!process.env.MONGODB_URI) {
     console.warn(
