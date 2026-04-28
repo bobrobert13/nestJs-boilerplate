@@ -27,6 +27,17 @@ export interface AuthConfig {
   bcrypt: {
     saltRounds: number;
   };
+  twoFactor: {
+    issuer: string;
+    algorithm: 'SHA1' | 'SHA256' | 'SHA512';
+    digits: 6 | 8;
+    period: number;
+    step: number;
+    backupCodes: {
+      count: number;
+      length: number;
+    };
+  };
 }
 
 export default registerAs('auth', () => ({
@@ -55,5 +66,16 @@ export default registerAs('auth', () => ({
   },
   bcrypt: {
     saltRounds: parseInt(process.env.BCRYPT_SALT_ROUNDS || '12', 10),
+  },
+  twoFactor: {
+    issuer: process.env.TWO_FACTOR_ISSUER || 'MyApp',
+    algorithm: (process.env.TWO_FACTOR_ALGORITHM as 'SHA1' | 'SHA256' | 'SHA512') || 'SHA1',
+    digits: parseInt(process.env.TWO_FACTOR_DIGITS || '6', 10) as 6 | 8,
+    period: parseInt(process.env.TWO_FACTOR_PERIOD || '30', 10),
+    step: parseInt(process.env.TWO_FACTOR_STEP || '30', 10),
+    backupCodes: {
+      count: parseInt(process.env.TWO_FACTOR_BACKUP_CODES_COUNT || '10', 10),
+      length: parseInt(process.env.TWO_FACTOR_BACKUP_CODES_LENGTH || '10', 10),
+    },
   },
 }));

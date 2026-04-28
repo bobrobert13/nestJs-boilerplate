@@ -137,6 +137,14 @@ OAUTH_GITHUB_CLIENT_SECRET=
 # Auth - Password Hashing
 BCRYPT_SALT_ROUNDS=12
 
+# Auth - Two Factor (2FA)
+TWO_FACTOR_ISSUER=MyApp
+TWO_FACTOR_ALGORITHM=SHA1
+TWO_FACTOR_DIGITS=6
+TWO_FACTOR_PERIOD=30
+TWO_FACTOR_BACKUP_CODES_COUNT=10
+TWO_FACTOR_BACKUP_CODES_LENGTH=10
+
 # Playwright
 PLAYWRIGHT_HEADLESS=true
 PLAYWRIGHT_TIMEOUT=30000
@@ -381,6 +389,55 @@ const email = await magicLinkService.verifyMagicLink(token);
 **Decorators:**
 - `@Public()` - Skip JWT validation
 - `@Roles(...roles)` - Require specific roles
+
+### @common/auth - Two Factor (2FA)
+
+Two-factor authentication with TOTP and backup codes.
+
+```typescript
+import { TwoFactorModule, TwoFactorService } from '@common/auth';
+
+@Module({
+  imports: [AuthModule, TwoFactorModule],
+})
+export class AppModule {}
+
+// Inject service
+constructor(private readonly twoFactorService: TwoFactorService) {}
+
+// Generate secret and QR code
+const result = await twoFactorService.generateSecret(userId);
+return { qrCode: result.qrCode, backupCodes: result.backupCodes };
+
+// Enable 2FA
+await twoFactorService.enableTwoFactor(userId, code);
+
+// Verify code
+const result = await twoFactorService.verifyCode(userId, code);
+
+// Verify backup code
+await twoFactorService.verifyBackupCodeWithUser(userId, backupCode);
+```
+
+**2FA Endpoints:**
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/auth/2fa/generate` | Generate secret and QR |
+| POST | `/auth/2fa/enable` | Enable 2FA |
+| POST | `/auth/2fa/verify` | Verify TOTP code |
+| POST | `/auth/2fa/verify-backup` | Verify backup code |
+| POST | `/auth/2fa/regenerate-backup-codes` | Regenerate codes |
+| POST | `/auth/2fa/disable` | Disable 2FA |
+
+**2FA Environment Variables:**
+```env
+TWO_FACTOR_ISSUER=MyApp
+TWO_FACTOR_ALGORITHM=SHA1
+TWO_FACTOR_DIGITS=6
+TWO_FACTOR_PERIOD=30
+TWO_FACTOR_BACKUP_CODES_COUNT=10
+TWO_FACTOR_BACKUP_CODES_LENGTH=10
+```
 
 ---
 
