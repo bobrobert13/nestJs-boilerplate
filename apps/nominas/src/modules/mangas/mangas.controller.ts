@@ -9,7 +9,7 @@ export class MangasController {
 
   @Post('scrape')
   @ApiOperation({ summary: 'Scrape manga data from URL' })
-  async scrape(@Body() body: { link: string }) {
-    return this.mangasService.scrapeAndStore(body.link);
+  async scrape(@Body() body: { link: string; site?: string }) {
+    return this.mangasService.scrapeAndStore(body.link, body.site);
   }
 }
