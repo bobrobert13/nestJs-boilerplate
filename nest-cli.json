@@ -73,6 +73,15 @@
       "compilerOptions": {
         "tsConfigPath": "packages/serve-static/tsconfig.json"
       }
+    },
+    "ai": {
+      "type": "library",
+      "root": "packages/ai",
+      "entryFile": "index",
+      "sourceRoot": "packages/ai/src",
+      "compilerOptions": {
+        "tsConfigPath": "packages/ai/tsconfig.json"
+      }
     }
   }
 }

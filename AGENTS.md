@@ -85,6 +85,16 @@ api-nominas/
 │       └── src/
 │           ├── http.module.ts
 │           └── services/
+│   └── ai/                      # AI providers wrapper (OpenAI, Anthropic, Gemini, etc.)
+│       └── src/
+│           ├── ai.module.ts
+│           ├── ai.service.ts
+│           ├── types/
+│           │   └── ai.types.ts
+│           ├── interfaces/
+│           │   └── provider.interface.ts
+│           └── providers/
+│               └── openai-compatible.provider.ts
 │
 ├── apps/
 │   └── nominas/      # Main application
@@ -113,6 +123,7 @@ import { PlaywrightModule } from '@common/playwright';
 import { ResendModule } from '@common/resend';
 import { AuthModule, JwtAuthGuard, RolesGuard, Public, Roles } from '@common/auth';
 import { ServeStaticModule, ServeStaticService } from '@common/serve-static';
+import { AiModule, AiService } from '@common/ai';
 import { DatabaseExceptionFilter } from '@common/common';
 ```
 
@@ -560,6 +571,67 @@ packages/serve-static/templates/
 - `getPartials()` - List available partials
 
 **TailwindCSS:** Loaded via CDN by default (`https://cdn.tailwindcss.com`)
+
+### @common/ai
+
+AI Providers wrapper supporting OpenAI, Anthropic, Google Gemini, Moonshot (Kimi), MiniMax and any OpenAI-compatible API.
+
+**Basic Usage:**
+```typescript
+import { AiModule, AiService, ChatMessage } from '@common/ai';
+
+@Module({
+  imports: [AiModule],
+})
+export class AppModule {}
+
+// In any service
+@Injectable()
+export class MyService {
+  constructor(private readonly ai: AiService) {}
+
+  async generateContent() {
+    const response = await this.ai.generateText(
+      'openai',
+      'Explain quantum computing',
+      'You are a helpful assistant'
+    );
+
+    if (response.success) {
+      console.log(response.data);
+    }
+  }
+}
+```
+
+**Pre-configured Providers:**
+| Provider | Model | Description |
+|----------|-------|-------------|
+| `openai` | gpt-4o | OpenAI GPT models |
+| `anthropic` | claude-3-5-sonnet | Anthropic Claude models |
+| `google` | gemini-2.0-flash | Google Gemini models |
+| `moonshot` | moonshot-v1-8k | Moonshot Kimi models |
+| `minimax` | MiniMax-Text-01 | MiniMax models |
+
+**Key Methods:**
+- `chat(provider, messages, options?)` - Chat completions
+- `generateText(provider, prompt, systemPrompt?, options?)` - Text generation
+- `generateSchema(provider, description, options?)` - Generate Mongoose schemas
+- `generateTemplate(provider, type, description, options?)` - Generate HTML, email, JSON, code
+- `embeddings(provider, input, options?)` - Generate embeddings
+- `createEmbedding(provider, text)` - Single embedding vector
+- `chatStream(provider, messages, onChunk, options?)` - Streaming responses
+- `registerProvider(config)` - Add custom provider
+
+**Custom Provider:**
+```typescript
+aiService.registerProvider({
+  provider: 'custom',
+  model: 'llama-3',
+  apiKey: 'not-needed',
+  baseUrl: 'http://localhost:11434/v1',
+});
+```
 
 ---
 
