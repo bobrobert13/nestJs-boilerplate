@@ -134,8 +134,11 @@ OAUTH_GOOGLE_CLIENT_SECRET=
 OAUTH_GITHUB_CLIENT_ID=
 OAUTH_GITHUB_CLIENT_SECRET=
 
-# Auth - Password Hashing
-BCRYPT_SALT_ROUNDS=12
+# Auth - Password Hashing (Argon2)
+ARGON2_TYPE=2
+ARGON2_MEMORY_COST=65536
+ARGON2_TIME_COST=3
+ARGON2_PARALLELISM=4
 
 # Auth - Two Factor (2FA)
 TWO_FACTOR_ISSUER=MyApp
@@ -383,12 +386,19 @@ adminAction() {}
 const user = await authService.validateUser(email, password);
 const tokens = await authService.login(user);
 await authService.refreshTokens(refreshToken);
-await authService.hashPassword(password);
-await authService.comparePassword(password, hash);
+await authService.hashPassword(password);  // Argon2
+await authService.comparePassword(password, hash);  // Argon2
 
 // MagicLinkService
 const token = await magicLinkService.generateMagicLink(email);
 const email = await magicLinkService.verifyMagicLink(token);
+```
+
+**Argon2 Password Hashing:**
+```typescript
+// Hash password with argon2id (more secure than bcrypt)
+const hash = await authService.hashPassword(password);
+const isValid = await authService.comparePassword(plainPassword, hash);
 ```
 
 **Decorators:**

@@ -24,8 +24,11 @@ export interface AuthConfig {
       callbackUrl: string;
     };
   };
-  bcrypt: {
-    saltRounds: number;
+  argon2: {
+    type: number;
+    memoryCost: number;
+    timeCost: number;
+    parallelism: number;
   };
   twoFactor: {
     issuer: string;
@@ -69,8 +72,11 @@ export default registerAs('auth', () => ({
       callbackUrl: process.env.OAUTH_GITHUB_CALLBACK_URL || 'http://localhost:3000/auth/github/callback',
     },
   },
-  bcrypt: {
-    saltRounds: parseInt(process.env.BCRYPT_SALT_ROUNDS || '12', 10),
+  argon2: {
+    type: parseInt(process.env.ARGON2_TYPE || '2', 10),
+    memoryCost: parseInt(process.env.ARGON2_MEMORY_COST || '65536', 10),
+    timeCost: parseInt(process.env.ARGON2_TIME_COST || '3', 10),
+    parallelism: parseInt(process.env.ARGON2_PARALLELISM || '4', 10),
   },
   twoFactor: {
     issuer: process.env.TWO_FACTOR_ISSUER || 'MyApp',

@@ -9,6 +9,7 @@ Authentication module for NestJS with JWT, Magic Links, OAuth, 2FA and Passkeys 
 - **OAuth2** - Social login (Google, GitHub)
 - **2FA/TOTP** - Two-factor with Google Authenticator compatibility
 - **Passkeys** - Passwordless hardware authentication (FaceID, TouchID, Windows Hello)
+- **Argon2** - Secure password hashing (replaces bcrypt)
 - **Role-based Access Control** - Guards and decorators for authorization
 - **Refresh Tokens** - Token renewal support
 
@@ -38,8 +39,11 @@ OAUTH_GOOGLE_CLIENT_SECRET=
 OAUTH_GITHUB_CLIENT_ID=
 OAUTH_GITHUB_CLIENT_SECRET=
 
-# Password Hashing
-BCRYPT_SALT_ROUNDS=12
+# Password Hashing (Argon2)
+ARGON2_TYPE=2
+ARGON2_MEMORY_COST=65536
+ARGON2_TIME_COST=3
+ARGON2_PARALLELISM=4
 
 # Two Factor (2FA)
 TWO_FACTOR_ISSUER=MyApp
@@ -112,6 +116,41 @@ export class AdminController {
     // Only admin role can access
   }
 }
+```
+
+## Password Hashing with Argon2
+
+Argon2 is the winner of the Password Hashing Competition and is more secure than bcrypt for customer login passwords.
+
+### Hash a Password
+
+```typescript
+const hash = await authService.hashPassword(plainPassword);
+```
+
+### Verify a Password
+
+```typescript
+const isValid = await authService.comparePassword(plainPassword, hash);
+if (!isValid) {
+  throw new UnauthorizedException('Invalid credentials');
+}
+```
+
+### Argon2 Configuration
+
+```env
+# Argon2id algorithm (type 2)
+ARGON2_TYPE=2
+
+# Memory cost in KiB (64 MB)
+ARGON2_MEMORY_COST=65536
+
+# Number of iterations
+ARGON2_TIME_COST=3
+
+# Parallelism
+ARGON2_PARALLELISM=4
 ```
 
 ## Passkeys (WebAuthn)
@@ -275,7 +314,7 @@ const tokens = await authService.login(user);
 // Refresh tokens
 const newTokens = await authService.refreshTokens(refreshToken);
 
-// Hash/verify passwords
+// Hash passwords (Argon2)
 const hash = await authService.hashPassword(password);
 const match = await authService.comparePassword(password, hash);
 ```
@@ -308,7 +347,7 @@ interface AuthenticatedUser {
 
 | Method | Description | Security Level |
 |--------|-------------|----------------|
-| Password + JWT | Traditional authentication | Medium |
+| Password + Argon2 | Secure password hashing | High |
 | Magic Link | Passwordless email | High |
 | 2FA/TOTP | Time-based codes | Very High |
 | Passkeys | Hardware biometric | Very High |
