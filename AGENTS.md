@@ -16,6 +16,8 @@
 | **Test E2E**         | `npm run test:e2e`                    |
 | **Format**           | `npm run format`                       |
 | **Prod Start**       | `npm run start:prod`                  |
+| **Package Setup**    | `./setup/setup.sh` (Linux/Mac)        |
+|                     | `setup\setup.bat` (Windows)            |
 
 ---
 
@@ -720,7 +722,74 @@ import { DatabaseModule } from '@common/database';
 
 ---
 
-## 9. Troubleshooting
+## 9. Package Setup Wizard
+
+The project includes an interactive setup wizard for selecting which packages to include.
+
+### Quick Start
+
+**Linux / macOS / Git Bash / WSL:**
+```bash
+chmod +x setup/setup.sh
+./setup/setup.sh
+```
+
+**Windows (cmd.exe or PowerShell):**
+```cmd
+setup\setup.bat
+```
+
+### Setup Options
+
+```bash
+./setup/setup.sh --help   # Show help
+./setup/setup.sh --list   # List available packages
+./setup/setup.sh --reset  # Reset previous selection
+```
+
+### What It Does
+
+1. **Package Selection**: Interactive CLI to choose packages
+2. **Environment Variables**: Collects required env vars per package
+3. **Configuration Updates**:
+   - Updates `nest-cli.json` (includes only selected packages)
+   - Updates `package.json` (adds required dependencies)
+   - Creates `.env` file with all variables
+4. **Preserves Selection**: Saves to `selection.json` for future runs
+
+### Available Packages
+
+| Package | Default | Description |
+|---------|---------|-------------|
+| `@common/ai` | Yes | AI providers wrapper |
+| `@common/auth` | Yes | Authentication with JWT, 2FA, Passkeys |
+| `@common/common` | Yes | Common utilities |
+| `@common/database` | Yes | MongoDB with transactions |
+| `@common/http` | Yes | HTTP client with sharp |
+| `@common/inngest` | No | Event-driven task queue |
+| `@common/playwright` | No | Browser automation |
+| `@common/resend` | No | Email via Resend API |
+| `@common/serve-static` | No | EJS templates with TailwindCSS |
+
+### Configuration Files
+
+| File | Purpose |
+|------|---------|
+| `setup/package-config.json` | Package definitions and metadata |
+| `setup/selection.json` | Saved selection (auto-generated) |
+| `setup/templates/.env.template` | Environment variables template |
+
+### Next Steps After Setup
+
+```bash
+npm install        # Install selected dependencies
+npm run build      # Build project
+npm run start:dev  # Start development server
+```
+
+---
+
+## 10. Troubleshooting
 
 **Port already in use:**
 
@@ -741,9 +810,15 @@ mongosh --eval "db.adminCommand('ping')"
 npx playwright install
 ```
 
+**Setup wizard permission denied (Linux):**
+
+```bash
+chmod +x setup/setup.sh
+```
+
 ---
 
-## 10. Deployment Checklist
+## 11. Deployment Checklist
 
 - [ ] Environment variables configured
 - [ ] MongoDB connection string set
@@ -757,11 +832,7 @@ npx playwright install
 
 ---
 
-**Last Updated:** 2026-04-28
-**NestJS Version:** 11.x
-**TypeScript Version:** 5.7.x
-
-## 11. Key Files
+## 12. Key Files
 
 | File | Purpose |
 |------|---------|
@@ -769,10 +840,11 @@ npx playwright install
 | `AGENTS.md` | This file |
 | `nest-cli.json` | Monorepo configuration |
 | `packages/*/` | Reusable packages |
+| `setup/` | Package setup wizard |
 
 ---
 
-## 12. Docker
+## 13. Docker
 
 ```bash
 # Build image
