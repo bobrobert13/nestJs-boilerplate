@@ -2,7 +2,7 @@ import { Injectable, Logger, UnauthorizedException, ConflictException } from '@n
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { randomBytes } from 'crypto';
-import * as argon2 from 'argon2';
+import argon2 from 'argon2';
 import { JwtPayload, TokenResponse, AuthenticatedUser } from '../interfaces/auth.interfaces';
 
 interface AuthConfig {
@@ -115,10 +115,10 @@ export class AuthService {
   async hashPassword(password: string): Promise<string> {
     const config = this.configService.get<AuthConfig>('auth');
     const argon2Options = {
-      type: config?.argon2?.type || argon2.argon2id,
-      memoryCost: config?.argon2?.memoryCost || 65536,
-      timeCost: config?.argon2?.timeCost || 3,
-      parallelism: config?.argon2?.parallelism || 4,
+      type: (config?.argon2?.type ?? argon2.argon2id) as 0 | 1 | 2,
+      memoryCost: config?.argon2?.memoryCost ?? 65536,
+      timeCost: config?.argon2?.timeCost ?? 3,
+      parallelism: config?.argon2?.parallelism ?? 4,
     };
 
     this.logger.debug('Hashing password with argon2id');
