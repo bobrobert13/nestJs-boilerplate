@@ -84,6 +84,7 @@ export class InngestService implements OnModuleInit {
   ): InngestEventPayload<'scrapping/hola-inngest'> {
     return {
       name: 'scrapping/hola-inngest',
+      id: `hola-inngest-${Date.now()}`,
       data: {
         message,
         timestamp: new Date().toISOString(),
