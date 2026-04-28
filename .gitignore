@@ -3,6 +3,10 @@
 /node_modules
 /build
 
+# packages compiled output
+/packages/*/dist
+/packages/*/.tsbuildinfo
+
 # Logs
 logs
 *.log

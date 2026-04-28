@@ -2,9 +2,10 @@
   "$schema": "https://json.schemastore.org/nest-cli",
   "collection": "@nestjs/schematics",
   "sourceRoot": "apps/nominas/src",
-  "compilerOptions": {
+"compilerOptions": {
     "deleteOutDir": true,
     "webpack": true,
+    "webpackConfigPath": "webpack.config.js",
     "tsConfigPath": "apps/nominas/tsconfig.app.json"
   },
   "monorepo": true,
@@ -53,6 +54,15 @@
       "sourceRoot": "packages/common/src",
       "compilerOptions": {
         "tsConfigPath": "packages/common/tsconfig.json"
+      }
+    },
+    "http": {
+      "type": "library",
+      "root": "packages/http",
+      "entryFile": "index",
+      "sourceRoot": "packages/http/src",
+      "compilerOptions": {
+        "tsConfigPath": "packages/http/tsconfig.json"
       }
     }
   }

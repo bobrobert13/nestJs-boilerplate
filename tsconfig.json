@@ -14,7 +14,7 @@
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": "./",
-    "incremental": true,
+    "incremental": false,
     "skipLibCheck": true,
     "strictNullChecks": true,
     "forceConsistentCasingInFileNames": true,
@@ -22,10 +22,12 @@
     "strictBindCallApply": true,
     "noFallthroughCasesInSwitch": true,
     "paths": {
+      "@common/common": ["packages/common/src/index.ts"],
       "@common/database": ["packages/database/src/index.ts"],
       "@common/inngest": ["packages/inngest/src/index.ts"],
       "@common/playwright": ["packages/playwright/src/index.ts"],
-      "@common/common": ["packages/common/src/index.ts"]
-    }
+      "@common/http": ["packages/http/src/index.ts"]
+    },
+    "types": ["node"]
   }
 }

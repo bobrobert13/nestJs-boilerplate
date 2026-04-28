@@ -1,0 +1,20 @@
+{
+  "name": "@common/http",
+  "version": "1.0.0",
+  "description": "HTTP client module for NestJS with axios and sharp",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "peerDependencies": {
+    "@nestjs/common": "^10.0.0 || ^11.0.0"
+  },
+  "dependencies": {
+    "axios": "^1.7.9",
+    "sharp": "^0.33.5"
+  }
+}
