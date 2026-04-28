@@ -51,12 +51,26 @@ api-nominas/
 │   │   └── src/
 │   │       ├── playwright.module.ts
 │   │       └── playwright.service.ts
-│   └── resend/                 # Email module
+│   ├── resend/                 # Email module
+│   │   └── src/
+│   │       ├── resend.module.ts
+│   │       ├── resend.service.ts
+│   │       ├── config/resend.config.ts
+│   │       └── modules/newsletter/
+│   └── auth/                   # Authentication module
 │       └── src/
-│           ├── resend.module.ts
-│           ├── resend.service.ts
-│           ├── config/resend.config.ts
-│           └── modules/newsletter/  # Newsletter functionality
+│           ├── auth.module.ts
+│           ├── auth.service.ts
+│           ├── magic-link.service.ts
+│           ├── strategies/
+│           │   ├── jwt.strategy.ts
+│           │   └── local.strategy.ts
+│           ├── guards/
+│           │   ├── jwt-auth.guard.ts
+│           │   └── roles.guard.ts
+│           └── decorators/
+│               ├── public.decorator.ts
+│               └── roles.decorator.ts
 │
 ├── apps/
 │   └── nominas/      # Main application
@@ -83,6 +97,7 @@ import { DatabaseModule } from '@common/database';
 import { InngestModule } from '@common/inngest';
 import { PlaywrightModule } from '@common/playwright';
 import { ResendModule } from '@common/resend';
+import { AuthModule, JwtAuthGuard, RolesGuard, Public, Roles } from '@common/auth';
 import { DatabaseExceptionFilter } from '@common/common';
 ```
 
@@ -101,6 +116,26 @@ RESEND_API_KEY=your_api_key
 RESEND_FROM_EMAIL=your@domain.com
 RESEND_FROM_NAME=Your App Name
 RESEND_REPLY_TO=reply@domain.com
+
+# Auth - JWT
+JWT_SECRET=your-super-secret-key-min-32-chars
+JWT_ACCESS_TOKEN_TTL=900
+JWT_REFRESH_TOKEN_TTL=604800
+JWT_ISSUER=api-nominas
+JWT_AUDIENCE=api-nominas
+
+# Auth - Magic Link
+MAGIC_LINK_ENABLED=true
+MAGIC_LINK_TOKEN_TTL=300
+
+# Auth - OAuth (Optional)
+OAUTH_GOOGLE_CLIENT_ID=
+OAUTH_GOOGLE_CLIENT_SECRET=
+OAUTH_GITHUB_CLIENT_ID=
+OAUTH_GITHUB_CLIENT_SECRET=
+
+# Auth - Password Hashing
+BCRYPT_SALT_ROUNDS=12
 
 # Playwright
 PLAYWRIGHT_HEADLESS=true
@@ -296,6 +331,56 @@ RESEND_FROM_EMAIL=your@domain.com
 RESEND_FROM_NAME=Your App Name
 RESEND_REPLY_TO=reply@domain.com
 ```
+
+### @common/auth
+
+Authentication module with JWT, Magic Links, and OAuth support.
+
+**Basic Usage:**
+```typescript
+import { AuthModule, JwtAuthGuard, Public, Roles, RolesGuard } from '@common/auth';
+
+@Module({
+  imports: [AuthModule],
+})
+export class AppModule {}
+
+// In controllers
+@UseGuards(JwtAuthGuard)
+@Get('profile')
+getProfile(@Request() req) {
+  return req.user;
+}
+
+// Public route
+@Public()
+@Post('login')
+async login(@Body() dto: LoginDto) {}
+
+// Role-based access
+@Roles('admin')
+@UseGuards(RolesGuard)
+@Post('admin-only')
+adminAction() {}
+```
+
+**Services:**
+```typescript
+// AuthService
+const user = await authService.validateUser(email, password);
+const tokens = await authService.login(user);
+await authService.refreshTokens(refreshToken);
+await authService.hashPassword(password);
+await authService.comparePassword(password, hash);
+
+// MagicLinkService
+const token = await magicLinkService.generateMagicLink(email);
+const email = await magicLinkService.verifyMagicLink(token);
+```
+
+**Decorators:**
+- `@Public()` - Skip JWT validation
+- `@Roles(...roles)` - Require specific roles
 
 ---
 

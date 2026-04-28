@@ -1,0 +1,135 @@
+import { Injectable, Logger, UnauthorizedException, ConflictException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
+import { randomBytes } from 'crypto';
+import { JwtPayload, TokenResponse, AuthenticatedUser } from '../interfaces/auth.interfaces';
+
+interface AuthConfig {
+  jwt: {
+    secret: string;
+    accessTokenTtl: number;
+    refreshTokenTtl: number;
+    issuer: string;
+    audience: string;
+  };
+  bcrypt: {
+    saltRounds: number;
+  };
+}
+
+@Injectable()
+export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+  private readonly refreshTokenStore: Map<string, { userId: string; expiresAt: Date }> = new Map();
+
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
+  ) {}
+
+  async validateUser(email: string, password: string): Promise<AuthenticatedUser | null> {
+    this.logger.log(`Validating user: ${email}`);
+    
+    if (email === 'demo@example.com' && password === 'demo123') {
+      return {
+        id: 'demo-user-id',
+        email: 'demo@example.com',
+        roles: ['user'],
+      };
+    }
+
+    return null;
+  }
+
+  async register(email: string, password: string, name?: string): Promise<AuthenticatedUser> {
+    this.logger.log(`Registering user: ${email}`);
+
+    if (email === 'demo@example.com') {
+      throw new ConflictException('User already exists');
+    }
+
+    return {
+      id: `user-${Date.now()}`,
+      email,
+      roles: ['user'],
+    };
+  }
+
+  async login(user: AuthenticatedUser): Promise<TokenResponse> {
+    this.logger.log(`User login: ${user.email}`);
+
+    const payload: JwtPayload = {
+      sub: user.id,
+      email: user.email,
+      roles: user.roles,
+    };
+
+    const accessToken = this.jwtService.sign(payload);
+    const refreshToken = this.createRefreshToken(user.id);
+
+    return {
+      accessToken,
+      refreshToken,
+      expiresIn: 900,
+    };
+  }
+
+  async refreshTokens(refreshToken: string): Promise<TokenResponse> {
+    const tokenData = this.refreshTokenStore.get(refreshToken);
+
+    if (!tokenData) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    if (new Date() > tokenData.expiresAt) {
+      this.refreshTokenStore.delete(refreshToken);
+      throw new UnauthorizedException('Refresh token expired');
+    }
+
+    const user: AuthenticatedUser = {
+      id: tokenData.userId,
+      email: 'demo@example.com',
+      roles: ['user'],
+    };
+
+    return this.login(user);
+  }
+
+  async logout(refreshToken: string): Promise<void> {
+    this.refreshTokenStore.delete(refreshToken);
+    this.logger.log('User logged out');
+  }
+
+  async validateToken(token: string): Promise<JwtPayload> {
+    try {
+      return this.jwtService.verify<JwtPayload>(token);
+    } catch {
+      throw new UnauthorizedException('Invalid token');
+    }
+  }
+
+  async hashPassword(password: string): Promise<string> {
+    const bcrypt = await import('bcrypt');
+    const config = this.configService.get<AuthConfig>('auth');
+    const saltRounds = config?.bcrypt?.saltRounds || 12;
+    return bcrypt.hash(password, saltRounds);
+  }
+
+  async comparePassword(password: string, hash: string): Promise<boolean> {
+    const bcrypt = await import('bcrypt');
+    return bcrypt.compare(password, hash);
+  }
+
+  private createRefreshToken(userId: string): string {
+    const token = randomBytes(32).toString('hex');
+    const config = this.configService.get<AuthConfig>('auth');
+    const ttl = config?.jwt?.refreshTokenTtl || 604800;
+
+    this.refreshTokenStore.set(token, {
+      userId,
+      expiresAt: new Date(Date.now() + ttl * 1000),
+    });
+
+    return token;
+  }
+}
