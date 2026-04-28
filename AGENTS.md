@@ -57,20 +57,34 @@ api-nominas/
 │   │       ├── resend.service.ts
 │   │       ├── config/resend.config.ts
 │   │       └── modules/newsletter/
-│   └── auth/                   # Authentication module
+│   ├── auth/                   # Authentication module
+│   │   └── src/
+│   │       ├── auth.module.ts
+│   │       ├── auth.service.ts
+│   │       ├── magic-link.service.ts
+│   │       ├── strategies/
+│   │       │   ├── jwt.strategy.ts
+│   │       │   └── local.strategy.ts
+│   │       ├── guards/
+│   │       │   ├── jwt-auth.guard.ts
+│   │       │   └── roles.guard.ts
+│   │       └── decorators/
+│   │           ├── public.decorator.ts
+│   │           └── roles.decorator.ts
+│   ├── serve-static/           # Static file serving with templates
+│   │   └── src/
+│   │       ├── serve-static.module.ts
+│   │       ├── serve-static.service.ts
+│   │       └── index.ts
+│   │   └── templates/          # Work folder for templates
+│   │       ├── layouts/
+│   │       ├── pages/
+│   │       ├── partials/
+│   │       └── assets/
+│   └── http/                   # HTTP client module
 │       └── src/
-│           ├── auth.module.ts
-│           ├── auth.service.ts
-│           ├── magic-link.service.ts
-│           ├── strategies/
-│           │   ├── jwt.strategy.ts
-│           │   └── local.strategy.ts
-│           ├── guards/
-│           │   ├── jwt-auth.guard.ts
-│           │   └── roles.guard.ts
-│           └── decorators/
-│               ├── public.decorator.ts
-│               └── roles.decorator.ts
+│           ├── http.module.ts
+│           └── services/
 │
 ├── apps/
 │   └── nominas/      # Main application
@@ -98,6 +112,7 @@ import { InngestModule } from '@common/inngest';
 import { PlaywrightModule } from '@common/playwright';
 import { ResendModule } from '@common/resend';
 import { AuthModule, JwtAuthGuard, RolesGuard, Public, Roles } from '@common/auth';
+import { ServeStaticModule, ServeStaticService } from '@common/serve-static';
 import { DatabaseExceptionFilter } from '@common/common';
 ```
 
@@ -499,6 +514,53 @@ PASSKEYS_RP_NAME=MyApp
 PASSKEYS_RP_ORIGIN=http://localhost:3000
 ```
 
+### @common/serve-static
+
+Static file serving with EJS template engine and TailwindCSS CDN support.
+
+**Basic Usage:**
+```typescript
+import { ServeStaticModule, ServeStaticService } from '@common/serve-static';
+
+@Module({
+  imports: [ServeStaticModule],
+})
+export class AppModule {}
+
+// In controller
+@Controller()
+export class AppController {
+  constructor(private readonly serveStatic: ServeStaticService) {}
+
+  @Get()
+  async home(@Res() res: Response) {
+    const html = await this.serveStatic.render('home', {
+      title: 'Bienvenido',
+      description: 'Página principal',
+      layout: 'main',
+    });
+    res.send(html);
+  }
+}
+```
+
+**Template Structure:**
+```
+packages/serve-static/templates/
+├── layouts/          # Layout templates (main.ejs)
+├── pages/            # Page templates (home.ejs, about.ejs)
+├── partials/         # Reusable partials (header.ejs, footer.ejs)
+└── assets/           # Static assets (css/, js/)
+```
+
+**Methods:**
+- `render(view, options)` - Render page with layout
+- `renderString(template, data)` - Render template string
+- `getPages()` - List available pages
+- `getPartials()` - List available partials
+
+**TailwindCSS:** Loaded via CDN by default (`https://cdn.tailwindcss.com`)
+
 ---
 
 ## 7. Creating New Modules
@@ -623,7 +685,7 @@ npx playwright install
 
 ---
 
-**Last Updated:** 2026-04-26
+**Last Updated:** 2026-04-28
 **NestJS Version:** 11.x
 **TypeScript Version:** 5.7.x
 

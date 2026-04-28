@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <meta name="description" content="<%= description %>">
+  <meta name="keywords" content="<%= keywords %>">
+  <meta name="author" content="<%= author %>">
+  <script src="<%= tailwindCdn %>"></script>
+</head>
+<body class="bg-gray-100 text-gray-900">
+  <%- include('../partials/header.ejs') %>
+
+  <main class="container mx-auto px-4 py-8">
+    <%- body %>
+  </main>
+
+  <%- include('../partials/footer.ejs') %>
+
+  <% if (typeof scripts !== 'undefined') { %>
+    <%- scripts %>
+  <% } %>
+</body>
+</html>

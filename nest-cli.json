@@ -64,6 +64,15 @@
       "compilerOptions": {
         "tsConfigPath": "packages/http/tsconfig.json"
       }
+    },
+    "serve-static": {
+      "type": "library",
+      "root": "packages/serve-static",
+      "entryFile": "index",
+      "sourceRoot": "packages/serve-static/src",
+      "compilerOptions": {
+        "tsConfigPath": "packages/serve-static/tsconfig.json"
+      }
     }
   }
 }
