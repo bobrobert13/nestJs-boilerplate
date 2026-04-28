@@ -8,6 +8,8 @@ interface DatabaseConfig {
     autoIndex: boolean;
     serverSelectionTimeoutMS: number;
     socketTimeoutMS: number;
+    replicaSet?: string;
+    directConnection?: boolean;
   };
   retry: {
     maxRetries: number;

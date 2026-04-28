@@ -15,12 +15,28 @@ services:
       - mongodb_config:/data/configdb
     networks:
       - boilerplate-network
+    command: ["--replSet", "rs0", "--bind_ip_all"]
     healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      test: |
+        mongosh --quiet --eval "
+          try {
+            if (rs.status().ok) {
+              const state = rs.status().myState;
+              if (state === 1 || state === 2) quit(0);
+            }
+            rs.initiate({
+              _id: 'rs0',
+              members: [{ _id: 0, host: 'localhost:27017' }]
+            });
+            quit(0);
+          } catch (e) {
+            quit(1);
+          }
+        "
       interval: 10s
-      timeout: 5s
+      timeout: 10s
       retries: 5
-      start_period: 40s
+      start_period: 15s
 
   # Boilerplate Service
   boilerplate-service:
@@ -34,7 +50,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3000
-      - MONGODB_URI=mongodb://${MONGO_USER:-admin}:${MONGO_PASSWORD:-admin123}@mongodb:27017/boilerplate_db?authSource=admin
+      - MONGODB_URI=mongodb://${MONGO_USER:-admin}:${MONGO_PASSWORD:-admin123}@mongodb:27017/boilerplate_db?authSource=admin&replicaSet=rs0
       - PLAYWRIGHT_HEADLESS=true
       - PLAYWRIGHT_TIMEOUT=30000
       - PLAYWRIGHT_RETRIES=3

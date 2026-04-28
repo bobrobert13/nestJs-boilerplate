@@ -40,16 +40,23 @@ api-nominas/
 │   │   └── src/
 │   │       ├── database.module.ts
 │   │       ├── database.service.ts
-│   │       └── config/database.config.ts
+│   │       ├── config/database.config.ts
+│   │       └── transaction/    # Transaction wrappers
 │   ├── inngest/               # Inngest module
 │   │   └── src/
 │   │       ├── inngest.module.ts
 │   │       ├── inngest.service.ts
 │   │       └── functions/
-│   └── playwright/             # Playwright module
+│   ├── playwright/             # Playwright module
+│   │   └── src/
+│   │       ├── playwright.module.ts
+│   │       └── playwright.service.ts
+│   └── resend/                 # Email module
 │       └── src/
-│           ├── playwright.module.ts
-│           └── playwright.service.ts
+│           ├── resend.module.ts
+│           ├── resend.service.ts
+│           ├── config/resend.config.ts
+│           └── modules/newsletter/  # Newsletter functionality
 │
 ├── apps/
 │   └── nominas/      # Main application
@@ -75,6 +82,7 @@ Imports use `@common/*` paths:
 import { DatabaseModule } from '@common/database';
 import { InngestModule } from '@common/inngest';
 import { PlaywrightModule } from '@common/playwright';
+import { ResendModule } from '@common/resend';
 import { DatabaseExceptionFilter } from '@common/common';
 ```
 
@@ -87,6 +95,12 @@ import { DatabaseExceptionFilter } from '@common/common';
 ```env
 MONGODB_URI=mongodb://localhost:27017/boilerplate_db
 PORT=3000
+
+# Resend
+RESEND_API_KEY=your_api_key
+RESEND_FROM_EMAIL=your@domain.com
+RESEND_FROM_NAME=Your App Name
+RESEND_REPLY_TO=reply@domain.com
 
 # Playwright
 PLAYWRIGHT_HEADLESS=true
@@ -242,6 +256,46 @@ Event-driven task queue.
 ### @common/playwright
 
 Browser automation for web scraping.
+
+### @common/resend
+
+Email service via Resend API with newsletter module.
+
+**Basic Usage:**
+```typescript
+import { ResendService } from '@common/resend';
+
+@Injectable()
+export class MyService {
+  constructor(private readonly resendService: ResendService) {}
+
+  async sendWelcome(email: string) {
+    return this.resendService.sendEmail({
+      to: email,
+      subject: 'Welcome!',
+      html: '<h1>Welcome to our app</h1>',
+    });
+  }
+}
+```
+
+**Newsletter Module:**
+```typescript
+import { NewsletterModule } from '@common/resend';
+
+@Module({
+  imports: [NewsletterModule],
+})
+export class AppModule {}
+```
+
+**Environment Variables:**
+```env
+RESEND_API_KEY=your_api_key
+RESEND_FROM_EMAIL=your@domain.com
+RESEND_FROM_NAME=Your App Name
+RESEND_REPLY_TO=reply@domain.com
+```
 
 ---
 

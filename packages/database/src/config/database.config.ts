@@ -2,7 +2,7 @@ import { registerAs } from '@nestjs/config';
 
 export default registerAs('database', () => {
   const mongodbUri =
-    process.env.MONGODB_URI || 'mongodb://localhost:27017/manga_scrapping';
+    process.env.MONGODB_URI || 'mongodb://localhost:27017/manga_scrapping?replicaSet=rs0';
 
   if (!process.env.MONGODB_URI) {
     console.warn(
@@ -16,6 +16,8 @@ export default registerAs('database', () => {
       autoIndex: true,
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
+      replicaSet: process.env.MONGODB_REPLICA_SET,
+      directConnection: process.env.MONGODB_DIRECT_CONNECTION === 'true',
     },
     retry: {
       maxRetries: 3,

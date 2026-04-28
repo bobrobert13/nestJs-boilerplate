@@ -27,7 +27,7 @@ interface DatabaseConfig {
       useFactory: (configService: ConfigService) => {
         const config = configService.get<DatabaseConfig>('database');
         return {
-          uri: config?.uri ?? 'mongodb://localhost:27017/boilerplate_db',
+          uri: config?.uri ?? 'mongodb://localhost:27017/nest-boilerplate',
         };
       },
       inject: [ConfigService],
