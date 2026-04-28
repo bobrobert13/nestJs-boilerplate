@@ -38,6 +38,11 @@ export interface AuthConfig {
       length: number;
     };
   };
+  passkeys: {
+    rpId: string;
+    rpName: string;
+    rpOrigin: string;
+  };
 }
 
 export default registerAs('auth', () => ({
@@ -77,5 +82,10 @@ export default registerAs('auth', () => ({
       count: parseInt(process.env.TWO_FACTOR_BACKUP_CODES_COUNT || '10', 10),
       length: parseInt(process.env.TWO_FACTOR_BACKUP_CODES_LENGTH || '10', 10),
     },
+  },
+  passkeys: {
+    rpId: process.env.PASSKEYS_RP_ID || 'localhost',
+    rpName: process.env.PASSKEYS_RP_NAME || 'MyApp',
+    rpOrigin: process.env.PASSKEYS_RP_ORIGIN || 'http://localhost:3000',
   },
 }));

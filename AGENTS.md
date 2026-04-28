@@ -145,6 +145,11 @@ TWO_FACTOR_PERIOD=30
 TWO_FACTOR_BACKUP_CODES_COUNT=10
 TWO_FACTOR_BACKUP_CODES_LENGTH=10
 
+# Auth - Passkeys (WebAuthn)
+PASSKEYS_RP_ID=localhost
+PASSKEYS_RP_NAME=MyApp
+PASSKEYS_RP_ORIGIN=http://localhost:3000
+
 # Playwright
 PLAYWRIGHT_HEADLESS=true
 PLAYWRIGHT_TIMEOUT=30000
@@ -437,6 +442,51 @@ TWO_FACTOR_DIGITS=6
 TWO_FACTOR_PERIOD=30
 TWO_FACTOR_BACKUP_CODES_COUNT=10
 TWO_FACTOR_BACKUP_CODES_LENGTH=10
+```
+
+### @common/auth - Passkeys (WebAuthn)
+
+Passwordless authentication using hardware biometrics.
+
+```typescript
+import { PasskeysModule, PasskeysService } from '@common/auth';
+
+@Module({
+  imports: [AuthModule, PasskeysModule],
+})
+export class AppModule {}
+
+// Inject service
+constructor(private readonly passkeysService: PasskeysService) {}
+
+// Generate registration options
+const options = await passkeysService.generateRegistrationOptions(userId, email);
+
+// Verify registration
+const result = await passkeysService.verifyRegistration(userId, email, response);
+
+// Generate authentication options
+const authOptions = await passkeysService.generateAuthenticationOptions(userId);
+
+// Verify authentication
+const verifyResult = await passkeysService.verifyAuthentication(userId, credentialId, response);
+```
+
+**Passkeys Endpoints:**
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/auth/passkeys/register-options` | Get registration options |
+| POST | `/auth/passkeys/register-verify` | Verify passkey registration |
+| POST | `/auth/passkeys/login-options` | Get login options |
+| POST | `/auth/passkeys/login-verify` | Verify passkey login |
+| GET | `/auth/passkeys/list` | List user's passkeys |
+| DELETE | `/auth/passkeys/delete/:id` | Delete a passkey |
+
+**Passkeys Environment Variables:**
+```env
+PASSKEYS_RP_ID=localhost
+PASSKEYS_RP_NAME=MyApp
+PASSKEYS_RP_ORIGIN=http://localhost:3000
 ```
 
 ---

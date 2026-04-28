@@ -1,11 +1,14 @@
 # @common/auth - Authentication Module
 
-Authentication module for NestJS with JWT, Magic Links, and OAuth support.
+Authentication module for NestJS with JWT, Magic Links, OAuth, 2FA and Passkeys support.
 
 ## Features
 
 - **JWT Authentication** - Stateless token-based authentication
 - **Magic Links** - Passwordless authentication via email links
+- **OAuth2** - Social login (Google, GitHub)
+- **2FA/TOTP** - Two-factor with Google Authenticator compatibility
+- **Passkeys** - Passwordless hardware authentication (FaceID, TouchID, Windows Hello)
 - **Role-based Access Control** - Guards and decorators for authorization
 - **Refresh Tokens** - Token renewal support
 
@@ -32,13 +35,24 @@ MAGIC_LINK_TOKEN_TTL=300
 # OAuth (Optional)
 OAUTH_GOOGLE_CLIENT_ID=
 OAUTH_GOOGLE_CLIENT_SECRET=
-OAUTH_GOOGLE_CALLBACK_URL=http://localhost:3000/auth/google/callback
 OAUTH_GITHUB_CLIENT_ID=
 OAUTH_GITHUB_CLIENT_SECRET=
-OAUTH_GITHUB_CALLBACK_URL=http://localhost:3000/auth/github/callback
 
 # Password Hashing
 BCRYPT_SALT_ROUNDS=12
+
+# Two Factor (2FA)
+TWO_FACTOR_ISSUER=MyApp
+TWO_FACTOR_ALGORITHM=SHA1
+TWO_FACTOR_DIGITS=6
+TWO_FACTOR_PERIOD=30
+TWO_FACTOR_BACKUP_CODES_COUNT=10
+TWO_FACTOR_BACKUP_CODES_LENGTH=10
+
+# Passkeys (WebAuthn)
+PASSKEYS_RP_ID=localhost
+PASSKEYS_RP_NAME=MyApp
+PASSKEYS_RP_ORIGIN=http://localhost:3000
 ```
 
 ## Quick Start
@@ -46,23 +60,17 @@ BCRYPT_SALT_ROUNDS=12
 ### 1. Import AuthModule
 
 ```typescript
-// app.module.ts
 import { AuthModule } from '@common/auth';
 
 @Module({
-  imports: [
-    AuthModule,
-    // other modules...
-  ],
+  imports: [AuthModule],
 })
 export class AppModule {}
 ```
 
-### 2. Use JWT Authentication
+### 2. Protect Routes with JWT
 
 ```typescript
-//Protect routes with JWT
-import { Controller, Get, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '@common/auth';
 
 @Controller('protected')
@@ -106,89 +114,103 @@ export class AdminController {
 }
 ```
 
-## Services
+## Passkeys (WebAuthn)
 
-### AuthService
+Passwordless authentication using hardware security keys, fingerprint, or face recognition.
 
-Core authentication operations.
+### How It Works
+
+1. User registers a passkey ( FaceID, TouchID, Windows Hello, security key )
+2. User authenticates using the registered passkey
+3. No password required - inherently secure 2FA
+
+### Registration Flow
 
 ```typescript
-import { AuthService } from '@common/auth';
+// 1. Generate registration options (send to client)
+const options = await passkeysService.generateRegistrationOptions(userId, username);
+// Client uses options to call navigator.credentials.create()
 
-@Injectable()
-export class MyService {
-  constructor(private readonly authService: AuthService) {}
+// 2. Verify registration response
+const result = await passkeysService.verifyRegistration(userId, username, response);
+// Save the credential ID for later authentication
+```
 
-  async login(email: string, password: string) {
-    const user = await this.authService.validateUser(email, password);
-    if (user) {
-      return this.authService.login(user);
-    }
-  }
+### Authentication Flow
 
-  async register(email: string, password: string, name?: string) {
-    return this.authService.register(email, password, name);
-  }
+```typescript
+// 1. Generate authentication options
+const options = await passkeysService.generateAuthenticationOptions(userId);
+// Client uses options to call navigator.credentials.get()
 
-  async refreshTokens(refreshToken: string) {
-    return this.authService.refreshTokens(refreshToken);
-  }
-
-  async hashPassword(password: string) {
-    return this.authService.hashPassword(password);
-  }
-
-  async comparePassword(password: string, hash: string) {
-    return this.authService.comparePassword(password, hash);
-  }
+// 2. Verify authentication response
+const result = await passkeysService.verifyAuthentication(userId, credentialId, response);
+if (result.valid) {
+  // Login successful - issue JWT tokens
 }
 ```
 
-### MagicLinkService
-
-Passwordless authentication via magic links.
-
-```typescript
-import { MagicLinkService } from '@common/auth';
-
-@Injectable()
-export class AuthService {
-  constructor(private readonly magicLinkService: MagicLinkService) {}
-
-  async requestMagicLink(email: string) {
-    if (this.magicLinkService.isEnabled()) {
-      const token = await this.magicLinkService.generateMagicLink(email);
-      // Send email with magic link containing token
-      return token;
-    }
-    throw new Error('Magic link disabled');
-  }
-
-  async verifyMagicLink(token: string) {
-    const email = await this.magicLinkService.verifyMagicLink(token);
-    // Login user with verified email
-    return email;
-  }
-}
-```
-
-## API Endpoints
+### Passkeys Endpoints
 
 | Method | Endpoint | Description | Auth |
 |--------|----------|-------------|------|
-| POST | `/auth/register` | Register new user | Public |
-| POST | `/auth/login` | Login with email/password | Public |
-| POST | `/auth/refresh` | Refresh access token | Public |
-| POST | `/auth/magic-link/request` | Request magic link | Public |
-| POST | `/auth/magic-link/verify` | Verify magic link | Public |
-| POST | `/auth/logout` | Logout user | JWT |
-| POST | `/auth/verify` | Verify JWT token | JWT |
+| POST | `/auth/passkeys/register-options` | Get registration options | JWT |
+| POST | `/auth/passkeys/register-verify` | Verify passkey registration | JWT |
+| POST | `/auth/passkeys/login-options` | Get login options | Public |
+| POST | `/auth/passkeys/login-verify` | Verify passkey login | Public |
+| GET | `/auth/passkeys/list` | List user's passkeys | JWT |
+| DELETE | `/auth/passkeys/delete/:id` | Delete a passkey | JWT |
+
+## 2FA (TOTP)
+
+Two-factor authentication compatible with Google Authenticator, Authy, etc.
+
+### Enable 2FA
+
+```typescript
+// Generate secret and QR code
+const result = await twoFactorService.generateSecret(userId);
+// Show QR code to user (result.qrCode is base64 image)
+// User scans with authenticator app
+
+// Enable with code verification
+const enabled = await twoFactorService.enableTwoFactor(userId, code);
+```
+
+### Verify 2FA Code
+
+```typescript
+const result = await twoFactorService.verifyCode(userId, code);
+if (!result.valid) {
+  throw new UnauthorizedException('Invalid 2FA code');
+}
+```
+
+### Backup Codes
+
+```typescript
+// User gets 10 backup codes when enabling 2FA
+// Use a backup code if device is unavailable
+const isValid = await twoFactorService.verifyBackupCodeWithUser(userId, backupCode);
+```
+
+### 2FA Endpoints
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| POST | `/auth/2fa/generate` | Generate secret and QR | JWT |
+| POST | `/auth/2fa/enable` | Enable 2FA | JWT |
+| POST | `/auth/2fa/verify` | Verify TOTP code | JWT |
+| POST | `/auth/2fa/verify-backup` | Verify backup code | Public |
+| POST | `/auth/2fa/regenerate-backup-codes` | Regenerate codes | JWT |
+| POST | `/auth/2fa/disable` | Disable 2FA | JWT |
+| POST | `/auth/2fa/status` | Check 2FA status | JWT |
 
 ## Decorators
 
 ### @Public()
 
-Mark routes as public (skip JWT validation).
+Skip JWT validation for a route.
 
 ```typescript
 @Public()
@@ -200,7 +222,7 @@ healthCheck() {
 
 ### @Roles(...roles)
 
-Require specific roles for access.
+Require specific roles.
 
 ```typescript
 @Roles('admin', 'moderator')
@@ -214,7 +236,7 @@ adminAction() {
 
 ### JwtAuthGuard
 
-Protects routes with JWT authentication.
+Protects routes requiring JWT authentication.
 
 ```typescript
 @UseGuards(JwtAuthGuard)
@@ -237,64 +259,61 @@ adminPanel() {
 }
 ```
 
-## Example: Full Authentication Flow
+## Auth Service
 
 ```typescript
-// auth.controller.ts
-import { Controller, Post, Body } from '@nestjs/common';
 import { AuthService } from '@common/auth';
-import { Public } from '@common/auth';
 
-@Controller('auth')
-export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+constructor(private readonly authService: AuthService) {}
 
-  @Public()
-  @Post('login')
-  async login(@Body() { email, password }) {
-    const user = await this.authService.validateUser(email, password);
-    if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-    return this.authService.login(user);
-  }
+// Validate user credentials
+const user = await authService.validateUser(email, password);
 
-  @Public()
-  @Post('register')
-  async register(@Body() { email, password, name }) {
-    const user = await this.authService.register(email, password, name);
-    return { user };
-  }
+// Login and get tokens
+const tokens = await authService.login(user);
 
-  @Post('refresh')
-  async refresh(@Body() { refreshToken }) {
-    return this.authService.refreshTokens(refreshToken);
-  }
-}
+// Refresh tokens
+const newTokens = await authService.refreshTokens(refreshToken);
+
+// Hash/verify passwords
+const hash = await authService.hashPassword(password);
+const match = await authService.comparePassword(password, hash);
 ```
 
-## User Object in Request
+## Auth Endpoints
 
-When using JwtAuthGuard, the request user object contains:
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| POST | `/auth/register` | Register new user | Public |
+| POST | `/auth/login` | Login with email/password | Public |
+| POST | `/auth/refresh` | Refresh access token | Public |
+| POST | `/auth/magic-link/request` | Request magic link | Public |
+| POST | `/auth/magic-link/verify` | Verify magic link | Public |
+| POST | `/auth/logout` | Logout user | JWT |
+| POST | `/auth/verify` | Verify JWT token | JWT |
+
+## User Object
+
+When authenticated, `req.user` contains:
 
 ```typescript
 interface AuthenticatedUser {
-  id: string;      // User ID from JWT sub claim
-  email: string;   // User email
-  roles: string[]; // User roles
+  id: string;
+  email: string;
+  roles: string[];
 }
 ```
 
-## Token Payload
+## Security Methods Supported
 
-JWT tokens contain:
+| Method | Description | Security Level |
+|--------|-------------|----------------|
+| Password + JWT | Traditional authentication | Medium |
+| Magic Link | Passwordless email | High |
+| 2FA/TOTP | Time-based codes | Very High |
+| Passkeys | Hardware biometric | Very High |
 
-```typescript
-interface JwtPayload {
-  sub: string;      // User ID
-  email: string;   // User email
-  roles?: string[];// User roles
-  iat?: number;     // Issued at
-  exp?: number;     // Expiration
-}
-```
+## Compatible Clients
+
+- **Passkeys**: FaceID, TouchID, Windows Hello, YubiKey, Google Pixel
+- **2FA**: Google Authenticator, Authy, Microsoft Authenticator, 1Password

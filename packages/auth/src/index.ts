@@ -12,3 +12,4 @@ export * from './decorators/roles.decorator';
 export * from './interfaces/auth.interfaces';
 export * from './dto/auth.dto';
 export * from './two-factor';
+export * from './passkeys';
