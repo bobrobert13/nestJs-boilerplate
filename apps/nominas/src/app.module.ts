@@ -5,6 +5,7 @@ import { InngestModule } from '@common/inngest';
 import { PlaywrightModule } from '@common/playwright';
 import { DatabaseExceptionFilter } from '@common/common';
 import { UsuariosModule } from './modules/usuarios/usuarios.module';
+import { DynamicSchemaModule } from './modules/dynamic-schema/dynamic-schema.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { UsuariosModule } from './modules/usuarios/usuarios.module';
     InngestModule,
     PlaywrightModule,
     UsuariosModule,
+    DynamicSchemaModule,
   ],
   controllers: [],
   providers: [],

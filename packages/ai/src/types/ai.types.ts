@@ -57,3 +57,25 @@ export interface ProviderCapability {
   streaming: boolean;
   functionCalling: boolean;
 }
+
+// Schema generation types
+export type SchemaFieldType = 'string' | 'number' | 'boolean' | 'date' | 'array' | 'object';
+
+export interface SchemaFieldDefinition {
+  name: string;
+  type: SchemaFieldType;
+  required?: boolean;
+  validate?: Record<string, unknown>;
+  default?: unknown;
+}
+
+export interface GeneratedSchema {
+  fields: SchemaFieldDefinition[];
+  collectionName: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface SchemaGenerationOptions {
+  temperature?: number;
+  model?: string;
+}
