@@ -154,15 +154,17 @@ docker run -d \
 
 ```
 boilerplate-service/
-├── src/
-│   ├── main.ts                 # Entry point
-│   ├── app.module.ts          # Root module
-│   ├── common/                # Infrastructure
-│   │   ├── database/          # MongoDB
-│   │   ├── inngest/           # Task queue
-│   │   └── playwright/        # Browser automation
-│   └── modules/               # Business modules
-│       └── usuarios/          # Example CRUD module
+├── packages/                 # Shared packages (@common/*)
+│   ├── database/           # MongoDB module
+│   ├── inngest/           # Task queue
+│   └── playwright/         # Browser automation
+└── apps/
+    └── nominas/
+        └── src/
+            ├── main.ts                 # Entry point
+            ├── app.module.ts          # Root module
+            └── modules/               # Business modules
+                └── usuarios/          # Example CRUD module
 ```
 
 ## Troubleshooting

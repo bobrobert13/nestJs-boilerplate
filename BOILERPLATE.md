@@ -48,22 +48,69 @@ El proyecto sigue una arquitectura **monorepo** con **packages** que permite sep
 ## 3. Estructura del Proyecto
 
 ```
-api-nominas/
+nestJs-boilerplate/
 ├── packages/                    # Paquetes reutilizables
-│   ├── common/                 # Utilidades comunes
+│   ├── ai/                      # Wrapper de proveedores AI (OpenAI, Anthropic, Gemini, etc.)
+│   │   └── src/
+│   │       ├── ai.module.ts
+│   │       ├── ai.service.ts
+│   │       ├── types/
+│   │       │   └── ai.types.ts
+│   │       ├── interfaces/
+│   │       │   └── provider.interface.ts
+│   │       └── providers/
+│   │           └── openai-compatible.provider.ts
+│   ├── auth/                    # Módulo de autenticación (JWT, 2FA, Passkeys, Magic Link)
+│   │   └── src/
+│   │       ├── auth.module.ts
+│   │       ├── auth.service.ts
+│   │       ├── magic-link.service.ts
+│   │       ├── strategies/
+│   │       │   ├── jwt.strategy.ts
+│   │       │   └── local.strategy.ts
+│   │       ├── guards/
+│   │       │   ├── jwt-auth.guard.ts
+│   │       │   └── roles.guard.ts
+│   │       ├── decorators/
+│   │       │   ├── public.decorator.ts
+│   │       │   └── roles.decorator.ts
+│   │       ├── two-factor/
+│   │       └── passkeys/
+│   ├── common/                  # Utilidades comunes
 │   │   ├── src/
 │   │   │   ├── base-adapter.interface.ts
-│   │   │   └── database-exception.filter.ts
+│   │   │   ├── database-exception.filter.ts
+│   │   │   └── http-error.handler.ts
 │   │   ├── package.json
 │   │   └── tsconfig.json
-│   ├── database/              # Módulo MongoDB
+│   ├── database/                # Módulo MongoDB
 │   │   ├── src/
 │   │   │   ├── database.module.ts
 │   │   │   ├── database.service.ts
-│   │   │   └── config/database.config.ts
+│   │   │   ├── config/database.config.ts
+│   │   │   └── transaction/
 │   │   ├── package.json
 │   │   └── tsconfig.json
-│   ├── inngest/               # Módulo Inngest
+│   ├── documents/              # Extracción de texto de PDF y DOCX
+│   │   ├── src/
+│   │   │   ├── document.module.ts
+│   │   │   ├── services/
+│   │   │   │   ├── pdf.service.ts
+│   │   │   │   ├── docx.service.ts
+│   │   │   │   └── document-processor.service.ts
+│   │   │   └── interfaces/
+│   │   │       └── parser.interface.ts
+│   │   ├── package.json
+│   │   └── tsconfig.json
+│   ├── http/                   # Cliente HTTP con soporte para descarga de imágenes
+│   │   ├── src/
+│   │   │   ├── http.module.ts
+│   │   │   └── services/
+│   │   │       ├── http.service.ts
+│   │   │       └── download.service.ts
+│   │   ├── package.json
+│   │   └── tsconfig.json
+│   ├── inngest/                # Módulo Inngest
 │   │   ├── src/
 │   │   │   ├── inngest.module.ts
 │   │   │   ├── inngest.service.ts
@@ -71,14 +118,28 @@ api-nominas/
 │   │   │   └── serve/
 │   │   ├── package.json
 │   │   └── tsconfig.json
-│   └── playwright/            # Módulo Playwright
+│   ├── playwright/             # Módulo Playwright
+│   │   ├── src/
+│   │   │   ├── playwright.module.ts
+│   │   │   ├── playwright.service.ts
+│   │   │   ├── constants/
+│   │   │   └── interfaces/
+│   │   ├── package.json
+│   │   └── tsconfig.json
+│   ├── resend/                 # Módulo de email via Resend API
+│   │   ├── src/
+│   │   │   ├── resend.module.ts
+│   │   │   ├── resend.service.ts
+│   │   │   ├── config/resend.config.ts
+│   │   │   └── modules/newsletter/
+│   │   ├── package.json
+│   │   └── tsconfig.json
+│   └── serve-static/            # Servido de archivos estáticos con plantillas EJS
 │       ├── src/
-│       │   ├── playwright.module.ts
-│       │   ├── playwright.service.ts
-│       │   ├── constants/
-│       │   └── interfaces/
-│       ├── package.json
-│       └── tsconfig.json
+│       │   ├── serve-static.module.ts
+│       │   ├── serve-static.service.ts
+│       │   └── index.ts
+│       └── templates/
 │
 ├── apps/
 │   └── nominas/      # Aplicación principal
@@ -158,6 +219,58 @@ async scrape(url: string) {
 Contiene filtros y adaptadores genéricos.
 
 - `DatabaseExceptionFilter` - Maneja errores de MongoDB globalmente
+- `HttpError` - Jerarquía de errores HTTP personalizada
+- `BaseAdapter<T>` - Interfaz para adapters de mapeo de datos
+
+### 4.5 @common/ai
+
+Wrapper de proveedores AI (OpenAI, Anthropic, Gemini, Moonshot, MiniMax).
+
+```typescript
+const response = await aiService.generateText('openai', 'Hello', 'You are helpful');
+```
+
+### 4.6 @common/auth
+
+Módulo completo de autenticación: JWT, Magic Links, OAuth, 2FA y Passkeys.
+
+```typescript
+import { AuthModule, JwtAuthGuard, Public } from '@common/auth';
+```
+
+### 4.7 @common/http
+
+Cliente HTTP con descarga de imágenes optimizada via sharp.
+
+```typescript
+constructor(private readonly http: HttpService) {}
+const image = await http.downloadImage(url);
+```
+
+### 4.8 @common/documents
+
+Extracción de texto de PDFs y DOCXs.
+
+```typescript
+constructor(private readonly docs: DocumentProcessorService) {}
+const text = await docs.extract(buffer, 'pdf');
+```
+
+### 4.9 @common/resend
+
+Servicio de email via Resend API con módulo de newsletter.
+
+```typescript
+await resendService.sendEmail({ to: 'user@example.com', subject: 'Hi', html: '<h1>Hello</h1>' });
+```
+
+### 4.10 @common/serve-static
+
+Servido de archivos estáticos con motor de plantillas EJS y TailwindCSS CDN.
+
+```typescript
+const html = await serveStatic.render('home', { title: 'Home', layout: 'main' });
+```
 
 ---
 
@@ -187,7 +300,7 @@ apps/nominas/src/modules/usuarios/
 | POST | `/api/usuarios` | Crear usuario |
 | GET | `/api/usuarios` | Listar usuarios |
 | GET | `/api/usuarios/:id` | Obtener usuario |
-| PATCH | `/api/usodos/:id` | Actualizar usuario |
+| PATCH | `/api/usuarios/:id` | Actualizar usuario |
 | DELETE | `/api/usuarios/:id` | Eliminar usuario |
 
 ---

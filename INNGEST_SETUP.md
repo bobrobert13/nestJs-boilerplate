@@ -78,7 +78,7 @@ node test-inngest.js
 ### Función Inngest Registrada
 
 La función `holaInngest` está definida en:
-`apps/nominas/src/common/inngest/functions/index.ts`
+`packages/inngest/src/functions/index.ts`
 
 ```typescript
 export const holaInngest = inngest.createFunction(

@@ -20,18 +20,10 @@ services:
       test: |
         mongosh --quiet --eval "
           try {
-            if (rs.status().ok) {
-              const state = rs.status().myState;
-              if (state === 1 || state === 2) quit(0);
-            }
-            rs.initiate({
-              _id: 'rs0',
-              members: [{ _id: 0, host: 'localhost:27017' }]
-            });
-            quit(0);
-          } catch (e) {
+            const state = rs.status().myState;
+            if (state === 1 || state === 2) quit(0);
             quit(1);
-          }
+          } catch (e) { quit(1); }
         "
       interval: 10s
       timeout: 10s
@@ -51,9 +43,33 @@ services:
       - NODE_ENV=production
       - PORT=3000
       - MONGODB_URI=mongodb://${MONGO_USER:-admin}:${MONGO_PASSWORD:-admin123}@mongodb:27017/boilerplate_db?authSource=admin&replicaSet=rs0
+      # Auth - JWT (MUST be set in production)
+      - JWT_SECRET=${JWT_SECRET:-change-me-in-production-min-32-chars}
+      - JWT_ACCESS_TOKEN_TTL=${JWT_ACCESS_TOKEN_TTL:-900}
+      - JWT_REFRESH_TOKEN_TTL=${JWT_REFRESH_TOKEN_TTL:-604800}
+      - JWT_ISSUER=${JWT_ISSUER:-api-nominas}
+      - JWT_AUDIENCE=${JWT_AUDIENCE:-api-nominas}
+      # Auth - Argon2
+      - ARGON2_TYPE=${ARGON2_TYPE:-2}
+      - ARGON2_MEMORY_COST=${ARGON2_MEMORY_COST:-65536}
+      - ARGON2_TIME_COST=${ARGON2_TIME_COST:-3}
+      - ARGON2_PARALLELISM=${ARGON2_PARALLELISM:-4}
+      # Auth - 2FA
+      - TWO_FACTOR_ISSUER=${TWO_FACTOR_ISSUER:-MyApp}
+      # Auth - Passkeys
+      - PASSKEYS_RP_ID=${PASSKEYS_RP_ID:-localhost}
+      - PASSKEYS_RP_NAME=${PASSKEYS_RP_NAME:-MyApp}
+      - PASSKEYS_RP_ORIGIN=${PASSKEYS_RP_ORIGIN:-http://localhost:3000}
+      # Resend
+      - RESEND_API_KEY=${RESEND_API_KEY:-}
+      - RESEND_FROM_EMAIL=${RESEND_FROM_EMAIL:-onboarding@resend.dev}
+      - RESEND_FROM_NAME=${RESEND_FROM_NAME:-MyApp}
+      - RESEND_REPLY_TO=${RESEND_REPLY_TO:-}
+      # Playwright
       - PLAYWRIGHT_HEADLESS=true
       - PLAYWRIGHT_TIMEOUT=30000
       - PLAYWRIGHT_RETRIES=3
+      # Inngest
       - INNGEST_EVENT_KEY=${INNGEST_EVENT_KEY:-your_event_key}
       - INNGEST_SIGNING_KEY=${INNGEST_SIGNING_KEY:-your_signing_key}
       - INNGEST_BASE_URL=${INNGEST_BASE_URL:-https://inngest.treborjs-dev.online/}

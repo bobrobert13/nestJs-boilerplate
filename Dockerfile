@@ -17,13 +17,32 @@ COPY tsconfig*.json ./
 COPY apps/nominas/tsconfig.app.json ./apps/nominas/
 
 # Install all dependencies (including dev)
-RUN npm install
+RUN npm ci
 
 # Copy source code
 COPY . .
 
 # Build the application
 RUN npm run build
+
+# Stage: Development (referenced by docker-compose.dev.yml)
+FROM node:22.18.0-slim AS development
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y \
+    python3 \
+    make \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY package*.json ./
+RUN npm install
+COPY . .
+
+EXPOSE 3000 9229
+
+CMD ["npm", "run", "start:dev"]
 
 # Stage 2: Production
 FROM node:22.18.0-slim

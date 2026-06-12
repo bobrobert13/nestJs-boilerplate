@@ -32,33 +32,18 @@
 ### Structure
 
 ```
-api-nominas/
+nestJs-boilerplate/
 ├── packages/                    # Reusable packages (extractable)
-│   ├── common/                 # Common utilities
+│   ├── ai/                      # AI providers wrapper (OpenAI, Anthropic, Gemini, etc.)
 │   │   └── src/
-│   │       ├── base-adapter.interface.ts
-│   │       └── database-exception.filter.ts
-│   ├── database/              # MongoDB module
-│   │   └── src/
-│   │       ├── database.module.ts
-│   │       ├── database.service.ts
-│   │       ├── config/database.config.ts
-│   │       └── transaction/    # Transaction wrappers
-│   ├── inngest/               # Inngest module
-│   │   └── src/
-│   │       ├── inngest.module.ts
-│   │       ├── inngest.service.ts
-│   │       └── functions/
-│   ├── playwright/             # Playwright module
-│   │   └── src/
-│   │       ├── playwright.module.ts
-│   │       └── playwright.service.ts
-│   ├── resend/                 # Email module
-│   │   └── src/
-│   │       ├── resend.module.ts
-│   │       ├── resend.service.ts
-│   │       ├── config/resend.config.ts
-│   │       └── modules/newsletter/
+│   │       ├── ai.module.ts
+│   │       ├── ai.service.ts
+│   │       ├── types/
+│   │       │   └── ai.types.ts
+│   │       ├── interfaces/
+│   │       │   └── provider.interface.ts
+│   │       └── providers/
+│   │           └── openai-compatible.provider.ts
 │   ├── auth/                   # Authentication module
 │   │   └── src/
 │   │       ├── auth.module.ts
@@ -70,33 +55,68 @@ api-nominas/
 │   │       ├── guards/
 │   │       │   ├── jwt-auth.guard.ts
 │   │       │   └── roles.guard.ts
-│   │       └── decorators/
-│   │           ├── public.decorator.ts
-│   │           └── roles.decorator.ts
-│   ├── serve-static/           # Static file serving with templates
+│   │       ├── decorators/
+│   │       │   ├── public.decorator.ts
+│   │       │   └── roles.decorator.ts
+│   │       ├── two-factor/
+│   │       └── passkeys/
+│   ├── common/                 # Common utilities
 │   │   └── src/
-│   │       ├── serve-static.module.ts
-│   │       ├── serve-static.service.ts
-│   │       └── index.ts
-│   │   └── templates/          # Work folder for templates
-│   │       ├── layouts/
-│   │       ├── pages/
-│   │       ├── partials/
-│   │       └── assets/
-│   └── http/                   # HTTP client module
+│   │       ├── base-adapter.interface.ts
+│   │       ├── database-exception.filter.ts
+│   │       └── http-error.handler.ts
+│   ├── database/              # MongoDB module
+│   │   └── src/
+│   │       ├── database.module.ts
+│   │       ├── database.service.ts
+│   │       ├── config/database.config.ts
+│   │       └── transaction/
+│   │           ├── transaction.service.ts
+│   │           └── decorators/
+│   │               └── transaction.decorator.ts
+│   ├── documents/             # Document text extraction (PDF, DOCX)
+│   │   └── src/
+│   │       ├── document.module.ts
+│   │       ├── services/
+│   │       │   ├── pdf.service.ts
+│   │       │   ├── docx.service.ts
+│   │       │   └── document-processor.service.ts
+│   │       └── interfaces/
+│   │           └── parser.interface.ts
+│   ├── http/                   # HTTP client module
+│   │   └── src/
+│   │       ├── http.module.ts
+│   │       └── services/
+│   │           ├── http.service.ts
+│   │           └── download.service.ts
+│   ├── inngest/               # Inngest module
+│   │   └── src/
+│   │       ├── inngest.module.ts
+│   │       ├── inngest.service.ts
+│   │       └── functions/
+│   │           └── index.ts
+│   ├── playwright/             # Playwright module
+│   │   └── src/
+│   │       ├── playwright.module.ts
+│   │       ├── playwright.service.ts
+│   │       ├── constants/
+│   │       └── interfaces/
+│   ├── resend/                 # Email module
+│   │   └── src/
+│   │       ├── resend.module.ts
+│   │       ├── resend.service.ts
+│   │       ├── config/resend.config.ts
+│   │       └── modules/newsletter/
+│   └── serve-static/           # Static file serving with templates
 │       └── src/
-│           ├── http.module.ts
-│           └── services/
-│   └── ai/                      # AI providers wrapper (OpenAI, Anthropic, Gemini, etc.)
-│       └── src/
-│           ├── ai.module.ts
-│           ├── ai.service.ts
-│           ├── types/
-│           │   └── ai.types.ts
-│           ├── interfaces/
-│           │   └── provider.interface.ts
-│           └── providers/
-│               └── openai-compatible.provider.ts
+│           ├── serve-static.module.ts
+│           ├── serve-static.service.ts
+│           └── index.ts
+│       └── templates/          # Work folder for templates
+│           ├── layouts/
+│           ├── pages/
+│           ├── partials/
+│           └── assets/
 │
 ├── apps/
 │   └── nominas/      # Main application

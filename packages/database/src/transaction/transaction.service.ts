@@ -2,8 +2,13 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/mongoose';
 import { Connection, ClientSession } from 'mongoose';
 
+/**
+ * Transaction options for controlling retry behavior.
+ */
 export interface TransactionOptions {
+  /** Whether to auto-retry on transient errors (default: true) */
   retry?: boolean;
+  /** Maximum number of retry attempts (default: 3) */
   maxRetries?: number;
 }
 
@@ -13,6 +18,27 @@ export class TransactionService {
 
   constructor(@InjectConnection() private readonly connection: Connection) {}
 
+  /**
+   * Execute a callback within a MongoDB transaction with automatic retry.
+   *
+   * Use when you need atomic operations across multiple collections.
+   * The operation will be retried automatically if a transient error occurs
+   * (e.g., replica set election, network hiccup).
+   *
+   * @param operation - Async callback receiving the MongoDB session.
+   *                   All database operations within should pass { session }.
+   * @param options - { retry: true, maxRetries: 3 } to control retry behavior
+   * @returns The result of the operation
+   *
+   * @example
+   * ```typescript
+   * const order = await this.transaction.withTransaction(async (session) => {
+   *   const o = await this.orderRepo.create(dto, { session });
+   *   await this.inventoryService.decrementStock(dto.items, { session });
+   *   return o;
+   * });
+   * ```
+   */
   async withTransaction<T>(
     operation: (session: ClientSession) => Promise<T>,
     options: TransactionOptions = {},
@@ -56,6 +82,12 @@ export class TransactionService {
     return executeWithRetry();
   }
 
+  /**
+   * Execute a callback with a MongoDB session (no transaction).
+   * Use when you need session context but not atomic transactions.
+   *
+   * @param operation - Async callback receiving the MongoDB session
+   */
   async withSession<T>(
     operation: (session: ClientSession) => Promise<T>,
   ): Promise<T> {

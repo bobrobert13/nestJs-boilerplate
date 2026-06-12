@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import * as ejs from 'ejs';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -8,17 +8,58 @@ export interface RenderOptions {
   description?: string;
   keywords?: string;
   author?: string;
+  layout?: string;
   [key: string]: unknown;
+}
+
+interface CacheEntry {
+  content: string;
+  timestamp: number;
 }
 
 @Injectable()
 export class ServeStaticService {
+  private readonly logger = new Logger(ServeStaticService.name);
   private readonly templatesPath: string;
   private readonly tailwindCdn = 'https://cdn.tailwindcss.com';
   private readonly defaultLayout = 'main';
+  private readonly cache = new Map<string, CacheEntry>();
+  private readonly cacheTtlMs = 60_000;
 
   constructor() {
     this.templatesPath = path.join(__dirname, '..', '..', 'templates');
+  }
+
+  private sanitizeViewName(view: string): string {
+    if (!view || typeof view !== 'string') {
+      throw new Error('View name must be a non-empty string');
+    }
+    if (/[^a-zA-Z0-9_-]/.test(view)) {
+      throw new Error(`Invalid view name: "${view}". Only alphanumeric, hyphen, and underscore allowed.`);
+    }
+    return view;
+  }
+
+  private async getCachedTemplate(filePath: string): Promise<string> {
+    const cached = this.cache.get(filePath);
+    if (cached && Date.now() - cached.timestamp < this.cacheTtlMs) {
+      return cached.content;
+    }
+
+    try {
+      const content = await fs.promises.readFile(filePath, 'utf-8');
+      this.cache.set(filePath, { content, timestamp: Date.now() });
+      return content;
+    } catch (error) {
+      if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
+        throw new Error(`File not found: ${path.basename(filePath)}`);
+      }
+      throw error;
+    }
+  }
+
+  private clearCache(): void {
+    this.cache.clear();
   }
 
   private getViewPath(view: string): string {
@@ -30,16 +71,26 @@ export class ServeStaticService {
   }
 
   async render(view: string, options: RenderOptions = {}): Promise<string> {
+    const safeView = this.sanitizeViewName(view);
     const layout = (options.layout as string) || this.defaultLayout;
-    const viewPath = this.getViewPath(view);
-    const layoutPath = this.getLayoutPath(layout);
+    const safeLayout = this.sanitizeViewName(layout);
 
-    if (!fs.existsSync(viewPath)) {
-      throw new Error(`View not found: ${viewPath}`);
+    const viewPath = this.getViewPath(safeView);
+    const layoutPath = this.getLayoutPath(safeLayout);
+
+    let viewContent: string;
+    let layoutContent: string;
+
+    try {
+      viewContent = await this.getCachedTemplate(viewPath);
+    } catch {
+      throw new Error(`View not found: ${safeView}`);
     }
 
-    if (!fs.existsSync(layoutPath)) {
-      throw new Error(`Layout not found: ${layoutPath}`);
+    try {
+      layoutContent = await this.getCachedTemplate(layoutPath);
+    } catch {
+      throw new Error(`Layout not found: ${layout}`);
     }
 
     const baseData = {
@@ -51,13 +102,11 @@ export class ServeStaticService {
       ...options,
     };
 
-    const viewContent = await ejs.renderFile(viewPath, baseData, {
-      strict: false,
-    });
+    const renderedView = await ejs.render(viewContent, baseData, { strict: false });
 
-    return ejs.renderFile(
-      layoutPath,
-      { ...baseData, body: viewContent },
+    return ejs.render(
+      layoutContent,
+      { ...baseData, body: renderedView },
       { strict: false },
     );
   }
@@ -73,25 +122,36 @@ export class ServeStaticService {
     return ejs.render(template, baseData, { strict: false });
   }
 
-  getPartials(): string[] {
+  async getPartials(): Promise<string[]> {
     const partialsPath = path.join(this.templatesPath, 'partials');
-    if (!fs.existsSync(partialsPath)) return [];
-    return fs
-      .readdirSync(partialsPath)
-      .filter((f) => f.endsWith('.ejs'))
-      .map((f) => f.replace('.ejs', ''));
+    try {
+      const files = await fs.promises.readdir(partialsPath);
+      return files
+        .filter((f) => f.endsWith('.ejs'))
+        .map((f) => f.replace('.ejs', ''));
+    } catch {
+      return [];
+    }
   }
 
-  getPages(): string[] {
+  async getPages(): Promise<string[]> {
     const pagesPath = path.join(this.templatesPath, 'pages');
-    if (!fs.existsSync(pagesPath)) return [];
-    return fs
-      .readdirSync(pagesPath)
-      .filter((f) => f.endsWith('.ejs'))
-      .map((f) => f.replace('.ejs', ''));
+    try {
+      const files = await fs.promises.readdir(pagesPath);
+      return files
+        .filter((f) => f.endsWith('.ejs'))
+        .map((f) => f.replace('.ejs', ''));
+    } catch {
+      return [];
+    }
   }
 
   getAssetsPath(): string {
     return path.join(this.templatesPath, 'assets');
+  }
+
+  clearTemplateCache(): void {
+    this.clearCache();
+    this.logger.log('Template cache cleared');
   }
 }

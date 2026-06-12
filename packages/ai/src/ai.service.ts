@@ -53,6 +53,10 @@ export class AiService {
     });
   }
 
+  /**
+   * Register a new AI provider or override an existing one.
+   * @param config - Provider configuration with name, model, and optional API settings
+   */
   registerProvider(config: AIConfig): void {
     const provider = new OpenAICompatibleProvider(config);
     const key = config.provider;
@@ -63,14 +67,30 @@ export class AiService {
     return `${provider}:${model}`;
   }
 
+  /**
+   * Get a specific provider by name.
+   * @param name - Provider name (e.g., 'openai', 'anthropic', 'google')
+   * @returns The provider instance or undefined if not found
+   */
   getProvider(name: string): IAIProvider | undefined {
     return this.providers.get(name);
   }
 
+  /**
+   * List all registered provider names.
+   * @returns Array of provider name strings
+   */
   listProviders(): string[] {
     return Array.from(this.providers.keys());
   }
 
+  /**
+   * Send a chat completion request to an AI provider.
+   * @param providerName - Provider name (e.g., 'openai', 'anthropic', 'google')
+   * @param messages - Array of chat messages with role and content
+   * @param options - Optional provider-specific options (model, temperature, etc.)
+   * @returns AIResponse with success/error state
+   */
   async chat(
     providerName: string,
     messages: ChatMessage[],
@@ -90,6 +110,13 @@ export class AiService {
     return provider.chat({ messages, ...options });
   }
 
+  /**
+   * Generate a Mongoose schema from a natural language description.
+   * @param providerName - AI provider to use
+   * @param description - Natural language description of the schema
+   * @param options - Optional settings (temperature, model)
+   * @returns AIResponse with GeneratedSchema data
+   */
   async generateSchema(
     providerName: string,
     description: string,
@@ -132,6 +159,14 @@ export const ProductSchema = SchemaFactory.createForClass(Product);
     });
   }
 
+  /**
+   * Generate HTML, email, JSON, or code templates from a description.
+   * @param providerName - AI provider to use
+   * @param templateType - Type of template: 'html', 'email', 'json', 'code'
+   * @param description - Description of what to generate
+   * @param options - Optional settings (temperature, model)
+   * @returns AIResponse with generated template content
+   */
   async generateTemplate(
     providerName: string,
     templateType: 'html' | 'email' | 'json' | 'code',
@@ -157,6 +192,14 @@ export const ProductSchema = SchemaFactory.createForClass(Product);
     });
   }
 
+  /**
+   * Simple text generation with optional system prompt.
+   * @param providerName - AI provider to use
+   * @param prompt - User prompt text
+   * @param systemPrompt - Optional system prompt for context
+   * @param options - Optional settings (temperature, maxTokens, model)
+   * @returns AIResponse with generated text
+   */
   async generateText(
     providerName: string,
     prompt: string,
@@ -180,6 +223,13 @@ export const ProductSchema = SchemaFactory.createForClass(Product);
     });
   }
 
+  /**
+   * Generate embeddings for text input(s).
+   * @param providerName - AI provider to use
+   * @param input - Single text string or array of strings
+   * @param options - Optional settings (model, etc.)
+   * @returns AIResponse with embeddings data
+   */
   async embeddings(
     providerName: string,
     input: string | string[],
@@ -199,6 +249,12 @@ export const ProductSchema = SchemaFactory.createForClass(Product);
     return provider.embeddings({ input, ...options });
   }
 
+  /**
+   * Generate a single embedding vector for one text.
+   * @param providerName - AI provider to use
+   * @param text - Text to embed
+   * @returns AIResponse with single embedding vector
+   */
   async createEmbedding(
     providerName: string,
     text: string,
@@ -223,6 +279,13 @@ export const ProductSchema = SchemaFactory.createForClass(Product);
     return result;
   }
 
+  /**
+   * Streaming chat — calls onChunk callback for each response piece.
+   * @param providerName - AI provider to use
+   * @param messages - Array of chat messages
+   * @param onChunk - Callback invoked with each streaming chunk
+   * @param options - Optional settings
+   */
   async chatStream(
     providerName: string,
     messages: ChatMessage[],
