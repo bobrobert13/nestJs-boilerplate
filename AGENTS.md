@@ -1,256 +1,307 @@
-# AGENTS.md - NestJS Boilerplate Service
+# AGENTS.md — NestJS Boilerplate Service
 
-> **Note:** This document is for AI agents and developers working on this NestJS monorepo. Follow these guidelines for consistency.
-
----
-
-## Quick Reference
-
-| Task                 | Command                                |
-| -------------------- | -------------------------------------- |
-| **Dev Server**       | `npm run start:dev`                    |
-| **Build**            | `npm run build`                        |
-| **Lint**             | `npm run lint`                         |
-| **Test Unit**        | `npm run test`                         |
-| **Test Single File** | `npm run test -- path/to/file.spec.ts` |
-| **Test E2E**         | `npm run test:e2e`                    |
-| **Format**           | `npm run format`                       |
-| **Prod Start**       | `npm run start:prod`                  |
-| **Package Setup**    | `./setup/setup.sh` (Linux/Mac)        |
-|                     | `setup\setup.bat` (Windows)            |
+> Índice maestro para agentes IA y desarrolladores. Contiene toda la información necesaria para trabajar autónomamente en este proyecto.
 
 ---
 
-## 1. Project Overview
+## Índice Rápido
 
-**Architecture:** NestJS 11 monorepo with TypeScript
-**Database:** MongoDB via Mongoose
-**Task Queue:** Inngest (self-hosted)
-**Browser Automation:** Playwright
-**API Docs:** Swagger at `/api`
+| Sección | Descripción |
+|---------|-------------|
+| [1. Comandos](#1-comandos) | Build, test, lint, dev |
+| [2. Stack y Arquitectura](#2-stack-y-arquitectura) | Tech stack, diagramas |
+| [3. OpenSpec — SDD Workflow](#3-openspec--sdd-workflow) | Cómo usar specs y cambios |
+| [4. Paquetes — Índice](#4-paquetes--índice) | Todos los packages y su estado |
+| [5. Convenciones de Código](#5-convenciones-de-código) | Imports, naming, DI, módulos |
+| [6. Configuración](#6-configuración) | .env, setup wizard, tsconfig paths |
+| [7. Despliegue](#7-despliegue) | Docker, producción, checklist |
+| [8. Reglas para Trabajo Autónomo](#8-reglas-para-trabajo-autónomo) | Cómo debe trabajar una IA aquí |
+| [9. Documentación Autónoma](#9-documentación-autónoma) | Propuesta de auto-documentación |
+| [10. Troubleshooting](#10-troubleshooting) | Problemas comunes |
+| [11. Key Files](#11-key-files) | Archivos importantes |
+| [12. Project Status Dashboard](#12-project-status-dashboard) | Cambios activos y estado del proyecto |
+| [13. Documentation Index](#13-documentation-index) | Índice de documentación referencial |
 
-### Structure
+---
 
-```
-nestJs-boilerplate/
-├── packages/                    # Reusable packages (extractable)
-│   ├── ai/                      # AI providers wrapper (OpenAI, Anthropic, Gemini, etc.)
-│   │   └── src/
-│   │       ├── ai.module.ts
-│   │       ├── ai.service.ts
-│   │       ├── types/
-│   │       │   └── ai.types.ts
-│   │       ├── interfaces/
-│   │       │   └── provider.interface.ts
-│   │       └── providers/
-│   │           └── openai-compatible.provider.ts
-│   ├── auth/                   # Authentication module
-│   │   └── src/
-│   │       ├── auth.module.ts
-│   │       ├── auth.service.ts
-│   │       ├── magic-link.service.ts
-│   │       ├── strategies/
-│   │       │   ├── jwt.strategy.ts
-│   │       │   └── local.strategy.ts
-│   │       ├── guards/
-│   │       │   ├── jwt-auth.guard.ts
-│   │       │   └── roles.guard.ts
-│   │       ├── decorators/
-│   │       │   ├── public.decorator.ts
-│   │       │   └── roles.decorator.ts
-│   │       ├── two-factor/
-│   │       └── passkeys/
-│   ├── common/                 # Common utilities
-│   │   └── src/
-│   │       ├── base-adapter.interface.ts
-│   │       ├── database-exception.filter.ts
-│   │       └── http-error.handler.ts
-│   ├── database/              # MongoDB module
-│   │   └── src/
-│   │       ├── database.module.ts
-│   │       ├── database.service.ts
-│   │       ├── config/database.config.ts
-│   │       └── transaction/
-│   │           ├── transaction.service.ts
-│   │           └── decorators/
-│   │               └── transaction.decorator.ts
-│   ├── documents/             # Document text extraction (PDF, DOCX)
-│   │   └── src/
-│   │       ├── document.module.ts
-│   │       ├── services/
-│   │       │   ├── pdf.service.ts
-│   │       │   ├── docx.service.ts
-│   │       │   └── document-processor.service.ts
-│   │       └── interfaces/
-│   │           └── parser.interface.ts
-│   ├── http/                   # HTTP client module
-│   │   └── src/
-│   │       ├── http.module.ts
-│   │       └── services/
-│   │           ├── http.service.ts
-│   │           └── download.service.ts
-│   ├── inngest/               # Inngest module
-│   │   └── src/
-│   │       ├── inngest.module.ts
-│   │       ├── inngest.service.ts
-│   │       └── functions/
-│   │           └── index.ts
-│   ├── playwright/             # Playwright module
-│   │   └── src/
-│   │       ├── playwright.module.ts
-│   │       ├── playwright.service.ts
-│   │       ├── constants/
-│   │       └── interfaces/
-│   ├── resend/                 # Email module
-│   │   └── src/
-│   │       ├── resend.module.ts
-│   │       ├── resend.service.ts
-│   │       ├── config/resend.config.ts
-│   │       └── modules/newsletter/
-│   └── serve-static/           # Static file serving with templates
-│       └── src/
-│           ├── serve-static.module.ts
-│           ├── serve-static.service.ts
-│           └── index.ts
-│       └── templates/          # Work folder for templates
-│           ├── layouts/
-│           ├── pages/
-│           ├── partials/
-│           └── assets/
-│
-├── apps/
-│   └── nominas/      # Main application
-│       └── src/
-│           ├── main.ts
-│           ├── app.module.ts
-│           └── modules/
-│               └── usuarios/   # Example CRUD module
-│
-├── Dockerfile
-├── docker-compose.yml
-├── nest-cli.json
-└── tsconfig.json
+## 1. Comandos
+
+| Task | Comando |
+|------|---------|
+| Dev Server | `npm run start:dev` |
+| Build | `npm run build` |
+| Lint | `npm run lint` |
+| Test Unit | `npm run test` |
+| Test Single | `npm run test -- path/to/file.spec.ts` |
+| Test E2E | `npm run test:e2e` |
+| Test Coverage | `npm run test:cov` |
+| Format | `npm run format` |
+| Prod Start | `npm run start:prod` |
+| Setup Wizard | `./setup/setup.sh` (Linux/Mac) · `setup\setup.bat` (Windows) |
+
+---
+
+## 2. Stack y Arquitectura
+
+```mermaid
+graph TB
+    subgraph "Application"
+        NOMINAS["apps/nominas<br/>Main Application"]
+        USUARIOS["usuarios Module<br/>Example CRUD"]
+        DYNAMIC["dynamic-schema Module<br/>AI Schema Generator"]
+    end
+
+    subgraph "Core Packages"
+        DB["@common/database<br/>MongoDB + Transactions"]
+        COMMON["@common/common<br/>Utilities + Filters"]
+        AUTH["@common/auth<br/>JWT · 2FA · Passkeys · Magic Link"]
+    end
+
+    subgraph "Integration Packages"
+        AI["@common/ai<br/>Multi-Provider AI"]
+        PW["@common/playwright<br/>Browser Automation"]
+        INNGEST["@common/inngest<br/>Task Queue"]
+        HTTP["@common/http<br/>HTTP Client"]
+        DOCS["@common/documents<br/>PDF/DOCX Extraction"]
+        RESEND["@common/resend<br/>Email + Newsletter"]
+        SS["@common/serve-static<br/>EJS + TailwindCSS"]
+    end
+
+    NOMINAS --> AUTH
+    NOMINAS --> DB
+    NOMINAS --> INNGEST
+    NOMINAS --> PW
+    NOMINAS --> AI
+    NOMINAS --> DOCS
+    NOMINAS --> RESEND
+    NOMINAS --> SS
+    USUARIOS --> DB
+    DYNAMIC --> AI
+    DYNAMIC --> DOCS
+    AUTH --> DB
+    RESEND --> RESEND_SVC["Resend API<br/>(external)"]
+    INNGEST --> INNGEST_SVC["Inngest Server<br/>(self-hosted)"]
+    PW --> CHROMIUM["Chromium<br/>(Docker)"]
+    AI --> LLM_API["OpenAI · Anthropic ·<br/>Gemini · Moonshot · MiniMax"]
 ```
 
----
+```mermaid
+graph LR
+    subgraph "Docker Deployment"
+        DOCKER_COMPOSE["docker-compose.yml"]
+        MONGODB["MongoDB 7.0<br/>ReplicaSet: rs0"]
+        SERVICE["boilerplate-service<br/>Node 22 slim"]
+    end
 
-## 2. Using Shared Packages
-
-Imports use `@common/*` paths:
-
-```typescript
-import { DatabaseModule } from '@common/database';
-import { InngestModule } from '@common/inngest';
-import { PlaywrightModule } from '@common/playwright';
-import { ResendModule } from '@common/resend';
-import { AuthModule, JwtAuthGuard, RolesGuard, Public, Roles } from '@common/auth';
-import { ServeStaticModule, ServeStaticService } from '@common/serve-static';
-import { AiModule, AiService } from '@common/ai';
-import { DatabaseExceptionFilter } from '@common/common';
+    DOCKER_COMPOSE --> MONGODB
+    DOCKER_COMPOSE --> SERVICE
+    SERVICE --> MONGODB
+    SERVICE --> |healthcheck| HEALTH["GET /api/usuarios"]
+    SERVICE --> |swagger| SWAGGER["GET /api"]
 ```
 
+### Stack Tecnológico
+
+| Tecnología | Versión | Propósito |
+|------------|---------|-----------|
+| NestJS | 11.x | Framework |
+| TypeScript | 5.7.x | Lenguaje |
+| MongoDB | 7.0 | Base de datos (ReplicaSet) |
+| Mongoose | 9.x | ODM |
+| Inngest | 4.x | Task queue |
+| Playwright | 1.59.x | Browser automation |
+| Swagger | 11.3.x | API docs |
+| Docker | — | Node 22.18.0-slim |
+| Argon2 | 0.31.x | Password hashing |
+
 ---
 
-## 3. Development Setup
+## 3. OpenSpec — SDD Workflow
 
-### Environment Variables (.env)
+OpenSpec es el sistema de especificaciones por cambios (Spec-Driven Development). Todo cambio significativo en el proyecto debe pasar por este flujo.
 
-```env
-MONGODB_URI=mongodb://localhost:27017/boilerplate_db
-PORT=3000
+### Estructura
 
-# Resend
-RESEND_API_KEY=your_api_key
-RESEND_FROM_EMAIL=your@domain.com
-RESEND_FROM_NAME=Your App Name
-RESEND_REPLY_TO=reply@domain.com
-
-# Auth - JWT
-JWT_SECRET=your-super-secret-key-min-32-chars
-JWT_ACCESS_TOKEN_TTL=900
-JWT_REFRESH_TOKEN_TTL=604800
-JWT_ISSUER=api-nominas
-JWT_AUDIENCE=api-nominas
-
-# Auth - Magic Link
-MAGIC_LINK_ENABLED=true
-MAGIC_LINK_TOKEN_TTL=300
-
-# Auth - OAuth (Optional)
-OAUTH_GOOGLE_CLIENT_ID=
-OAUTH_GOOGLE_CLIENT_SECRET=
-OAUTH_GITHUB_CLIENT_ID=
-OAUTH_GITHUB_CLIENT_SECRET=
-
-# Auth - Password Hashing (Argon2)
-ARGON2_TYPE=2
-ARGON2_MEMORY_COST=65536
-ARGON2_TIME_COST=3
-ARGON2_PARALLELISM=4
-
-# Auth - Two Factor (2FA)
-TWO_FACTOR_ISSUER=MyApp
-TWO_FACTOR_ALGORITHM=SHA1
-TWO_FACTOR_DIGITS=6
-TWO_FACTOR_PERIOD=30
-TWO_FACTOR_BACKUP_CODES_COUNT=10
-TWO_FACTOR_BACKUP_CODES_LENGTH=10
-
-# Auth - Passkeys (WebAuthn)
-PASSKEYS_RP_ID=localhost
-PASSKEYS_RP_NAME=MyApp
-PASSKEYS_RP_ORIGIN=http://localhost:3000
-
-# Playwright
-PLAYWRIGHT_HEADLESS=true
-PLAYWRIGHT_TIMEOUT=30000
-PLAYWRIGHT_RETRIES=3
-
-# Inngest (self-hosted)
-INNGEST_EVENT_KEY=your_event_key
-INNGEST_SIGNING_KEY=your_signing_key
-INNGEST_BASE_URL=https://inngest.treborjs-dev.online/
+```
+openspec/
+├── config.yaml              ← Configuración del proyecto
+├── specs/                   ← Source of truth (specs principales)
+│   ├── auth/spec.md
+│   ├── ai/spec.md
+│   ├── database/spec.md
+│   ├── email/spec.md
+│   ├── documents/spec.md
+│   ├── http/spec.md
+│   ├── inngest/spec.md
+│   ├── playwright/spec.md
+│   └── serve-static/spec.md
+├── changes/                 ← Cambios activos
+│   ├── {change-name}/       ← Carpeta del cambio activo
+│   │   ├── state.yaml       ← Estado del DAG
+│   │   ├── proposal.md      ← Propuesta
+│   │   ├── specs/           ← Delta specs
+│   │   ├── design.md        ← Diseño técnico
+│   │   ├── tasks.md         ← Checklist de tareas
+│   │   └── verify-report.md ← Reporte de verificación
+│   └── archive/             ← Cambios completados
 ```
 
-### Prerequisites
+### Flujo SDD para cada cambio
 
-- Node.js 20+
-- MongoDB running locally or connection string
-- Inngest server (self-hosted or cloud)
+```
+/sdd-new <change-name>     → Crea proposal + specs + design + tasks
+/sdd-continue <change-name> → Ejecuta la siguiente fase disponible
+/sdd-verify <change-name>   → Verifica contra specs
+/sdd-archive <change-name>  → Archiva el cambio (mergea deltas a main specs)
+```
 
----
+### Fases del Ciclo
 
-## 4. Commands Reference
+| Fase | Output | Depende de | Descripción |
+|------|--------|------------|-------------|
+| proposal | `proposal.md` | — | Qué, por qué, alcance, riesgos |
+| specs | `specs/{domain}/spec.md` | proposal | Requisitos con Given/When/Then |
+| design | `design.md` | proposal | Decisiones técnicas, diagramas |
+| tasks | `tasks.md` | specs + design | Checklist de implementación |
+| apply | Cambios en código | tasks | Implementación |
+| verify | `verify-report.md` | tasks + specs | Validación |
+| archive | Mover a archive/ | verify | Merge specs + archivo |
 
-### Build & Run
+### Reglas OpenSpec
+
+1. **Nunca** modificar `openspec/specs/` directamente. Los cambios se hacen via delta specs en `openspec/changes/{name}/` y se mergean al archivar.
+2. **Siempre** leer las specs del dominio afectado antes de implementar.
+3. **Cada cambio debe tener al menos** un proposal y un spec. Design y tasks son recomendados.
+4. **Al archivar**, el delta spec se mergea al main spec del dominio.
+5. **Commitel mensaje**: `feat({domain}): {desc}` o `fix({domain}): {desc}` para cambios con spec.
+6. **state.yaml** se actualiza automáticamente en cada fase. No modificarlo manualmente.
+
+### Buscar Specs por Dominio
 
 ```bash
-npm run build                    # Compile TypeScript (apps + packages)
-npm run start                    # Start dev server
-npm run start:dev               # Start with watch mode
-npm run start:prod              # Start production build
+# Encontrar spec de un dominio
+openspec/specs/<domain>/spec.md
+
+# Ver cambios activos
+ls openspec/changes/
+
+# Ver cambios archivados
+ls openspec/changes/archive/
 ```
 
-### Testing
-
-```bash
-npm run test                    # Run unit tests
-npm run test -- --watch        # Watch mode
-npm run test -- path.spec.ts   # Single test file
-npm run test:cov               # With coverage
-npm run test:e2e               # E2E tests only
-```
-
-### Code Quality
-
-```bash
-npm run lint                   # ESLint with auto-fix
-npm run format                 # Prettier formatting
-```
+Si un agente IA necesita entender cómo funciona un módulo, DEBE leer primero:
+1. `openspec/specs/{domain}/spec.md` — contrato del módulo
+2. `packages/{name}/README.md` — documentación de uso
+3. El código fuente — implementación
 
 ---
 
-## 5. Code Style Guidelines
+## 4. Paquetes — Índice
+
+### Matriz de Paquetes
+
+| Package | README | JSDoc | Swagger | Tests | Estado |
+|---------|--------|-------|---------|-------|--------|
+| [@common/ai](packages/ai/README.md) | ✅ | ❌ | — | ❌ | partial |
+| [@common/auth](packages/auth/README.md) | ✅ | ⚠️ | ❌ | ❌ | partial |
+| [@common/common](packages/common/README.md) | ⚠️ | ❌ | — | ❌ | partial |
+| [@common/database](packages/database/README.md) | ✅ | ⚠️ | — | ❌ | partial |
+| [@common/documents](packages/documents/README.md) | ✅ | ⚠️ | — | ❌ | partial |
+| [@common/http](packages/http/README.md) | ✅ | ⚠️ | — | ❌ | partial |
+| [@common/inngest](packages/inngest/README.md) | ✅ | ⚠️ | ✅ | ✅ | **complete** |
+| [@common/playwright](packages/playwright/README.md) | ✅ | ⚠️ | — | ❌ | partial |
+| [@common/resend](packages/resend/README.md) | ✅* | ❌ | — | ❌ | partial |
+| [@common/serve-static](packages/serve-static/README.md) | ✅* | ❌ | — | ❌ | partial |
+
+> ✅ = completo · ⚠️ = parcial · ❌ = ausente · — = no aplica · \* = creado recientemente
+
+### Dependencias entre Paquetes
+
+```mermaid
+graph LR
+    subgraph "Layer 0 — Infra"
+        COMMON["@common/common"]
+    end
+    subgraph "Layer 1 — Data"
+        DB["@common/database"] --> COMMON
+    end
+    subgraph "Layer 2 — Business"
+        AUTH["@common/auth"] --> DB
+        RESEND["@common/resend"]
+        INNGEST["@common/inngest"]
+    end
+    subgraph "Layer 3 — Integration"
+        AI["@common/ai"]
+        PW["@common/playwright"]
+        HTTP["@common/http"]
+        DOCS["@common/documents"]
+        SS["@common/serve-static"]
+    end
+```
+
+### Notas por Paquete
+
+#### `@common/ai` — AI Providers Wrapper
+- **Ubicación:** `packages/ai/`
+- **Dependencias:** `openai`, `@anthropic-ai/sdk`, `@google/generative-ai`
+- **Providers:** OpenAI, Anthropic, Gemini, Moonshot, MiniMax + custom
+- **Incluye:** `AiService.chat()`, `generateText()`, `generateSchema()`, `embeddings()`, streaming
+- **Falta:** JSDoc en métodos públicos, tests unitarios
+
+#### `@common/auth` — Authentication
+- **Ubicación:** `packages/auth/`
+- **Métodos:** JWT, Magic Link, OAuth (placeholder), 2FA/TOTP, Passkeys/WebAuthn
+- **Password hashing:** Argon2 (NO bcrypt — `argon2` en uso, `bcrypt` en package.json es legacy)
+- ⚠️ **Auth es stub/demo** — hardcodea `demo@example.com` / `demo123`. No usar en producción sin reemplazar.
+- **Falta:** Swagger decorators en controlador, JSDoc completo, tests
+
+#### `@common/common` — Utilities
+- **Ubicación:** `packages/common/`
+- **Contiene:** `BaseAdapter<T>` interface, `DatabaseExceptionFilter`, `HttpError`
+- ⚠️ `http-error` está duplicado con `packages/http/`
+- **Falta:** README más completo, JSDoc, unificar con http
+
+#### `@common/database` — MongoDB
+- **Ubicación:** `packages/database/`
+- **Requiere:** MongoDB ReplicaSet (`rs0`) para transacciones
+- **Incluye:** `TransactionService.withTransaction()`, `@Transactional` decorator, retry logic
+- **Falta:** JSDoc en transaction, ejemplos de decorators, tests
+
+#### `@common/documents` — Document Extraction
+- **Ubicación:** `packages/documents/`
+- **Formatos:** PDF (`pdf-parse`), DOCX (`mammoth`), parser interface extensible
+- **Falta:** JSDoc en servicios, tests con archivos de prueba
+
+#### `@common/http` — HTTP Client
+- **Ubicación:** `packages/http/`
+- **Incluye:** HTTP client (axios), download service con sharp para optimización de imágenes
+- **Falta:** JSDoc completo, tests, unificar http-error con common
+
+#### `@common/inngest` — Task Queue ⭐ (mejor documentado)
+- **Ubicación:** `packages/inngest/`
+- **Endpoints:** `/api/inngest`, `/api/inngest-events/hola-inngest`
+- **Tiene:** Tests unitarios + integración, Swagger decorators, README bilingüe
+- **Falta:** JSDoc completo en métodos
+
+#### `@common/playwright` — Browser Automation
+- **Ubicación:** `packages/playwright/`
+- **Config:** Playwright con Chromium, headless configurable, timeouts, retries
+- **Falta:** Tests (complejo por requerir browser), JSDoc en servicio
+
+#### `@common/resend` — Email (recientemente documentado)
+- **Ubicación:** `packages/resend/`
+- **Incluye:** `ResendService` (email simple + templates), `NewsletterModule` (suscriptores in-memory)
+- ⚠️ Newsletter usa `Map` en memoria — NO persiste entre reinicios
+- **Falta:** JSDoc, tests, persistencia para newsletter
+
+#### `@common/serve-static` — EJS Templates (recientemente documentado)
+- **Ubicación:** `packages/serve-static/`
+- **Incluye:** `ServeStaticService.render()`, layouts, partials, TailwindCSS CDN, caché 60s
+- **Falta:** JSDoc, tests, ejemplos de templates
+
+---
+
+## 5. Convenciones de Código
 
 ### Imports Order
 
@@ -263,25 +314,26 @@ import { Inngest } from 'inngest';
 
 // 3. Shared packages
 import { DatabaseModule } from '@common/database';
-import { InngestService } from '@common/inngest';
 
 // 4. DTOs/Interfaces (local)
 import { CreateUsuarioDto } from './dto';
 ```
 
-### Naming Conventions
+### Naming
 
-- **Files:** `kebab-case.ts`
-- **Classes:** `PascalCase`
-- **Interfaces:** `PascalCase`
-- **DTOs:** `PascalCase` with `Dto` suffix
-- **Constants:** `UPPER_SNAKE_CASE`
-- **Variables/Functions:** `camelCase`
+| Elemento | Convention | Ejemplo |
+|----------|-----------|---------|
+| Files | `kebab-case.ts` | `usuarios.controller.ts` |
+| Classes | `PascalCase` | `UsuariosService` |
+| Interfaces | `PascalCase` | `UsuarioInterface` |
+| DTOs | `PascalCase` + `Dto` | `CreateUsuarioDto` |
+| Constants | `UPPER_SNAKE_CASE` | `MAX_RETRIES` |
+| Variables | `camelCase` | `userName` |
+| Tests | `name.spec.ts` | `usuarios.service.spec.ts` |
 
 ### Dependency Injection
 
 ```typescript
-// ✅ CORRECT: Constructor injection
 @Injectable()
 export class UsuariosService {
   constructor(
@@ -295,401 +347,6 @@ export class UsuariosService {
 
 ```typescript
 @Module({
-  imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
-    DatabaseModule,    // @common/database
-    InngestModule,     // @common/inngest
-    PlaywrightModule,   // @common/playwright
-    UsuariosModule,
-  ],
-  controllers: [UsuariosController],
-  providers: [UsuariosService],
-  exports: [UsuariosService],
-})
-export class AppModule {}
-```
-
----
-
-## 6. External Services
-
-### @common/database
-
-MongoDB connection with retry logic.
-
-**Transaction Support:**
-The database package provides a transaction wrapper for atomic operations:
-
-```typescript
-import { TransactionService } from '@common/database';
-
-// In any service
-constructor(private readonly transaction: TransactionService) {}
-
-async createOrderWithInventory(dto: CreateOrderDto) {
-  return this.transaction.withTransaction(async (session) => {
-    // All operations inside use the same transaction
-    const order = await this.orderRepo.create(dto, { session });
-    await this.inventoryService.decrementStock(dto.items, { session });
-    return order;
-  });
-}
-```
-
-**Transaction Options:**
-```typescript
-await this.transaction.withTransaction(operation, {
-  retry: true,        // Auto-retry on transient errors (default: true)
-  maxRetries: 3,       // Maximum retry attempts (default: 3)
-});
-```
-
-### @common/inngest
-
-Event-driven task queue.
-
-**Endpoints:**
-- `/api/inngest` - Inngest function sync
-- `/api/inngest-events/hola-inngest` - Test event
-
-### @common/playwright
-
-Browser automation for web scraping.
-
-### @common/resend
-
-Email service via Resend API with newsletter module.
-
-**Basic Usage:**
-```typescript
-import { ResendService } from '@common/resend';
-
-@Injectable()
-export class MyService {
-  constructor(private readonly resendService: ResendService) {}
-
-  async sendWelcome(email: string) {
-    return this.resendService.sendEmail({
-      to: email,
-      subject: 'Welcome!',
-      html: '<h1>Welcome to our app</h1>',
-    });
-  }
-}
-```
-
-**Newsletter Module:**
-```typescript
-import { NewsletterModule } from '@common/resend';
-
-@Module({
-  imports: [NewsletterModule],
-})
-export class AppModule {}
-```
-
-**Environment Variables:**
-```env
-RESEND_API_KEY=your_api_key
-RESEND_FROM_EMAIL=your@domain.com
-RESEND_FROM_NAME=Your App Name
-RESEND_REPLY_TO=reply@domain.com
-```
-
-### @common/auth
-
-Authentication module with JWT, Magic Links, and OAuth support.
-
-**Basic Usage:**
-```typescript
-import { AuthModule, JwtAuthGuard, Public, Roles, RolesGuard } from '@common/auth';
-
-@Module({
-  imports: [AuthModule],
-})
-export class AppModule {}
-
-// In controllers
-@UseGuards(JwtAuthGuard)
-@Get('profile')
-getProfile(@Request() req) {
-  return req.user;
-}
-
-// Public route
-@Public()
-@Post('login')
-async login(@Body() dto: LoginDto) {}
-
-// Role-based access
-@Roles('admin')
-@UseGuards(RolesGuard)
-@Post('admin-only')
-adminAction() {}
-```
-
-**Services:**
-```typescript
-// AuthService
-const user = await authService.validateUser(email, password);
-const tokens = await authService.login(user);
-await authService.refreshTokens(refreshToken);
-await authService.hashPassword(password);  // Argon2
-await authService.comparePassword(password, hash);  // Argon2
-
-// MagicLinkService
-const token = await magicLinkService.generateMagicLink(email);
-const email = await magicLinkService.verifyMagicLink(token);
-```
-
-**Argon2 Password Hashing:**
-```typescript
-// Hash password with argon2id (more secure than bcrypt)
-const hash = await authService.hashPassword(password);
-const isValid = await authService.comparePassword(plainPassword, hash);
-```
-
-**Decorators:**
-- `@Public()` - Skip JWT validation
-- `@Roles(...roles)` - Require specific roles
-
-### @common/auth - Two Factor (2FA)
-
-Two-factor authentication with TOTP and backup codes.
-
-```typescript
-import { TwoFactorModule, TwoFactorService } from '@common/auth';
-
-@Module({
-  imports: [AuthModule, TwoFactorModule],
-})
-export class AppModule {}
-
-// Inject service
-constructor(private readonly twoFactorService: TwoFactorService) {}
-
-// Generate secret and QR code
-const result = await twoFactorService.generateSecret(userId);
-return { qrCode: result.qrCode, backupCodes: result.backupCodes };
-
-// Enable 2FA
-await twoFactorService.enableTwoFactor(userId, code);
-
-// Verify code
-const result = await twoFactorService.verifyCode(userId, code);
-
-// Verify backup code
-await twoFactorService.verifyBackupCodeWithUser(userId, backupCode);
-```
-
-**2FA Endpoints:**
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/auth/2fa/generate` | Generate secret and QR |
-| POST | `/auth/2fa/enable` | Enable 2FA |
-| POST | `/auth/2fa/verify` | Verify TOTP code |
-| POST | `/auth/2fa/verify-backup` | Verify backup code |
-| POST | `/auth/2fa/regenerate-backup-codes` | Regenerate codes |
-| POST | `/auth/2fa/disable` | Disable 2FA |
-
-**2FA Environment Variables:**
-```env
-TWO_FACTOR_ISSUER=MyApp
-TWO_FACTOR_ALGORITHM=SHA1
-TWO_FACTOR_DIGITS=6
-TWO_FACTOR_PERIOD=30
-TWO_FACTOR_BACKUP_CODES_COUNT=10
-TWO_FACTOR_BACKUP_CODES_LENGTH=10
-```
-
-### @common/auth - Passkeys (WebAuthn)
-
-Passwordless authentication using hardware biometrics.
-
-```typescript
-import { PasskeysModule, PasskeysService } from '@common/auth';
-
-@Module({
-  imports: [AuthModule, PasskeysModule],
-})
-export class AppModule {}
-
-// Inject service
-constructor(private readonly passkeysService: PasskeysService) {}
-
-// Generate registration options
-const options = await passkeysService.generateRegistrationOptions(userId, email);
-
-// Verify registration
-const result = await passkeysService.verifyRegistration(userId, email, response);
-
-// Generate authentication options
-const authOptions = await passkeysService.generateAuthenticationOptions(userId);
-
-// Verify authentication
-const verifyResult = await passkeysService.verifyAuthentication(userId, credentialId, response);
-```
-
-**Passkeys Endpoints:**
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/auth/passkeys/register-options` | Get registration options |
-| POST | `/auth/passkeys/register-verify` | Verify passkey registration |
-| POST | `/auth/passkeys/login-options` | Get login options |
-| POST | `/auth/passkeys/login-verify` | Verify passkey login |
-| GET | `/auth/passkeys/list` | List user's passkeys |
-| DELETE | `/auth/passkeys/delete/:id` | Delete a passkey |
-
-**Passkeys Environment Variables:**
-```env
-PASSKEYS_RP_ID=localhost
-PASSKEYS_RP_NAME=MyApp
-PASSKEYS_RP_ORIGIN=http://localhost:3000
-```
-
-### @common/serve-static
-
-Static file serving with EJS template engine and TailwindCSS CDN support.
-
-**Basic Usage:**
-```typescript
-import { ServeStaticModule, ServeStaticService } from '@common/serve-static';
-
-@Module({
-  imports: [ServeStaticModule],
-})
-export class AppModule {}
-
-// In controller
-@Controller()
-export class AppController {
-  constructor(private readonly serveStatic: ServeStaticService) {}
-
-  @Get()
-  async home(@Res() res: Response) {
-    const html = await this.serveStatic.render('home', {
-      title: 'Bienvenido',
-      description: 'Página principal',
-      layout: 'main',
-    });
-    res.send(html);
-  }
-}
-```
-
-**Template Structure:**
-```
-packages/serve-static/templates/
-├── layouts/          # Layout templates (main.ejs)
-├── pages/            # Page templates (home.ejs, about.ejs)
-├── partials/         # Reusable partials (header.ejs, footer.ejs)
-└── assets/           # Static assets (css/, js/)
-```
-
-**Methods:**
-- `render(view, options)` - Render page with layout
-- `renderString(template, data)` - Render template string
-- `getPages()` - List available pages
-- `getPartials()` - List available partials
-
-**TailwindCSS:** Loaded via CDN by default (`https://cdn.tailwindcss.com`)
-
-### @common/ai
-
-AI Providers wrapper supporting OpenAI, Anthropic, Google Gemini, Moonshot (Kimi), MiniMax and any OpenAI-compatible API.
-
-**Basic Usage:**
-```typescript
-import { AiModule, AiService, ChatMessage } from '@common/ai';
-
-@Module({
-  imports: [AiModule],
-})
-export class AppModule {}
-
-// In any service
-@Injectable()
-export class MyService {
-  constructor(private readonly ai: AiService) {}
-
-  async generateContent() {
-    const response = await this.ai.generateText(
-      'openai',
-      'Explain quantum computing',
-      'You are a helpful assistant'
-    );
-
-    if (response.success) {
-      console.log(response.data);
-    }
-  }
-}
-```
-
-**Pre-configured Providers:**
-| Provider | Model | Description |
-|----------|-------|-------------|
-| `openai` | gpt-4o | OpenAI GPT models |
-| `anthropic` | claude-3-5-sonnet | Anthropic Claude models |
-| `google` | gemini-2.0-flash | Google Gemini models |
-| `moonshot` | moonshot-v1-8k | Moonshot Kimi models |
-| `minimax` | MiniMax-Text-01 | MiniMax models |
-
-**Key Methods:**
-- `chat(provider, messages, options?)` - Chat completions
-- `generateText(provider, prompt, systemPrompt?, options?)` - Text generation
-- `generateSchema(provider, description, options?)` - Generate Mongoose schemas
-- `generateTemplate(provider, type, description, options?)` - Generate HTML, email, JSON, code
-- `embeddings(provider, input, options?)` - Generate embeddings
-- `createEmbedding(provider, text)` - Single embedding vector
-- `chatStream(provider, messages, onChunk, options?)` - Streaming responses
-- `registerProvider(config)` - Add custom provider
-
-**Custom Provider:**
-```typescript
-aiService.registerProvider({
-  provider: 'custom',
-  model: 'llama-3',
-  apiKey: 'not-needed',
-  baseUrl: 'http://localhost:11434/v1',
-});
-```
-
----
-
-## 7. Creating New Modules
-
-### Step 1: Create structure
-
-```
-apps/nominas/src/modules/mi-modulo/
-├── dto/
-├── interfaces/
-├── schemas/
-├── mi-modulo.controller.ts
-├── mi-modulo.module.ts
-├── mi-modulo.repository.ts
-└── mi-modulo.service.ts
-```
-
-### Step 2: Define Schema
-
-```typescript
-@Schema({ timestamps: true })
-export class MiEntidad {
-  @Prop({ required: true })
-  nombre: string;
-}
-
-export const MiEntidadSchema = SchemaFactory.createForClass(MiEntidad);
-```
-
-### Step 3: Create Repository, Service, Controller
-
-### Step 4: Register in Module
-
-```typescript
-@Module({
   imports: [MongooseModule.forFeature([{ name: MiEntidad.name, schema: MiEntidadSchema }])],
   controllers: [MiEntidadController],
   providers: [MiEntidadRepository, MiEntidadService],
@@ -698,183 +355,434 @@ export const MiEntidadSchema = SchemaFactory.createForClass(MiEntidad);
 export class MiEntidadModule {}
 ```
 
-### Step 5: Import in AppModule
+### Crear Nuevo Módulo en App
 
-```typescript
-@Module({
-  imports: [MiEntidadModule],
-})
-export class AppModule {}
+```
+apps/nominas/src/modules/mi-modulo/
+├── dto/                      # Create*Dto, Update*Dto, etc.
+├── interfaces/               # Interfaces del módulo
+├── schemas/                  # Mongoose schemas
+├── mi-modulo.controller.ts
+├── mi-modulo.module.ts
+├── mi-modulo.repository.ts
+└── mi-modulo.service.ts
 ```
 
 ---
 
-## 8. Extracting Packages
+## 6. Configuración
 
-Packages in `packages/` are **self-contained and reusable**.
+### Environment Variables
 
-### To extract to another project:
+Agrupadas por paquete:
 
-1. Copy package folder (e.g., `packages/database/`)
-2. Configure `tsconfig.json`:
+```env
+# ── App ──
+PORT=3000
+MONGODB_URI=mongodb://localhost:27017/boilerplate_db
+
+# ── Auth: JWT ──
+JWT_SECRET=your-super-secret-key-min-32-chars
+JWT_ACCESS_TOKEN_TTL=900
+JWT_REFRESH_TOKEN_TTL=604800
+JWT_ISSUER=api-nominas
+JWT_AUDIENCE=api-nominas
+
+# ── Auth: Magic Link ──
+MAGIC_LINK_ENABLED=true
+MAGIC_LINK_TOKEN_TTL=300
+
+# ── Auth: OAuth (Optional) ──
+OAUTH_GOOGLE_CLIENT_ID=
+OAUTH_GOOGLE_CLIENT_SECRET=
+OAUTH_GITHUB_CLIENT_ID=
+OAUTH_GITHUB_CLIENT_SECRET=
+
+# ── Auth: Argon2 ──
+ARGON2_TYPE=2
+ARGON2_MEMORY_COST=65536
+ARGON2_TIME_COST=3
+ARGON2_PARALLELISM=4
+
+# ── Auth: 2FA ──
+TWO_FACTOR_ISSUER=MyApp
+TWO_FACTOR_ALGORITHM=SHA1
+TWO_FACTOR_DIGITS=6
+TWO_FACTOR_PERIOD=30
+TWO_FACTOR_BACKUP_CODES_COUNT=10
+TWO_FACTOR_BACKUP_CODES_LENGTH=10
+
+# ── Auth: Passkeys ──
+PASSKEYS_RP_ID=localhost
+PASSKEYS_RP_NAME=MyApp
+PASSKEYS_RP_ORIGIN=http://localhost:3000
+
+# ── Playwright ──
+PLAYWRIGHT_HEADLESS=true
+PLAYWRIGHT_TIMEOUT=30000
+PLAYWRIGHT_RETRIES=3
+
+# ── Inngest ──
+INNGEST_EVENT_KEY=your_event_key
+INNGEST_SIGNING_KEY=your_signing_key
+INNGEST_BASE_URL=https://inngest.treborjs-dev.online/
+
+# ── Resend ──
+RESEND_API_KEY=
+RESEND_FROM_EMAIL=onboarding@resend.dev
+RESEND_FROM_NAME=My App
+RESEND_REPLY_TO=
+```
+
+### tsconfig Paths (paquetes registrados)
 
 ```json
 {
-  "compilerOptions": {
-    "paths": {
-      "@common/database": ["path/to/database/src/index.ts"]
-    }
-  }
+  "@common/common": ["packages/common/src/index.ts"],
+  "@common/database": ["packages/database/src/index.ts"],
+  "@common/inngest": ["packages/inngest/src/index.ts"],
+  "@common/playwright": ["packages/playwright/src/index.ts"],
+  "@common/http": ["packages/http/src/index.ts"],
+  "@common/ai": ["packages/ai/src/index.ts"],
+  "@common/documents": ["packages/documents/src/index.ts"]
 }
 ```
 
-3. Install dependencies:
+> **Nota:** `@common/auth`, `@common/resend` y `@common/serve-static` NO están en `tsconfig.json` paths. Se resuelven mediante `nest-cli.json` o instalación directa.
+
+### Setup Wizard
 
 ```bash
-cd packages/database && npm install
-```
-
-4. Import in your AppModule:
-
-```typescript
-import { DatabaseModule } from '@common/database';
+./setup/setup.sh              # Linux/Mac
+setup\setup.bat               # Windows
+./setup/setup.sh --list       # Listar paquetes disponibles
+./setup/setup.sh --reset      # Resetear selección
 ```
 
 ---
 
-## 9. Package Setup Wizard
+## 7. Despliegue
 
-The project includes an interactive setup wizard for selecting which packages to include.
-
-### Quick Start
-
-**Linux / macOS / Git Bash / WSL:**
-```bash
-chmod +x setup/setup.sh
-./setup/setup.sh
-```
-
-**Windows (cmd.exe or PowerShell):**
-```cmd
-setup\setup.bat
-```
-
-### Setup Options
+### Docker
 
 ```bash
-./setup/setup.sh --help   # Show help
-./setup/setup.sh --list   # List available packages
-./setup/setup.sh --reset  # Reset previous selection
+# Build + Run
+docker build -t boilerplate-service .
+docker-compose up -d
+
+# Dev con hot-reload
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+
+# Test automático
+./docker-test.sh
 ```
 
-### What It Does
+**Ver:** `README.Docker.md` para documentación completa.
 
-1. **Package Selection**: Interactive CLI to choose packages
-2. **Environment Variables**: Collects required env vars per package
-3. **Configuration Updates**:
-   - Updates `nest-cli.json` (includes only selected packages)
-   - Updates `package.json` (adds required dependencies)
-   - Creates `.env` file with all variables
-4. **Preserves Selection**: Saves to `selection.json` for future runs
+### Endpoints en Producción
 
-### Available Packages
+| Endpoint | URL |
+|----------|-----|
+| API Base | `http://localhost:3000/api` |
+| Swagger | `http://localhost:3000/api` |
+| Health Check | `http://localhost:3000/api/usuarios` |
+| Inngest Sync | `http://localhost:3000/api/inngest` |
 
-| Package | Default | Description |
-|---------|---------|-------------|
-| `@common/ai` | Yes | AI providers wrapper |
-| `@common/auth` | Yes | Authentication with JWT, 2FA, Passkeys |
-| `@common/common` | Yes | Common utilities |
-| `@common/database` | Yes | MongoDB with transactions |
-| `@common/http` | Yes | HTTP client with sharp |
-| `@common/inngest` | No | Event-driven task queue |
-| `@common/playwright` | No | Browser automation |
-| `@common/resend` | No | Email via Resend API |
-| `@common/serve-static` | No | EJS templates with TailwindCSS |
+### Checklist de Producción
 
-### Configuration Files
+- [ ] `JWT_SECRET` configurado con valor seguro (min 32 chars)
+- [ ] MongoDB connection string con credenciales
+- [ ] Inngest keys configuradas
+- [ ] `RESEND_API_KEY` configurada (si se usa email)
+- [ ] `npm run build` exitoso
+- [ ] `npm run lint` sin errores
+- [ ] `npm run test` sin fallos
+- [ ] Swagger accesible en `/api`
+- [ ] Health check responde 200
+- [ ] Docker image build exitoso
+- [ ] Playwright browsers instalados en la imagen
+- [ ] Reemplazar auth stub (`demo@example.com`) si está en producción
 
-| File | Purpose |
-|------|---------|
-| `setup/package-config.json` | Package definitions and metadata |
-| `setup/selection.json` | Saved selection (auto-generated) |
-| `setup/templates/.env.template` | Environment variables template |
+### Notas de Producción
 
-### Next Steps After Setup
+- **Playwright:** Chromium instalado en `/opt/playwright/browsers` dentro del contenedor Docker
+- **MongoDB:** Requiere ReplicaSet (`rs0`) para transacciones. El docker-compose lo configura automáticamente
+- **Auth:** El módulo `@common/auth` actualmente tiene un stub de demo. NO usar en producción sin implementar un UserService real
+- **Usuario:** La imagen Docker corre como `nodejs` (non-root, UID 1001)
 
-```bash
-npm install        # Install selected dependencies
-npm run build      # Build project
-npm run start:dev  # Start development server
+---
+
+## 8. Reglas para Trabajo Autónomo
+
+### Principios
+
+1. **LEER antes de escribir** — siempre leer el README del paquete y AGENTS.md antes de modificar código
+2. **DOCUMENTAR mientras se escribe** — JSDoc en todo método público nuevo
+3. **SEGUIR las convenciones** — naming, imports, estructura de módulos (sección 4)
+4. **VERIFICAR después de escribir** — `npm run build` y `npm run lint` antes de dar por terminado
+
+### Reglas de Código
+
+- **No usar `bcrypt`** — el proyecto usa `argon2` para password hashing. `bcrypt` en package.json es residuo
+- **No hardcodear credenciales** — toda configuración vía environment variables
+- **Auth es demo** — `@common/auth` tiene un stub. Nuevos módulos de auth deben implementar un servicio real
+- **Paquetes sin `tsconfig.json` path** — `auth`, `resend`, `serve-static` no están en tsconfig paths. Si se necesita importarlos, agregar el path
+
+### Reglas para el Modelo de IA
+
+1. **Contexto mínimo**: Antes de tocar cualquier archivo, leer:
+   - `AGENTS.md` (índice y reglas)
+   - `DOCUMENTATION-CONVENTION.md` (convención de documentación)
+   - `openspec/specs/<domain>/spec.md` (spec del dominio afectado)
+   - `packages/<name>/README.md` del paquete afectado
+
+2. **OpenSpec primero**: Si el cambio no tiene un cambio activo en `openspec/changes/`, crear UNO via `/sdd-new` antes de implementar.
+
+3. **No modificar archivos que no entiendes**: Si un archivo no tiene documentación y no puedes inferir su propósito, PREGUNTAR
+
+4. **Commits estructurados**:
+   ```
+   feat(@common/<name>): descripción del cambio
+   fix(@common/<name>): descripción del fix
+   docs(@common/<name>): descripción de documentación
+   chore(@common/<name>): tareas de mantenimiento
+   ```
+
+5. **Checklist antes de finalizar**:
+   - [ ] `npm run build` pasa
+   - [ ] `npm run lint` pasa
+   - [ ] JSDoc agregado en nuevos exports públicos
+   - [ ] README del paquete actualizado si cambia API
+   - [ ] Variables de entorno nuevas documentadas
+   - [ ] Spec de dominio actualizada si cambia comportamiento
+   - [ ] `openspec/changes/{name}/tasks.md` marcado con los tasks completados
+   - [ ] `CHANGELOG.md` actualizado con entrada del cambio
+
+### Mapa de Decisión para IA
+
+```
+¿Vas a crear algo nuevo?
+├── ¿Es un paquete reutilizable? → Crear en packages/<name>/
+│   ├── README.md (obligatorio)
+│   ├── JSDoc en todos los exports
+│   ├── Registrar en nest-cli.json
+│   ├── Agregar path en tsconfig.json
+│   └── package.json con peerDependencies
+├── ¿Es un módulo de negocio? → Crear en apps/nominas/src/modules/<name>/
+│   ├── Seguir estructura: dto/ interfaces/ schemas/ + controller/service/repository
+│   └── Swagger decorators en controlador
+└── ¿Es un cambio en paquete existente?
+    └── Leer README.md del paquete primero
+```
+
+---
+
+## 9. Documentación Autónoma
+
+### Gatillos Automáticos
+
+Cuando una IA complete cualquiera de estas acciones, DEBE documentar:
+
+| Acción | Documentar |
+|--------|------------|
+| Nuevo paquete | `packages/<name>/README.md` + JSDoc + AGENTS.md index |
+| Nuevo método público en paquete existente | JSDoc en el método |
+| Nueva variable de entorno | README.md del paquete + AGENTS.md sección 5 |
+| Nuevo endpoint | Swagger decorators (`@ApiTags`, `@ApiOperation`...) + README.md |
+| Nueva dependencia externa | `package.json` + README.md dependencies table |
+| Breaking change | `CHANGELOG.md` + marcar en README |
+| Bug fix | JSDoc actualizado si la firma cambia |
+
+### Template de Commit para Documentación
+
+```
+docs(@common/<name>): qué se documentó
+
+- README.md: sección X actualizada
+- JSDoc agregado en Service.method()
+```
+
+### Archivo CHANGELOG (pendiente de crear)
+
+Se recomienda crear `CHANGELOG.md` para rastrear cambios versionados. Formato:
+
+```markdown
+# Changelog
+
+## [0.1.0] - 2026-06-12
+### Added
+- @common/resend: README.md, NewsletterModule
+- @common/serve-static: README.md
+- AGENTS.md: documentación autónoma, reglas, diagramas
+
+### Changed
+- README.md: ahora describe el proyecto real, no el starter de NestJS
 ```
 
 ---
 
 ## 10. Troubleshooting
 
-**Port already in use:**
-
-```bash
-netstat -ano | findstr :3000
-taskkill /PID <PID> /F
-```
-
-**MongoDB connection failed:**
-
-```bash
-mongosh --eval "db.adminCommand('ping')"
-```
-
-**Playwright browsers not found:**
-
-```bash
-npx playwright install
-```
-
-**Setup wizard permission denied (Linux):**
-
-```bash
-chmod +x setup/setup.sh
-```
+| Problema | Solución |
+|----------|----------|
+| Puerto 3000 en uso | `netstat -ano \| findstr :3000` · `taskkill /PID <PID> /F` |
+| MongoDB no conecta | `mongosh --eval "db.adminCommand('ping')"` |
+| Playwright no encuentra browser | `npx playwright install` |
+| Setup wizard permission denied | `chmod +x setup/setup.sh` |
+| Swagger no muestra endpoints | Verificar `@ApiTags` en el controlador |
+| Build falla por paths | Verificar que el paquete está en `tsconfig.json` paths y `nest-cli.json` |
 
 ---
 
-## 11. Deployment Checklist
+## 11. Key Files
 
-- [ ] Environment variables configured
-- [ ] MongoDB connection string set
-- [ ] Inngest keys configured
-- [ ] `npm run build` succeeds
-- [ ] `npm run lint` passes
-- [ ] `npm run test` passes
-- [ ] Swagger docs at `/api`
-- [ ] Health check at `/api/usuarios`
-- [ ] Docker image builds successfully
-
----
-
-## 12. Key Files
-
-| File | Purpose |
-|------|---------|
-| `BOILERPLATE.md` | Complete extension guide |
-| `AGENTS.md` | This file |
-| `nest-cli.json` | Monorepo configuration |
-| `packages/*/` | Reusable packages |
+| Archivo | Propósito |
+|---------|-----------|
+| `BOILERPLATE.md` | Guía completa del proyecto (ES, 481 líneas) |
+| `AGENTS.md` | Este archivo — índice maestro |
+| `DOCUMENTATION-CONVENTION.md` | Convención de documentación IA-friendly |
+| `README.Docker.md` | Documentación completa de Docker |
+| `nest-cli.json` | Configuración del monorepo |
 | `setup/` | Package setup wizard |
+| `packages/*/README.md` | Documentación individual por paquete |
+| `CHANGELOG.md` | Historial de cambios (pendiente de crear) |
+| `openspec/config.yaml` | Configuración SDD del proyecto |
+| `openspec/specs/*/spec.md` | Especificaciones por dominio |
+| `openspec/changes/` | Cambios activos y archivados |
 
 ---
 
-## 13. Docker
+## 12. Project Status Dashboard
 
-```bash
-# Build image
-docker build -t boilerplate-service .
+### Cambios Activos
 
-# Run with docker-compose
-docker-compose up -d
+| Change | Status | Fase | Package Afectado | Spec |
+|--------|--------|------|------------------|------|
+| `init-openspec-structure` | ✅ Complete | archive | — | `openspec/specs/*` |
+| `fix-auth-swagger` | ✅ Complete | apply | `auth` | `openspec/specs/auth/spec.md` |
+| `fix-package-cleanup` | ✅ Complete | apply | root (package.json, tsconfig) | — |
+| `fix-unify-http-error` | ✅ Complete | apply | `common`, `http` | — |
+| `fix-cross-reference-docs` | ✅ Complete | apply | all packages | — |
 
-# Test script
-./docker-test.sh
+> ✅ Complete · 🔄 In Progress · 🔲 Pending · ❌ Blocked
+
+### Documentación por Paquete
+
+| Package | README | Spec OpenSpec | JSDoc | Status |
+|---------|--------|---------------|-------|--------|
+| `@common/ai` | ✅ | ✅ | ❌ | partial |
+| `@common/auth` | ✅ | ✅ | ⚠️ | partial |
+| `@common/common` | ⚠️ | — | ❌ | partial |
+| `@common/database` | ✅ | ✅ | ⚠️ | partial |
+| `@common/documents` | ✅ | ✅ | ⚠️ | partial |
+| `@common/http` | ✅ | ✅ | ⚠️ | partial |
+| `@common/inngest` | ✅ | ✅ | ⚠️ | **complete** |
+| `@common/playwright` | ✅ | ✅ | ⚠️ | partial |
+| `@common/resend` | ✅* | ✅ | ❌ | partial |
+| `@common/serve-static` | ✅* | ✅ | ❌ | partial |
+
+### Issues Conocidos
+
+| ID | Descripción | Severidad | Package |
+|----|-------------|-----------|---------|
+| #1 | Auth es stub (demo@example.com) | **ALTA** | `auth` |
+| #2 | Swagger tags ausentes en auth controller | ✅ Fixed | `auth` |
+| #3 | `@types/bcrypt` no se usa | ✅ Fixed | root |
+| #4 | `auth`, `resend`, `serve-static` sin path en tsconfig | ✅ Fixed | root |
+| #5 | `http-error` duplicado en common y http | ✅ Fixed | `common`, `http` |
+| #6 | Newsletter usa Map en memoria (no persiste) | **BAJA** | `resend` |
+
+---
+
+## 13. Documentation Index
+
+### Cross-Reference Matrix
+
+Cada spec de dominio referencia su documentación asociada:
+
+| Dominio | Spec | README | Código Fuente |
+|---------|------|--------|---------------|
+| Auth | `openspec/specs/auth/spec.md` | `packages/auth/README.md` | `packages/auth/src/` |
+| AI | `openspec/specs/ai/spec.md` | `packages/ai/README.md` | `packages/ai/src/` |
+| Database | `openspec/specs/database/spec.md` | `packages/database/README.md` | `packages/database/src/` |
+| Email | `openspec/specs/email/spec.md` | `packages/resend/README.md` | `packages/resend/src/` |
+| Documents | `openspec/specs/documents/spec.md` | `packages/documents/README.md` | `packages/documents/src/` |
+| HTTP | `openspec/specs/http/spec.md` | `packages/http/README.md` | `packages/http/src/` |
+| Inngest | `openspec/specs/inngest/spec.md` | `packages/inngest/README.md` | `packages/inngest/src/` |
+| Playwright | `openspec/specs/playwright/spec.md` | `packages/playwright/README.md` | `packages/playwright/src/` |
+| Serve Static | `openspec/specs/serve-static/spec.md` | `packages/serve-static/README.md` | `packages/serve-static/src/` |
+
+### Cómo Buscar Documentación
+
+**Para un agente IA:**
+
+1. **Entender un módulo** → `openspec/specs/{domain}/spec.md` (contrato) + `packages/{domain}/README.md` (uso)
+2. **Encontrar código** → `packages/{name}/src/` (implementación), `apps/nominas/src/modules/{name}/` (módulos app)
+3. **Ver cambios activos** → `openspec/changes/` (cambios en progreso)
+4. **Ver historial** → `openspec/changes/archive/` (cambios completados)
+5. **Buscar env vars** → `AGENTS.md` sección 6 (todas las variables agrupadas)
+6. **Verificar documentación faltante** → `AGENTS.md` sección 12 (status dashboard)
+
+**Tags de estado en READMEs:**
+
+Cada README de paquete lleva un tag HTML de estado:
+
+```html
+<!-- @common/<name> — status: complete | partial | critical -->
 ```
 
-**See:** `README.Docker.md` for complete Docker documentation
+Para encontrar paquetes con documentación crítica:
+
+```bash
+rg "status: critical" packages/*/README.md
+```
+
+### Documentación Externa de Referencia
+
+| Librería | Documentación |
+|----------|---------------|
+| NestJS 11 | https://docs.nestjs.com/ |
+| Mongoose 9 | https://mongoosejs.com/docs/ |
+| Inngest 4 | https://www.inngest.com/docs |
+| Playwright | https://playwright.dev/docs/ |
+| Resend | https://resend.com/docs |
+| Swagger NestJS | https://docs.nestjs.com/openapi/introduction |
+| argon2 | https://github.com/ranisalt/node-argon2 |
+| @simplewebauthn | https://simplewebauthn.dev/docs/ |
+
+---
+
+## Apéndice: Diagrama de Flujo de Decisión para IA
+
+```mermaid
+flowchart TD
+    A[Tarea asignada] --> B{¿Qué tipo de cambio?}
+    B -->|Nuevo| C0[Leer openspec/specs del dominio]
+    B -->|Modificar| D[Leer README del paquete + openspec/specs]
+
+    C0 --> C{¿Paquete o Módulo?}
+
+    C -->|Paquete| F[Crear en packages/]
+    C -->|Módulo| G[Crear en apps/nominas/src/modules/]
+
+    F --> H[README.md + JSDoc + tsconfig + nest-cli]
+    G --> I[Módulo NestJS estándar + Swagger]
+
+    D --> J[Hacer cambio]
+    H --> J
+    I --> J
+
+    J --> K0{¿Cambio significativo?}
+    K0 -->|Sí| L0[/sdd-new change-name → proposal → specs → design → tasks]
+    K0 -->|No| K
+
+    L0 --> K
+    K[Correr: npm run build]
+    K --> L{¿Build OK?}
+    L -->|Sí| M[Correr: npm run lint]
+    L -->|No| J
+    M --> N{¿Lint OK?}
+    N -->|Sí| O[Checklist pre-commit]
+    N -->|No| J
+    O --> P[Commit + Push]
+```
