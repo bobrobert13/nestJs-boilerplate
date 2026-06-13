@@ -28,7 +28,10 @@
       "@common/playwright": ["packages/playwright/src/index.ts"],
       "@common/http": ["packages/http/src/index.ts"],
       "@common/ai": ["packages/ai/src/index.ts"],
-      "@common/documents": ["packages/documents/src/index.ts"]
+      "@common/documents": ["packages/documents/src/index.ts"],
+      "@common/auth": ["packages/auth/src/index.ts"],
+      "@common/resend": ["packages/resend/src/index.ts"],
+      "@common/serve-static": ["packages/serve-static/src/index.ts"]
     },
     "types": ["node"]
   }
