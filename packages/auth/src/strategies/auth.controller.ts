@@ -1,4 +1,5 @@
 import { Controller, Post, Body, UseGuards, Request, HttpCode, HttpStatus } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from '../services/auth.service';
 import { MagicLinkService } from '../services/magic-link.service';
 import { Public } from '../decorators/public.decorator';
@@ -13,6 +14,7 @@ import {
   MagicLinkVerifyDto,
 } from '../dto/auth.dto';
 
+@ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -22,6 +24,9 @@ export class AuthController {
 
   @Public()
   @Post('register')
+  @ApiOperation({ summary: 'Register a new user', description: '⚠️ DEMO: Uses hardcoded demo user. Not for production.' })
+  @ApiResponse({ status: 201, description: 'User registered' })
+  @ApiResponse({ status: 400, description: 'Invalid input' })
   async register(@Body() dto: RegisterDto) {
     const user = await this.authService.register(dto.email, dto.password, dto.name);
     return {
@@ -33,6 +38,9 @@ export class AuthController {
   @Public()
   @Post('login')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Login with credentials', description: '⚠️ DEMO: Uses hardcoded demo user (demo@example.com / demo123).' })
+  @ApiResponse({ status: 200, description: 'Login successful, returns JWT tokens' })
+  @ApiResponse({ status: 401, description: 'Invalid credentials' })
   async login(@Body() dto: LoginDto) {
     const user = await this.authService.validateUser(dto.email, dto.password);
     if (!user) {
@@ -51,6 +59,8 @@ export class AuthController {
   @Public()
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Refresh JWT tokens' })
+  @ApiResponse({ status: 200, description: 'Tokens refreshed' })
   async refresh(@Body() dto: RefreshTokenDto) {
     const tokens = await this.authService.refreshTokens(dto.refreshToken);
     return {
@@ -62,6 +72,8 @@ export class AuthController {
   @Public()
   @Post('magic-link/request')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Request a magic link for passwordless login' })
+  @ApiResponse({ status: 200, description: 'Magic link sent' })
   async requestMagicLink(@Body() dto: MagicLinkRequestDto) {
     if (!this.magicLinkService.isEnabled()) {
       return {
@@ -84,6 +96,8 @@ export class AuthController {
   @Public()
   @Post('magic-link/verify')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Verify a magic link token' })
+  @ApiResponse({ status: 200, description: 'Token verified, returns JWT tokens' })
   async verifyMagicLink(@Body() dto: MagicLinkVerifyDto) {
     try {
       const email = await this.magicLinkService.verifyMagicLink(dto.token);
@@ -112,6 +126,9 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Post('logout')
   @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Logout and invalidate refresh token' })
+  @ApiResponse({ status: 200, description: 'Logged out' })
   async logout(@Body() dto: RefreshTokenDto) {
     await this.authService.logout(dto.refreshToken);
     return {
@@ -123,6 +140,9 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Post('verify')
   @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Verify JWT token and return user data' })
+  @ApiResponse({ status: 200, description: 'Token valid, returns user' })
   async verify(@Request() req: any) {
     return {
       success: true,
@@ -136,6 +156,10 @@ export class AuthController {
   @Roles('admin')
   @Post('admin-only')
   @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Admin-only endpoint (demo)' })
+  @ApiResponse({ status: 200, description: 'Admin access granted' })
+  @ApiResponse({ status: 403, description: 'Forbidden — not an admin' })
   async adminEndpoint() {
     return {
       success: true,

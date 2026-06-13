@@ -7,6 +7,7 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { TwoFactorService } from './two-factor.service';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { Public } from '../decorators/public.decorator';
@@ -17,12 +18,16 @@ import {
   GenerateBackupCodesDto,
 } from './dto/two-factor.dto';
 
+@ApiTags('auth', '2fa')
 @Controller('auth/2fa')
 export class TwoFactorController {
   constructor(private readonly twoFactorService: TwoFactorService) {}
 
   @UseGuards(JwtAuthGuard)
   @Post('generate')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Generate 2FA secret and QR code' })
+  @ApiResponse({ status: 200, description: 'Secret and QR generated' })
   async generate(@Request() req: any) {
     const result = await this.twoFactorService.generateSecret(req.user.id);
     return {
@@ -38,6 +43,9 @@ export class TwoFactorController {
 
   @UseGuards(JwtAuthGuard)
   @Post('enable')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Enable 2FA with TOTP code' })
+  @ApiResponse({ status: 200, description: '2FA enabled' })
   async enable(@Request() req: any, @Body() dto: EnableTwoFactorDto) {
     const result = await this.twoFactorService.enableTwoFactor(req.user.id, dto.code);
 
@@ -60,6 +68,9 @@ export class TwoFactorController {
   @UseGuards(JwtAuthGuard)
   @Post('verify')
   @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Verify a TOTP code' })
+  @ApiResponse({ status: 200, description: 'Verification result' })
   async verify(@Request() req: any, @Body() dto: VerifyTwoFactorDto) {
     const result = await this.twoFactorService.verifyCode(req.user.id, dto.code);
 
@@ -74,6 +85,8 @@ export class TwoFactorController {
   @Public()
   @Post('verify-backup')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Verify a 2FA backup code' })
+  @ApiResponse({ status: 200, description: 'Backup code verification result' })
   async verifyBackup(@Body() dto: VerifyBackupCodeDto & { userId: string }) {
     const isValid = await this.twoFactorService.verifyBackupCodeWithUser(dto.userId, dto.backupCode);
 
@@ -87,6 +100,9 @@ export class TwoFactorController {
 
   @UseGuards(JwtAuthGuard)
   @Post('regenerate-backup-codes')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Regenerate backup codes' })
+  @ApiResponse({ status: 200, description: 'Backup codes regenerated' })
   async regenerateBackupCodes(@Request() req: any, @Body() dto: GenerateBackupCodesDto) {
     try {
       const newCodes = await this.twoFactorService.regenerateBackupCodes(req.user.id, dto.currentCode!);
@@ -106,6 +122,9 @@ export class TwoFactorController {
 
   @UseGuards(JwtAuthGuard)
   @Post('disable')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Disable 2FA' })
+  @ApiResponse({ status: 200, description: '2FA disabled' })
   async disable(@Request() req: any) {
     await this.twoFactorService.disableTwoFactor(req.user.id);
     return {
@@ -116,6 +135,9 @@ export class TwoFactorController {
 
   @UseGuards(JwtAuthGuard)
   @Post('status')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get 2FA status and remaining time' })
+  @ApiResponse({ status: 200, description: '2FA status' })
   async status(@Request() req: any) {
     const isEnabled = this.twoFactorService.isTwoFactorEnabled(req.user.id);
     const timeRemaining = this.twoFactorService.getTimeRemaining();
