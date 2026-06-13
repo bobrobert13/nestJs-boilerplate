@@ -1,3 +1,5 @@
+<!-- @common/database — status: partial -->
+
 # @common/database
 
 MongoDB connection module for NestJS with automatic retry logic and transaction support.

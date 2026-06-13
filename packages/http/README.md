@@ -1,3 +1,5 @@
+<!-- @common/http — status: partial -->
+
 # @common/http
 
 HTTP client module for NestJS with axios and image download optimization via sharp.

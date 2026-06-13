@@ -1,3 +1,5 @@
+<!-- @common/inngest — status: complete -->
+
 # @common/inngest
 
 Inngest event-driven task queue module for NestJS — run background jobs, scheduled tasks, and event-triggered workflows.

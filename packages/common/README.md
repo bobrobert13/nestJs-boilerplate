@@ -1,3 +1,5 @@
+<!-- @common/common — status: partial -->
+
 # @common/common
 
 Common utilities for NestJS — base adapters, exception filters, and HTTP error handling.

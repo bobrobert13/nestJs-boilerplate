@@ -1,3 +1,5 @@
+<!-- @common/ai — status: partial -->
+
 # @common/ai
 
 AI Providers wrapper for NestJS - Connect to OpenAI, Anthropic, Google Gemini, Moonshot (Kimi), MiniMax and any OpenAI-compatible API.

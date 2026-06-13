@@ -1,3 +1,5 @@
+<!-- @common/playwright — status: partial -->
+
 # @common/playwright
 
 Playwright browser automation module for NestJS — web scraping, testing, and automated interactions.

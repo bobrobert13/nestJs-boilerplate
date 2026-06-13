@@ -1,3 +1,5 @@
+<!-- @common/documents — status: partial -->
+
 # @common/documents
 
 Document text extraction module for NestJS — parses PDF and DOCX files into structured text content.

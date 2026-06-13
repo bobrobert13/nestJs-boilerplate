@@ -1,3 +1,5 @@
+<!-- @common/auth — status: partial -->
+
 # @common/auth - Authentication Module
 
 Authentication module for NestJS with JWT, Magic Links, OAuth, 2FA and Passkeys support.
