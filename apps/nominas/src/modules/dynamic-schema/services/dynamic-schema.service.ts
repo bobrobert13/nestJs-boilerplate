@@ -117,7 +117,10 @@ export class DynamicSchemaService {
     try {
       this.logger.log(`Extracting document content (format: ${format})...`);
 
-      const content = await this.documentProcessor.extract(documentBuffer, format);
+      const content = await this.documentProcessor.extract(
+        documentBuffer,
+        format,
+      );
 
       return {
         success: true,
@@ -148,7 +151,10 @@ export class DynamicSchemaService {
     try {
       this.logger.log(`Compiling schema for collection: ${collectionName}...`);
 
-      const compiled = this.schemaCompiler.compileSchema(schema, collectionName);
+      const compiled = this.schemaCompiler.compileSchema(
+        schema,
+        collectionName,
+      );
 
       return {
         success: true,
@@ -193,7 +199,10 @@ export class DynamicSchemaService {
       const schema = schemaResult.generatedSchema!;
 
       // Step 3: Compile schema
-      const compileResult = await this.compileSchema(schema, schema.collectionName);
+      const compileResult = await this.compileSchema(
+        schema,
+        schema.collectionName,
+      );
       if (!compileResult.success) {
         return compileResult;
       }

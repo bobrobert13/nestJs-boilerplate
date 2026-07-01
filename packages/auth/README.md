@@ -15,6 +15,28 @@ Authentication module for NestJS with JWT, Magic Links, OAuth, 2FA and Passkeys 
 - **Role-based Access Control** - Guards and decorators for authorization
 - **Refresh Tokens** - Token renewal support
 
+---
+
+### Quick API Index
+
+> **Context budget:** Use this table to jump directly to the feature you need.
+
+| If you need to... | Relevant section | Files to read |
+|---|---|---|
+| Login with email/password | [§ Quick Start](#quick-start), [§ Auth Service](#api-reference) | `services/auth.service.ts`, `strategies/auth.controller.ts` |
+| Passwordless login via magic link | [§ Quick Start](#quick-start) | `services/magic-link.service.ts` |
+| Hash or verify passwords (Argon2) | [§ Password Hashing](#password-hashing-with-argon2) | `services/auth.service.ts` |
+| Set up Passkeys / WebAuthn | [§ Passkeys](#passkeys-webauthn) | `passkeys/passkeys.service.ts`, `passkeys.controller.ts` |
+| Enable Two-Factor (TOTP) | [§ 2FA](#2fa-totp) | `two-factor/two-factor.service.ts`, `two-factor.controller.ts` |
+| Protect routes with JWT | [§ Guards](#guards) | `guards/jwt-auth.guard.ts` |
+| Role-based access control | [§ Decorators](#decorators), [§ Guards](#guards) | `decorators/roles.decorator.ts`, `guards/roles.guard.ts` |
+| Make a route public (skip JWT) | [§ Decorators](#decorators) | `decorators/public.decorator.ts` |
+| Configure JWT/env vars | [§ Environment Variables](#environment-variables) | `config/auth.config.ts` |
+| All endpoints reference | [§ Auth Endpoints](#auth-endpoints) | `strategies/auth.controller.ts` |
+| Handle auth errors | [§ Error Handling](#error-handling) | — |
+
+---
+
 ## Installation
 
 ```bash
@@ -169,11 +191,18 @@ Passwordless authentication using hardware security keys, fingerprint, or face r
 
 ```typescript
 // 1. Generate registration options (send to client)
-const options = await passkeysService.generateRegistrationOptions(userId, username);
+const options = await passkeysService.generateRegistrationOptions(
+  userId,
+  username,
+);
 // Client uses options to call navigator.credentials.create()
 
 // 2. Verify registration response
-const result = await passkeysService.verifyRegistration(userId, username, response);
+const result = await passkeysService.verifyRegistration(
+  userId,
+  username,
+  response,
+);
 // Save the credential ID for later authentication
 ```
 
@@ -185,7 +214,11 @@ const options = await passkeysService.generateAuthenticationOptions(userId);
 // Client uses options to call navigator.credentials.get()
 
 // 2. Verify authentication response
-const result = await passkeysService.verifyAuthentication(userId, credentialId, response);
+const result = await passkeysService.verifyAuthentication(
+  userId,
+  credentialId,
+  response,
+);
 if (result.valid) {
   // Login successful - issue JWT tokens
 }
@@ -193,14 +226,14 @@ if (result.valid) {
 
 ### Passkeys Endpoints
 
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| POST | `/auth/passkeys/register-options` | Get registration options | JWT |
-| POST | `/auth/passkeys/register-verify` | Verify passkey registration | JWT |
-| POST | `/auth/passkeys/login-options` | Get login options | Public |
-| POST | `/auth/passkeys/login-verify` | Verify passkey login | Public |
-| GET | `/auth/passkeys/list` | List user's passkeys | JWT |
-| DELETE | `/auth/passkeys/delete/:id` | Delete a passkey | JWT |
+| Method | Endpoint                          | Description                 | Auth   |
+| ------ | --------------------------------- | --------------------------- | ------ |
+| POST   | `/auth/passkeys/register-options` | Get registration options    | JWT    |
+| POST   | `/auth/passkeys/register-verify`  | Verify passkey registration | JWT    |
+| POST   | `/auth/passkeys/login-options`    | Get login options           | Public |
+| POST   | `/auth/passkeys/login-verify`     | Verify passkey login        | Public |
+| GET    | `/auth/passkeys/list`             | List user's passkeys        | JWT    |
+| DELETE | `/auth/passkeys/delete/:id`       | Delete a passkey            | JWT    |
 
 ## 2FA (TOTP)
 
@@ -232,20 +265,23 @@ if (!result.valid) {
 ```typescript
 // User gets 10 backup codes when enabling 2FA
 // Use a backup code if device is unavailable
-const isValid = await twoFactorService.verifyBackupCodeWithUser(userId, backupCode);
+const isValid = await twoFactorService.verifyBackupCodeWithUser(
+  userId,
+  backupCode,
+);
 ```
 
 ### 2FA Endpoints
 
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| POST | `/auth/2fa/generate` | Generate secret and QR | JWT |
-| POST | `/auth/2fa/enable` | Enable 2FA | JWT |
-| POST | `/auth/2fa/verify` | Verify TOTP code | JWT |
-| POST | `/auth/2fa/verify-backup` | Verify backup code | Public |
-| POST | `/auth/2fa/regenerate-backup-codes` | Regenerate codes | JWT |
-| POST | `/auth/2fa/disable` | Disable 2FA | JWT |
-| POST | `/auth/2fa/status` | Check 2FA status | JWT |
+| Method | Endpoint                            | Description            | Auth   |
+| ------ | ----------------------------------- | ---------------------- | ------ |
+| POST   | `/auth/2fa/generate`                | Generate secret and QR | JWT    |
+| POST   | `/auth/2fa/enable`                  | Enable 2FA             | JWT    |
+| POST   | `/auth/2fa/verify`                  | Verify TOTP code       | JWT    |
+| POST   | `/auth/2fa/verify-backup`           | Verify backup code     | Public |
+| POST   | `/auth/2fa/regenerate-backup-codes` | Regenerate codes       | JWT    |
+| POST   | `/auth/2fa/disable`                 | Disable 2FA            | JWT    |
+| POST   | `/auth/2fa/status`                  | Check 2FA status       | JWT    |
 
 ## Decorators
 
@@ -300,38 +336,117 @@ adminPanel() {
 }
 ```
 
-## Auth Service
+## API Reference
+
+### AuthService
+
+| Method            | Signature                                                                        | Description                                      |
+| ----------------- | -------------------------------------------------------------------------------- | ------------------------------------------------ |
+| `validateUser`    | `(email: string, password: string): Promise<User \| null>`                       | Validate credentials, return user or null        |
+| `login`           | `(user: User): Promise<{ accessToken: string; refreshToken: string }>`           | Issue JWT access and refresh tokens              |
+| `refreshTokens`   | `(refreshToken: string): Promise<{ accessToken: string; refreshToken: string }>` | Rotate token pair; invalidates old refresh token |
+| `hashPassword`    | `(password: string): Promise<string>`                                            | Hash plain-text password with Argon2id           |
+| `comparePassword` | `(password: string, hash: string): Promise<boolean>`                             | Compare plain-text password against Argon2 hash  |
+
+### MagicLinkService
+
+| Method              | Signature                                     | Description                                     |
+| ------------------- | --------------------------------------------- | ----------------------------------------------- |
+| `generateMagicLink` | `(email: string): Promise<string>`            | Create and return a single-use magic link token |
+| `verifyMagicLink`   | `(token: string): Promise<{ email: string }>` | Verify token, return associated email if valid  |
+
+### TwoFactorService
+
+| Method                     | Signature                                                              | Description                           |
+| -------------------------- | ---------------------------------------------------------------------- | ------------------------------------- |
+| `generateSecret`           | `(userId: string): Promise<{ qrCode: string; backupCodes: string[] }>` | Generate TOTP secret and backup codes |
+| `enableTwoFactor`          | `(userId: string, code: string): Promise<boolean>`                     | Enable 2FA after code verification    |
+| `verifyCode`               | `(userId: string, code: string): Promise<{ valid: boolean }>`          | Verify TOTP code                      |
+| `verifyBackupCodeWithUser` | `(userId: string, backupCode: string): Promise<boolean>`               | Verify and consume a backup code      |
+
+### PasskeysService
+
+| Method                          | Signature                                                                               | Description                                 |
+| ------------------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------- |
+| `generateRegistrationOptions`   | `(userId: string, username: string): Promise<RegistrationOptions>`                      | Create WebAuthn credential creation options |
+| `verifyRegistration`            | `(userId: string, username: string, response: any): Promise<{ verified: boolean }>`     | Verify attestation response                 |
+| `generateAuthenticationOptions` | `(userId: string): Promise<AuthenticationOptions>`                                      | Create WebAuthn credential request options  |
+| `verifyAuthentication`          | `(userId: string, credentialId: string, response: any): Promise<{ verified: boolean }>` | Verify assertion response                   |
+
+### Guards
+
+| Guard          | Decorator                                    | Description                                               |
+| -------------- | -------------------------------------------- | --------------------------------------------------------- |
+| `JwtAuthGuard` | `@UseGuards(JwtAuthGuard)`                   | Protects routes with JWT validation; respects `@Public()` |
+| `RolesGuard`   | `@Roles('admin')` + `@UseGuards(RolesGuard)` | Enforces role-based access; requires `req.user.roles`     |
+
+### Decorators
+
+| Decorator          | Usage                          | Description                                       |
+| ------------------ | ------------------------------ | ------------------------------------------------- |
+| `@Public()`        | `@Public()`                    | Skip JWT authentication for a route or controller |
+| `@Roles(...roles)` | `@Roles('admin', 'moderator')` | Require one or more roles                         |
+
+## Error Handling
+
+### Common Exceptions
+
+| Exception               | Status | Typical Cause                                                    |
+| ----------------------- | ------ | ---------------------------------------------------------------- |
+| `UnauthorizedException` | 401    | Invalid credentials, expired token, missing Authorization header |
+| `ConflictException`     | 409    | Duplicate email or username during registration                  |
+| `BadRequestException`   | 400    | Malformed token, missing required fields, invalid input format   |
+
+### Token Expiry
+
+Access tokens are short-lived (default 15 min). When the access token expires, use the refresh token to obtain a new pair:
 
 ```typescript
-import { AuthService } from '@common/auth';
-
-constructor(private readonly authService: AuthService) {}
-
-// Validate user credentials
-const user = await authService.validateUser(email, password);
-
-// Login and get tokens
-const tokens = await authService.login(user);
-
-// Refresh tokens
-const newTokens = await authService.refreshTokens(refreshToken);
-
-// Hash passwords (Argon2)
-const hash = await authService.hashPassword(password);
-const match = await authService.comparePassword(password, hash);
+try {
+  const tokens = await authService.refreshTokens(refreshToken);
+  // Store new tokens
+} catch (error) {
+  if (error instanceof UnauthorizedException) {
+    // Refresh token expired or revoked — redirect to login
+  }
+}
 ```
+
+Refresh tokens expire after the configured `JWT_REFRESH_TOKEN_TTL` (default 7 days). After expiry, the user must re-authenticate.
+
+### Guard Ordering
+
+`RolesGuard` depends on `req.user` being populated by `JwtAuthGuard`. Always apply `JwtAuthGuard` first:
+
+```typescript
+// ✅ CORRECT: JwtAuthGuard populates req.user, then RolesGuard checks roles
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('admin')
+
+// ❌ WRONG: RolesGuard has no req.user to check
+@UseGuards(RolesGuard)
+@Roles('admin')
+```
+
+## Common Pitfalls
+
+- **JWT Secret too short**: Must be at least 32 characters in production. Short secrets are vulnerable to brute-force attacks. Use a cryptographically random string.
+- **Argon2 memory in Docker**: The default `ARGON2_MEMORY_COST=65536` (64 MB) may cause OOM errors in containers with limited memory. Reduce to `32768` (32 MB) if needed.
+- **Demo user in production**: The default User model seeds a demo user. Remove or disable the seeder in production deployments.
+- **Missing ConfigModule**: The auth module reads environment variables via `@nestjs/config`. Ensure `ConfigModule.forRoot({ isGlobal: true })` is imported in `AppModule`.
+- **Passkeys origin mismatch**: `PASSKEYS_RP_ORIGIN` must exactly match the browser origin (protocol + host + port). `http://localhost` and `http://localhost:3000` are different origins.
 
 ## Auth Endpoints
 
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| POST | `/auth/register` | Register new user | Public |
-| POST | `/auth/login` | Login with email/password | Public |
-| POST | `/auth/refresh` | Refresh access token | Public |
-| POST | `/auth/magic-link/request` | Request magic link | Public |
-| POST | `/auth/magic-link/verify` | Verify magic link | Public |
-| POST | `/auth/logout` | Logout user | JWT |
-| POST | `/auth/verify` | Verify JWT token | JWT |
+| Method | Endpoint                   | Description               | Auth   |
+| ------ | -------------------------- | ------------------------- | ------ |
+| POST   | `/auth/register`           | Register new user         | Public |
+| POST   | `/auth/login`              | Login with email/password | Public |
+| POST   | `/auth/refresh`            | Refresh access token      | Public |
+| POST   | `/auth/magic-link/request` | Request magic link        | Public |
+| POST   | `/auth/magic-link/verify`  | Verify magic link         | Public |
+| POST   | `/auth/logout`             | Logout user               | JWT    |
+| POST   | `/auth/verify`             | Verify JWT token          | JWT    |
 
 ## User Object
 
@@ -347,12 +462,23 @@ interface AuthenticatedUser {
 
 ## Security Methods Supported
 
-| Method | Description | Security Level |
-|--------|-------------|----------------|
-| Password + Argon2 | Secure password hashing | High |
-| Magic Link | Passwordless email | High |
-| 2FA/TOTP | Time-based codes | Very High |
-| Passkeys | Hardware biometric | Very High |
+| Method            | Description             | Security Level |
+| ----------------- | ----------------------- | -------------- |
+| Password + Argon2 | Secure password hashing | High           |
+| Magic Link        | Passwordless email      | High           |
+| 2FA/TOTP          | Time-based codes        | Very High      |
+| Passkeys          | Hardware biometric      | Very High      |
+
+---
+
+## Cross-Cutting
+
+> When modifying this package, also check:
+> - [`@common/resend`](../resend/) — Email verification and magic links depend on email delivery
+> - [`two-factor/`](src/two-factor/) — Extends auth flow; imports `AuthModule`, `JwtAuthGuard`, `@Public()`
+> - [`passkeys/`](src/passkeys/) — Extends auth flow; imports `AuthModule`, `JwtAuthGuard`, `@Public()`
+
+---
 
 ## Compatible Clients
 

@@ -4,7 +4,8 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 export class GenerateSchemaFromTextDto {
   @ApiProperty({
     description: 'The text content to analyze and generate a schema from',
-    example: 'User registration form with fields: name (string), email (string), age (number), isActive (boolean)',
+    example:
+      'User registration form with fields: name (string), email (string), age (number), isActive (boolean)',
   })
   @IsString()
   @IsNotEmpty()

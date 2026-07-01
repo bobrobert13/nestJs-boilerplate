@@ -1,5 +1,7 @@
 # BOILERPLATE.md - NestJS Boilerplate Service
 
+> **Propósito:** Guía extendida para desarrolladores humanos en español. Para la referencia técnica en inglés orientada a agentes AI, consultá [AGENTS.md](./AGENTS.md).
+
 > Boilerplate para servicios NestJS con MongoDB, Inngest, Playwright y patrones extensible.
 
 ---
@@ -147,7 +149,8 @@ nestJs-boilerplate/
 │           ├── main.ts
 │           ├── app.module.ts
 │           └── modules/
-│               └── usuarios/  # Ejemplo CRUD
+│               ├── usuarios/        # Ejemplo CRUD
+│               └── dynamic-schema/  # Generación de esquemas con IA
 │
 ├── Dockerfile
 ├── docker-compose.yml
@@ -271,6 +274,25 @@ Servido de archivos estáticos con motor de plantillas EJS y TailwindCSS CDN.
 ```typescript
 const html = await serveStatic.render('home', { title: 'Home', layout: 'main' });
 ```
+
+### 4.11 dynamic-schema (App Module)
+
+Módulo de aplicación que genera esquemas MongoDB desde documentos (PDF, DOCX) usando IA. Ubicado en `apps/nominas/src/modules/dynamic-schema/`.
+
+Pipeline: Documento → Extracción de texto → IA (generateSchemaFromText) → Compilación → Mongoose Schema.
+
+```typescript
+import { DynamicSchemaModule } from './modules/dynamic-schema/dynamic-schema.module';
+
+@Module({
+  imports: [DynamicSchemaModule],
+})
+export class AppModule {}
+```
+
+**Endpoints principales:** `POST /dynamic-schema/extract`, `POST /dynamic-schema/generate-from-text`, `POST /dynamic-schema/generate-from-image`, `POST /dynamic-schema/compile`, `POST /dynamic-schema/pipeline`.
+
+> Consulta [AGENTS.md](./AGENTS.md) §6 `@common/dynamic-schema` para la documentación completa de la API.
 
 ---
 

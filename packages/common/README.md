@@ -35,6 +35,12 @@ export class AppModule {}
 
 ---
 
+## Configuration
+
+No environment variables required.
+
+---
+
 ## BaseAdapter<T>
 
 Use when you need to map external/unstructured data into domain models.
@@ -53,7 +59,9 @@ export class UserAdapter implements BaseAdapter<UserOutput> {
 
   adapt(rawData: unknown): UserOutput | UserOutput[] {
     if (Array.isArray(rawData)) {
-      return rawData.map(item => this.mapFields(item as Record<string, unknown>, []));
+      return rawData.map((item) =>
+        this.mapFields(item as Record<string, unknown>, []),
+      );
     }
     return this.mapFields(rawData as Record<string, unknown>, []);
   }
@@ -72,6 +80,7 @@ export class UserAdapter implements BaseAdapter<UserOutput> {
 ```
 
 **When to use:**
+
 - Integrating external APIs with different data shapes
 - Normalizing database documents to domain models
 - Transforming webhook payloads into internal representations
@@ -107,9 +116,13 @@ export class AppModule {}
 
 ---
 
-## HttpError Hierarchy
+## HttpError Classes
 
 Custom HTTP error classes for precise error handling.
+
+> **Note:** The canonical `HttpError` class hierarchy originates in `@common/http` and is re-exported from `@common/common`. See [packages/http/README.md](../http/README.md#error-handling) for the complete hierarchy.
+
+### Usage
 
 ```typescript
 import { HttpError, createHttpError } from '@common/common';
@@ -117,28 +130,56 @@ import { HttpError, createHttpError } from '@common/common';
 // Manual instantiation
 throw new HttpError(404, 'Not Found', 'User not found', '/users/123');
 
-// Factory function
-throw createHttpError(400, 'Bad Request', 'Invalid email format', '/auth/register');
+// Factory function (delegates to @common/http implementation)
+throw createHttpError(
+  400,
+  'Bad Request',
+  'Invalid email format',
+  '/auth/register',
+);
 
 // Check error type
 if (error instanceof HttpError) {
   console.log(error.statusCode); // 404
-  console.log(error.message);    // 'User not found'
+  console.log(error.message); // 'User not found'
 }
 ```
 
-**Error classes available:**
-- `HttpError( status, message, cause?, path? )` — Base class
-- `BadRequestError` — 400
-- `UnauthorizedError` — 401
-- `ForbiddenError` — 403
-- `NotFoundError` — 404
-- `ConflictError` — 409
-- `InternalServerError` — 500
+### Available Classes
+
+| Class                     | Status | Description                    |
+| ------------------------- | ------ | ------------------------------ |
+| `BadRequestError`         | `400`  | Malformed request              |
+| `UnauthorizedError`       | `401`  | Missing or invalid credentials |
+| `ForbiddenError`          | `403`  | Insufficient permissions       |
+| `NotFoundError`           | `404`  | Resource not found             |
+| `TimeoutError`            | `408`  | Request timeout                |
+| `InternalServerError`     | `500`  | Server-side error              |
+| `ServiceUnavailableError` | `503`  | External service unavailable   |
+
+> `createHttpError(status, message, url, data?)` delegates to the `@common/http` implementation. Unknown status codes default to `InternalServerError`.
 
 ---
 
-## Error Handling Patterns
+## Error Handling
+
+### DatabaseExceptionFilter
+
+The `DatabaseExceptionFilter` transforms Mongoose/MongoDB errors into consistent HTTP responses. It catches duplicate keys (11000 → 409), unreachable hosts (14 → 503), and unknown errors (→ 500). See the [DatabaseExceptionFilter section](#databaseexceptionfilter) for the full error mapping table.
+
+### BaseAdapter Error Patterns
+
+When using `BaseAdapter<T>` to map external data, errors should be caught at the adapter boundary and wrapped in `HttpError` for consistent propagation:
+
+```typescript
+adapt(rawData: unknown): UserOutput {
+  try {
+    return this.mapFields(rawData as Record<string, unknown>, []);
+  } catch (error) {
+    throw new HttpError(500, 'Data mapping failed', error);
+  }
+}
+```
 
 ### Service Layer
 
@@ -167,10 +208,20 @@ async findAndAdapt<T>(query: Record<string, unknown>, adapter: BaseAdapter<T>): 
 
 ---
 
-## Common Errors
+---
 
-| Error | Cause | Resolution |
-|-------|-------|------------|
+## Cross-Cutting
+
+> When modifying this package, also check:
+> - [`@common/http`](../http/) — HttpError classes originate there; `@common/common` re-exports `DatabaseExceptionFilter`. Error class changes must be reflected in both packages.
+> - [`@common/database`](../database/) — `DatabaseExceptionFilter` catches MongoDB errors thrown by the database package
+
+---
+
+## Common Pitfalls
+
+| Error                       | Cause                | Resolution                                                   |
+| --------------------------- | -------------------- | ------------------------------------------------------------ |
 | `MongoServerSelectionError` | Database unavailable | Check MongoDB connection string and ensure server is running |
-| `MongoServerError: 11000` | Duplicate key | Check unique indexes, handle 409 in client |
-| `HttpError: 500` | Unknown error | Check logs for `cause` field with original error |
+| `MongoServerError: 11000`   | Duplicate key        | Check unique indexes, handle 409 in client                   |
+| `HttpError: 500`            | Unknown error        | Check logs for `cause` field with original error             |

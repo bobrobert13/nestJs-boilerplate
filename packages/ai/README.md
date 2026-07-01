@@ -15,6 +15,28 @@ AI Providers wrapper for NestJS - Connect to OpenAI, Anthropic, Google Gemini, M
 - **Template Generation**: Generate HTML, email templates, JSON, code
 - **Plug & Play**: Easy to add new providers or custom configurations
 
+---
+
+### Quick API Index
+
+> **Context budget:** Use this table to jump directly to the method you need. Skip reading the full README unless implementing a new provider or advanced pattern.
+
+| If you need to... | Method | Jump to |
+|---|---|---|
+| Chat / text generation | `chat()`, `generateText()` | [§ API Reference](#api-reference) |
+| Streaming responses | `chatStream()` | [§ API Reference](#api-reference) |
+| Generate embeddings | `embeddings()`, `createEmbedding()` | [§ API Reference](#api-reference) |
+| Generate Mongoose schemas | `generateSchema()`, `generateSchemaFromText()`, `generateSchemaFromImage()` | [§ API Reference](#api-reference) |
+| Generate HTML/email/JSON/code templates | `generateTemplate()` | [§ API Reference](#api-reference) |
+| Register a custom provider | `registerProvider()` | [§ Providers](#providers) |
+| List/check available providers | `listProviders()`, `getProvider()` | [§ API Reference](#api-reference) |
+| Understand response types | `AIResponse`, `ChatMessage`, `GeneratedSchema` | [§ Types](#types) |
+| Handle errors | Check `response.success` | [§ Error Handling](#error-handling) |
+| Choose the right provider for a task | Provider selection guide | [§ Providers](#providers) |
+| Avoid rate limits / token waste | Batch processing, token management | [§ Advanced Usage](#advanced-usage) |
+
+---
+
 ## Installation
 
 ```bash
@@ -47,9 +69,9 @@ export class MyService {
 
   async generateContent() {
     const response = await this.ai.generateText(
-      'openai',                    // Provider name
+      'openai', // Provider name
       'Explain quantum computing', // User prompt
-      'You are a helpful assistant' // Optional system prompt
+      'You are a helpful assistant', // Optional system prompt
     );
 
     if (response.success) {
@@ -63,13 +85,13 @@ export class MyService {
 
 ### Pre-configured Providers
 
-| Provider | Model | Description |
-|----------|-------|-------------|
-| `openai` | gpt-4o | OpenAI GPT models |
+| Provider    | Model             | Description             |
+| ----------- | ----------------- | ----------------------- |
+| `openai`    | gpt-4o            | OpenAI GPT models       |
 | `anthropic` | claude-3-5-sonnet | Anthropic Claude models |
-| `google` | gemini-2.0-flash | Google Gemini models |
-| `moonshot` | moonshot-v1-8k | Moonshot Kimi models |
-| `minimax` | MiniMax-Text-01 | MiniMax models |
+| `google`    | gemini-2.0-flash  | Google Gemini models    |
+| `moonshot`  | moonshot-v1-8k    | Moonshot Kimi models    |
+| `minimax`   | MiniMax-Text-01   | MiniMax models          |
 
 ### Custom Provider Configuration
 
@@ -112,6 +134,7 @@ const response = await ai.chat('openai', messages, {
 ```
 
 **Parameters:**
+
 - `providerName: string` - Provider identifier (e.g., 'openai', 'anthropic')
 - `messages: ChatMessage[]` - Array of chat messages
 - `options?: ChatCompletionOptions` - Optional parameters
@@ -129,7 +152,7 @@ const response = await ai.generateText(
   'openai',
   'What is the capital of France?',
   'Answer in one sentence.',
-  { temperature: 0.5 }
+  { temperature: 0.5 },
 );
 ```
 
@@ -140,16 +163,82 @@ const response = await ai.generateText(
 Generate a Mongoose schema from description.
 
 ```typescript
-const response = await ai.generateSchema('openai', `
+const response = await ai.generateSchema(
+  'openai',
+  `
   Create a User schema with:
   - email (required, unique)
   - name (required)
   - age (optional, number)
   - createdAt, updatedAt timestamps
-`);
+`,
+);
 
 // Response contains TypeScript code for the schema
 ```
+
+---
+
+#### `generateSchemaFromImage(providerName, imageData, options?)`
+
+Generate a Mongoose schema from an image (base64 or URL).
+
+```typescript
+const response = await ai.generateSchemaFromImage(
+  'openai',
+  'data:image/png;base64,iVBORw0KGgo...',
+  { temperature: 0.3 },
+);
+
+if (response.success) {
+  const schema: GeneratedSchema = response.data;
+  console.log('Collection:', schema.collectionName);
+  console.log('Fields:', schema.fields);
+}
+```
+
+**Parameters:**
+
+- `providerName: string` - AI provider to use (e.g., 'openai', 'anthropic')
+- `imageData: string` - Base64-encoded image data or image URL
+- `options?: SchemaGenerationOptions` - Optional settings (temperature, model)
+
+**Returns:** `Promise<AIResponse<GeneratedSchema>>`
+
+**Error handling:** On failure, `response.error` starts with `SCHEMA_GENERATION_ERROR:` prefix.
+
+> **Cross-reference:** See the [dynamic-schema module](../../apps/nominas/src/modules/dynamic-schema/) for the full document-to-schema pipeline that uses this method.
+
+---
+
+#### `generateSchemaFromText(providerName, text, options?)`
+
+Generate a Mongoose schema from text content (e.g., extracted document text, form descriptions).
+
+```typescript
+const response = await ai.generateSchemaFromText(
+  'anthropic',
+  'User registration form with fields: name (string), email (string), age (number)',
+  { temperature: 0.3, model: 'claude-3-5-sonnet' },
+);
+
+if (response.success) {
+  const schema: GeneratedSchema = response.data;
+  // Use with SchemaCompilerService
+}
+```
+
+**Parameters:**
+
+- `providerName: string` - AI provider to use
+- `text: string` - Text content to analyze for schema inference
+- `options?: SchemaGenerationOptions` - Optional settings (temperature, model)
+
+**Returns:** `Promise<AIResponse<GeneratedSchema>>`
+
+**Error handling:** On failure, `response.error` starts with `SCHEMA_GENERATION_ERROR:` prefix.
+
+> **Cross-reference:** This method is used by the [dynamic-schema module](../../apps/nominas/src/modules/dynamic-schema/) pipeline after document text extraction.
 
 ---
 
@@ -162,25 +251,26 @@ Generate templates (HTML, email, JSON, code).
 const html = await ai.generateTemplate(
   'openai',
   'html',
-  'Create a landing page for a SaaS product with hero, features, and pricing sections'
+  'Create a landing page for a SaaS product with hero, features, and pricing sections',
 );
 
 // Generate email template
 const email = await ai.generateTemplate(
   'anthropic',
   'email',
-  'Welcome email with verification link placeholder'
+  'Welcome email with verification link placeholder',
 );
 
 // Generate JSON structure
 const json = await ai.generateTemplate(
   'google',
   'json',
-  'User profile with id, name, email, preferences object'
+  'User profile with id, name, email, preferences object',
 );
 ```
 
 **Supported types:**
+
 - `html` - Complete HTML page with TailwindCSS
 - `email` - Email HTML template (inline styles)
 - `json` - JSON data structure
@@ -199,11 +289,12 @@ const response = await ai.embeddings('openai', 'Hello world');
 const response = await ai.embeddings('openai', [
   'First text',
   'Second text',
-  'Third text'
+  'Third text',
 ]);
 ```
 
 **Returns embeddings array:**
+
 ```typescript
 {
   success: true,
@@ -245,7 +336,7 @@ await ai.chatStream(
   (chunk) => {
     console.log('Received:', chunk.data);
   },
-  { maxTokens: 500 }
+  { maxTokens: 500 },
 );
 ```
 
@@ -318,20 +409,47 @@ interface AIConfig {
 }
 ```
 
----
-
-## Environment Variables
-
-No environment variables required by default. API keys can be passed directly when registering providers.
-
-For production, store API keys securely (e.g., environment variables or secrets manager):
+### SchemaGenerationOptions
 
 ```typescript
-aiService.registerProvider({
-  provider: 'openai',
-  model: 'gpt-4o',
-  apiKey: process.env.OPENAI_API_KEY,
-});
+interface SchemaGenerationOptions {
+  temperature?: number;
+  model?: string;
+}
+```
+
+### GeneratedSchema
+
+```typescript
+interface GeneratedSchema {
+  fields: SchemaFieldDefinition[];
+  collectionName: string;
+  metadata?: Record<string, unknown>;
+}
+```
+
+### SchemaFieldDefinition
+
+```typescript
+interface SchemaFieldDefinition {
+  name: string;
+  type: 'string' | 'number' | 'boolean' | 'date' | 'array' | 'object';
+  required?: boolean;
+  validate?: Record<string, unknown>;
+  default?: unknown;
+}
+```
+
+### ProviderCapability
+
+```typescript
+interface ProviderCapability {
+  chat: boolean;
+  embeddings: boolean;
+  vision: boolean;
+  streaming: boolean;
+  functionCalling: boolean;
+}
 ```
 
 ---
@@ -355,7 +473,9 @@ const response = await ai.chat('new-provider', messages);
 
 ---
 
-## Environment Variables
+## Configuration
+
+### Environment Variables
 
 No environment variables required by default. API keys can be passed directly when registering providers.
 
@@ -375,6 +495,97 @@ aiService.registerProvider({
   model: 'gpt-4o',
   apiKey: process.env.OPENAI_API_KEY,
 });
+```
+
+---
+
+## Error Handling
+
+All AI methods return `AIResponse<T>` with a `success` boolean. Always check `response.success` before accessing `response.data`:
+
+```typescript
+const response = await ai.generateText('openai', 'Hello');
+
+if (!response.success) {
+  console.error('AI Error:', response.error);
+  // Implement retry logic or fallback provider
+  return null;
+}
+
+// Safe to use response.data
+return response.data;
+```
+
+### Error Patterns
+
+| Method                    | Error Prefix               | Example                                                                |
+| ------------------------- | -------------------------- | ---------------------------------------------------------------------- |
+| `generateSchema`          | —                          | On failure, response contains error string                             |
+| `generateSchemaFromImage` | `SCHEMA_GENERATION_ERROR:` | `"SCHEMA_GENERATION_ERROR: Invalid image format"`                      |
+| `generateSchemaFromText`  | `SCHEMA_GENERATION_ERROR:` | `"SCHEMA_GENERATION_ERROR: Text too short"`                            |
+| `chatStream`              | —                          | Errors delivered via `onChunk` callback with `chunk.success === false` |
+
+### Rate Limiting
+
+Implement delays for batch operations:
+
+```typescript
+async processBatch(items: string[]) {
+  for (const item of items) {
+    const response = await this.ai.generateText('openai', item);
+
+    // Check for rate limit errors
+    if (response.error?.includes('rate limit')) {
+      await this.delay(1000);
+      continue;
+    }
+
+    await this.delay(200); // 200ms between requests
+  }
+}
+```
+
+### Token Management
+
+Monitor token usage:
+
+```typescript
+const response = await ai.chat('openai', messages, {
+  maxTokens: 1000, // Limit response length
+});
+
+if (response.usage) {
+  console.log(`Used ${response.usage.totalTokens} tokens`);
+  console.log(`Prompt: ${response.usage.promptTokens}`);
+  console.log(`Completion: ${response.usage.completionTokens}`);
+}
+```
+
+### Fallback Provider Pattern
+
+Implement fallback logic for reliability:
+
+```typescript
+async generateWithFallback(prompt: string): Promise<AIResponse> {
+  const providers = ['openai', 'anthropic', 'google'];
+
+  for (const provider of providers) {
+    const response = await this.ai.generateText(provider, prompt);
+
+    if (response.success) {
+      return response;
+    }
+
+    console.warn(`Provider ${provider} failed:`, response.error);
+  }
+
+  return {
+    success: false,
+    error: 'All providers failed',
+    provider: 'fallback',
+    model: 'none',
+  };
+}
 ```
 
 ---
@@ -429,17 +640,17 @@ Implement fallback logic for reliability:
 ```typescript
 async generateWithFallback(prompt: string): Promise<AIResponse> {
   const providers = ['openai', 'anthropic', 'google'];
-  
+
   for (const provider of providers) {
     const response = await this.ai.generateText(provider, prompt);
-    
+
     if (response.success) {
       return response;
     }
-    
+
     console.warn(`Provider ${provider} failed:`, response.error);
   }
-  
+
   return {
     success: false,
     error: 'All providers failed',
@@ -461,7 +672,7 @@ async compareProviders(prompt: string) {
   const results = await Promise.all(
     providers.map(p => this.ai.generateText(p, prompt))
   );
-  
+
   return providers.map((provider, i) => ({
     provider,
     success: results[i].success,
@@ -480,19 +691,19 @@ Process multiple items efficiently:
 ```typescript
 async batchEmbeddings(texts: string[], batchSize = 10) {
   const results = [];
-  
+
   for (let i = 0; i < texts.length; i += batchSize) {
     const batch = texts.slice(i, i + batchSize);
     const response = await this.ai.embeddings('openai', batch);
-    
+
     if (response.success) {
       results.push(...response.data.embeddings);
     }
-    
+
     // Rate limiting delay
     await new Promise(resolve => setTimeout(resolve, 100));
   }
-  
+
   return results;
 }
 ```
@@ -521,7 +732,7 @@ export class ChatController {
         if (chunk.success) {
           res.write(`data: ${JSON.stringify(chunk.data)}\n\n`);
         }
-      }
+      },
     );
 
     res.end();
@@ -535,27 +746,27 @@ export class ChatController {
 
 Complete workflow for generating and using Mongoose schemas:
 
-```typescript
+````typescript
 async createSchemaFromDescription(description: string) {
   // 1. Generate schema code
   const response = await this.ai.generateSchema('anthropic', description);
-  
+
   if (!response.success) {
     throw new Error('Failed to generate schema');
   }
-  
+
   // 2. Extract code from response (remove markdown fences)
   const code = response.data.choices[0].message.content
     .replace(/```typescript/g, '')
     .replace(/```/g, '')
     .trim();
-  
+
   // 3. Save to file or evaluate dynamically
   await this.fs.writeFile(`src/schemas/${name}.ts`, code);
-  
+
   return { code, saved: true };
 }
-```
+````
 
 ---
 
@@ -567,16 +778,16 @@ Generate templates with custom context:
 async generateEmailTemplate(type: string, context: Record<string, any>) {
   const prompt = `
     Generate an email template for: ${type}
-    
+
     Context:
     - Company: ${context.companyName}
     - Tone: ${context.tone}
     - CTA: ${context.callToAction}
     - Brand colors: ${context.brandColors}
-    
+
     Include inline CSS for email compatibility.
   `;
-  
+
   return this.ai.generateTemplate('openai', 'email', prompt);
 }
 
@@ -620,13 +831,13 @@ Implement delays for batch operations:
 async processBatch(items: string[]) {
   for (const item of items) {
     const response = await this.ai.generateText('openai', item);
-    
+
     // Check rate limit headers or errors
     if (response.error?.includes('rate limit')) {
       await this.delay(1000); // Wait 1 second
       continue;
     }
-    
+
     await this.delay(200); // 200ms between requests
   }
 }
@@ -654,39 +865,39 @@ if (response.usage) {
 
 ### 4. Temperature Guidelines
 
-| Temperature | Use Case |
-|-------------|----------|
-| 0.0 - 0.3 | Code generation, factual answers, schema generation |
-| 0.4 - 0.7 | General chat, content creation, balanced output |
-| 0.8 - 1.0 | Creative writing, brainstorming, diverse outputs |
-| 1.0+ | Experimental, highly creative (may be incoherent) |
+| Temperature | Use Case                                            |
+| ----------- | --------------------------------------------------- |
+| 0.0 - 0.3   | Code generation, factual answers, schema generation |
+| 0.4 - 0.7   | General chat, content creation, balanced output     |
+| 0.8 - 1.0   | Creative writing, brainstorming, diverse outputs    |
+| 1.0+        | Experimental, highly creative (may be incoherent)   |
 
 ---
 
 ### 5. Provider Selection
 
-| Task | Recommended Provider |
-|------|---------------------|
-| Code generation | OpenAI (gpt-4o), Anthropic (claude-3-5-sonnet) |
-| Creative writing | Anthropic, Google (gemini) |
-| Long context | Anthropic (200K), Google (1M+) |
-| Cost-effective | Moonshot, MiniMax |
-| Embeddings | OpenAI (text-embedding-3-large) |
-| Local/Offline | Custom provider (Ollama, LM Studio) |
+| Task             | Recommended Provider                           |
+| ---------------- | ---------------------------------------------- |
+| Code generation  | OpenAI (gpt-4o), Anthropic (claude-3-5-sonnet) |
+| Creative writing | Anthropic, Google (gemini)                     |
+| Long context     | Anthropic (200K), Google (1M+)                 |
+| Cost-effective   | Moonshot, MiniMax                              |
+| Embeddings       | OpenAI (text-embedding-3-large)                |
+| Local/Offline    | Custom provider (Ollama, LM Studio)            |
 
 ---
 
-## Troubleshooting
+## Common Pitfalls
 
 ### Common Issues
 
-| Issue | Solution |
-|-------|----------|
-| `Provider not found` | Check provider name, use `ai.listProviders()` |
-| `401 Unauthorized` | Verify API key is correct and active |
-| `429 Rate limit` | Add delays between requests or upgrade plan |
-| `Timeout` | Increase timeout in provider config or reduce maxTokens |
-| `Empty response` | Check temperature (too high) or maxTokens (too low) |
+| Issue                | Solution                                                |
+| -------------------- | ------------------------------------------------------- |
+| `Provider not found` | Check provider name, use `ai.listProviders()`           |
+| `401 Unauthorized`   | Verify API key is correct and active                    |
+| `429 Rate limit`     | Add delays between requests or upgrade plan             |
+| `Timeout`            | Increase timeout in provider config or reduce maxTokens |
+| `Empty response`     | Check temperature (too high) or maxTokens (too low)     |
 
 ---
 
@@ -702,11 +913,11 @@ export class DebugAiService {
   async debugProvider(provider: string, prompt: string) {
     console.log(`Testing provider: ${provider}`);
     console.log('Prompt:', prompt);
-    
+
     const start = Date.now();
     const response = await this.ai.generateText(provider, prompt);
     const duration = Date.now() - start;
-    
+
     console.log('Response:', {
       success: response.success,
       error: response.error,
@@ -714,7 +925,7 @@ export class DebugAiService {
       tokens: response.usage?.totalTokens,
       duration: `${duration}ms`,
     });
-    
+
     return response;
   }
 }
@@ -739,6 +950,16 @@ export class DebugAiService {
 - **Sanitize AI output** before displaying to users
 - **Implement rate limiting** per user to prevent abuse
 - **Log API usage** for monitoring and billing
+
+---
+
+---
+
+## Cross-Cutting
+
+> When modifying this package, also check:
+> - [`@common/documents`](../documents/) — Document text extraction provides the input for `generateSchemaFromText()`
+> - [`dynamic-schema` module](../../apps/nominas/src/modules/dynamic-schema/) — App module that orchestrates the full document→AI→schema pipeline
 
 ---
 

@@ -134,7 +134,10 @@ export class DynamicSchemaController {
   })
   @ApiResponse({ status: 400, description: 'Pipeline failed' })
   @HttpCode(HttpStatus.OK)
-  async fullPipeline(@Body() dto: ExtractDocumentDto & { provider?: string; temperature?: number }) {
+  async fullPipeline(
+    @Body()
+    dto: ExtractDocumentDto & { provider?: string; temperature?: number },
+  ) {
     const buffer = Buffer.from(dto.document, 'base64');
     const result = await this.dynamicSchemaService.fullPipeline(
       buffer,

@@ -1,41 +1,71 @@
-# openspec/config.yaml
 schema: spec-driven
 
 context: |
-  Tech stack: NestJS 11, TypeScript 5.7, MongoDB 7.0 (ReplicaSet), Mongoose 9, Inngest 4, Playwright 1.59
-  Architecture: Monorepo con packages/@common/*, Repository+Service pattern, Global modules
-  Testing: Jest (unit + e2e) — no implementado aún
-  Style: ESLint + Prettier, kebab-case files, PascalCase classes, PascalCase+Dtos
+  NestJS 11 monorepo (TypeScript 5.7, Node.js 20+), MongoDB/Mongoose 9.x, Inngest 4.x, Playwright 1.x.
+  10 shared packages (ai, auth, common, database, documents, http, inngest, playwright, resend, serve-static)
+  under packages/, 1 app (nominas) under apps/ with modules: usuarios, dynamic-schema.
+  Swagger at /api, Express platform, class-validator/class-transformer, Argon2 for passwords, 2FA + Passkeys.
 
-strict_tdd: false
+strict_tdd: true
+
+testing:
+  unit:
+    available: true
+    runner: jest
+    command: "npm run test"
+    pattern: "*.spec.ts"
+  integration:
+    available: true
+    runner: jest
+    command: "npm run test"
+    note: Uses @nestjs/testing with supertest for HTTP integration tests
+  e2e:
+    available: true
+    runner: jest
+    command: "npm run test:e2e"
+    config: apps/nominas/test/jest-e2e.json
+    pattern: "*.e2e-spec.ts"
+    note: Uses supertest for HTTP E2E tests against full NestJS app
+  coverage:
+    available: true
+    command: "npm run test:cov"
+    output: ./coverage/
+
+quality:
+  linter:
+    available: true
+    tool: eslint
+    command: "npm run lint"
+    config: eslint.config.mjs
+  type_checker:
+    available: true
+    tool: tsc
+    command: "npm run build"
+  formatter:
+    available: true
+    tool: prettier
+    command: "npm run format"
+    config: .prettierrc (singleQuote, trailingComma 'all')
 
 rules:
   proposal:
-    - Identificar packages/@common afectados
-    - Incluir rollback plan para cambios riesgosos
-    - Mapear dependencias entre paquetes afectados
+    - Include rollback plan for risky changes
   specs:
-    - Usar Given/When/Then para escenarios
-    - Usar RFC 2119 (MUST, SHALL, SHOULD, MAY)
-    - Incluir "Affected docs" en cada spec — rutas a READMEs afectados
+    - Use Given/When/Then for scenarios
+    - Use RFC 2119 keywords (MUST, SHALL, SHOULD, MAY)
   design:
-    - Incluir diagramas Mermaid para flujos complejos
-    - Documentar decisiones con rationale
-    - Referenciar documentación oficial de librerías externas
+    - Include sequence diagrams for complex flows
+    - Document architecture decisions with rationale
   tasks:
-    - Agrupar por paquete (infra, implementación, documentación)
-    - Usar numeración jerárquica (1.1, 1.2)
-    - Incluir tarea de documentación en cada cambio
-    - Cada tarea completable en sesión única
+    - Group by phase, use hierarchical numbering
+    - Keep tasks completable in one session
   apply:
-    - Seguir patrones existentes (Repository pattern, Global modules, DTOs)
-    - JSDoc obligatorio en nuevos exports públicos
-    - Actualizar README.md del paquete afectado SIEMPRE
-    - Ejecutar npm run build y npm run lint antes de finalizar
-    tdd: false
+    - Follow existing code patterns (NestJS module pattern, repository pattern, constructor DI)
+    tdd: true
+    test_command: "npm run test"
   verify:
+    test_command: "npm run test && npm run test:e2e"
     build_command: "npm run build"
-    lint_command: "npm run lint"
+    coverage_threshold: 0
   archive:
-    - Sincronizar delta specs a main specs de los dominios afectados
-    - Verificar que AGENTS.md refleje cambios de estructura
+    - Warn before merging destructive deltas

@@ -42,10 +42,7 @@ TWO_FACTOR_BACKUP_CODES_LENGTH=10
 import { AuthModule, TwoFactorModule } from '@common/auth';
 
 @Module({
-  imports: [
-    AuthModule,
-    TwoFactorModule,
-  ],
+  imports: [AuthModule, TwoFactorModule],
 })
 export class AppModule {}
 ```
@@ -63,15 +60,15 @@ export class MyService {
 
 ## API Endpoints
 
-| Método | Endpoint | Descripción | Auth |
-|--------|----------|-------------|------|
-| POST | `/auth/2fa/generate` | Generar secreto y QR | JWT |
-| POST | `/auth/2fa/enable` | Habilitar 2FA con código | JWT |
-| POST | `/auth/2fa/verify` | Verificar código TOTP | JWT |
-| POST | `/auth/2fa/verify-backup` | Verificar código de respaldo | Público |
-| POST | `/auth/2fa/regenerate-backup-codes` | Regenerar códigos | JWT |
-| POST | `/auth/2fa/disable` | Deshabilitar 2FA | JWT |
-| POST | `/auth/2fa/status` | Estado de 2FA | JWT |
+| Método | Endpoint                            | Descripción                  | Auth    |
+| ------ | ----------------------------------- | ---------------------------- | ------- |
+| POST   | `/auth/2fa/generate`                | Generar secreto y QR         | JWT     |
+| POST   | `/auth/2fa/enable`                  | Habilitar 2FA con código     | JWT     |
+| POST   | `/auth/2fa/verify`                  | Verificar código TOTP        | JWT     |
+| POST   | `/auth/2fa/verify-backup`           | Verificar código de respaldo | Público |
+| POST   | `/auth/2fa/regenerate-backup-codes` | Regenerar códigos            | JWT     |
+| POST   | `/auth/2fa/disable`                 | Deshabilitar 2FA             | JWT     |
+| POST   | `/auth/2fa/status`                  | Estado de 2FA                | JWT     |
 
 ## Flujo de Implementación
 
@@ -158,11 +155,11 @@ Los códigos de respaldo son:
 ```typescript
 interface User2FA {
   userId: string;
-  secret: string;           // Secreto TOTP (encriptado)
+  secret: string; // Secreto TOTP (encriptado)
   isEnabled: boolean;
   enabledAt: Date;
   backupCodes: {
-    code: string;          // Hash SHA-256
+    code: string; // Hash SHA-256
     isUsed: boolean;
     usedAt?: Date;
   }[];
@@ -186,8 +183,8 @@ const isValid = await twoFactorService.verifyBackupCodeWithUser(
 
 ```typescript
 interface TwoFactorVerifyResult {
-  valid: boolean;           // true si el código TOTP es válido
-  requiresBackupCode?: boolean;  // Indica si debe usar backup
+  valid: boolean; // true si el código TOTP es válido
+  requiresBackupCode?: boolean; // Indica si debe usar backup
 }
 ```
 

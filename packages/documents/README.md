@@ -147,15 +147,39 @@ async extractDocument(file: Express.Multer.File) {
 
 ---
 
-## Limits and Constraints
+## Configuration
 
-| Limit | Value | Reason |
-|-------|-------|--------|
-| Max file size | 10 MB | Memory constraints |
-| Max pages (PDF) | 20 pages | Processing time |
-| Max images | 50 per page | Output size |
+No environment variables required.
+
+---
+
+## Common Pitfalls
+
+### Limits
+
+| Limit           | Value       | Reason             |
+| --------------- | ----------- | ------------------ |
+| Max file size   | 10 MB       | Memory constraints |
+| Max pages (PDF) | 20 pages    | Processing time    |
+| Max images      | 50 per page | Output size        |
 
 Exceeding limits throws `Error` with appropriate `DOCUMENT_ERROR_CODES`.
+
+### Unsupported Scenarios
+
+- **Password-protected documents**: Extraction will fail with `DOCUMENT_PARSE_ERROR`. Remove protection before processing.
+- **Scanned images**: PDFs containing only images require OCR. The document extractors read text layers, not pixels. Use an OCR service (e.g., Tesseract) before feeding documents to this module.
+- **Complex layouts**: Heavy formatting, multi-column layouts, and embedded tables may produce garbled text. The extractors produce plain text — layout information is discarded.
+
+---
+
+---
+
+## Cross-Cutting
+
+> When modifying this package, also check:
+> - [`@common/ai`](../ai/) — Extracted text feeds into `generateSchemaFromText()` for AI schema generation
+> - [`dynamic-schema` module](../../apps/nominas/src/modules/dynamic-schema/) — App module that chains document extraction → AI schema gen → compilation
 
 ---
 

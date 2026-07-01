@@ -28,10 +28,7 @@ import { ConfigModule } from '@nestjs/config';
 import { PlaywrightModule } from '@common/playwright';
 
 @Module({
-  imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
-    PlaywrightModule,
-  ],
+  imports: [ConfigModule.forRoot({ isGlobal: true }), PlaywrightModule],
 })
 export class AppModule {}
 ```
@@ -139,7 +136,7 @@ await page.screenshot({ path: 'screenshot.png' });
 
 // Evaluate (run JS in browser)
 const links = await page.evaluate(() =>
-  Array.from(document.querySelectorAll('a')).map(a => a.href)
+  Array.from(document.querySelectorAll('a')).map((a) => a.href),
 );
 ```
 
@@ -171,11 +168,11 @@ async scrapeListPage(url: string): Promise<string[]> {
 
 ```typescript
 interface PlaywrightOptions {
-  headless?: boolean;           // Run without GUI (default: true)
-  timeout?: number;            // Default timeout in ms (default: 30000)
-  viewport?: { width: number; height: number };  // Browser viewport
-  userAgent?: string;          // Custom user agent string
-  acceptDownloads?: boolean;   // Allow file downloads (default: false)
+  headless?: boolean; // Run without GUI (default: true)
+  timeout?: number; // Default timeout in ms (default: 30000)
+  viewport?: { width: number; height: number }; // Browser viewport
+  userAgent?: string; // Custom user agent string
+  acceptDownloads?: boolean; // Allow file downloads (default: false)
 }
 ```
 
@@ -183,21 +180,65 @@ interface PlaywrightOptions {
 
 ## Environment Variables
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `PLAYWRIGHT_HEADLESS` | `true` | Run browser without GUI |
-| `PLAYWRIGHT_TIMEOUT` | `30000` | Default timeout (ms) |
-| `PLAYWRIGHT_RETRIES` | `3` | Retry count on failure |
-| `PLAYWRIGHT_BROWSERS_PATH` | — | Custom Chromium path |
+| Variable                   | Default | Description             |
+| -------------------------- | ------- | ----------------------- |
+| `PLAYWRIGHT_HEADLESS`      | `true`  | Run browser without GUI |
+| `PLAYWRIGHT_TIMEOUT`       | `30000` | Default timeout (ms)    |
+| `PLAYWRIGHT_RETRIES`       | `3`     | Retry count on failure  |
+| `PLAYWRIGHT_BROWSERS_PATH` | —       | Custom Chromium path    |
+
+---
+
+## Error Handling
+
+### Browser Initialization
+
+| Error                                      | Cause                       | Resolution                                                                 |
+| ------------------------------------------ | --------------------------- | -------------------------------------------------------------------------- |
+| `Executable doesn't exist at .../chromium` | Chromium not installed      | Run `npx playwright install chromium`                                      |
+| `Browser closed unexpectedly`              | Memory or resource pressure | Set `PLAYWRIGHT_HEADLESS=true` to reduce memory usage                      |
+| `Cannot find chromium`                     | Custom path misconfigured   | Set `PLAYWRIGHT_BROWSERS_PATH` to folder containing the browser executable |
+
+### Page Navigation
+
+| Error                                   | Cause                      | Resolution                                                                  |
+| --------------------------------------- | -------------------------- | --------------------------------------------------------------------------- |
+| `page.goto: net::ERR_NAME_NOT_RESOLVED` | Invalid URL or DNS failure | Verify URL is reachable                                                     |
+| `page.goto: Timeout`                    | Page load exceeded timeout | Increase `PLAYWRIGHT_TIMEOUT` or check network                              |
+| `waitForSelector: Timeout`              | Element never appeared     | Verify selector, increase timeout per call: `waitForSelector('.el', 10000)` |
+
+### Recovery Pattern
+
+```typescript
+async safeNavigate(url: string, retries = 3) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await this.playwright.createPage(url);
+    } catch (error) {
+      if (i === retries - 1) throw error;
+      await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+    }
+  }
+}
+```
+
+---
+
+---
+
+## Cross-Cutting
+
+> When modifying this package, also check:
+> - [`@common/http`](../http/) — File downloads via `DownloadService` may precede browser scraping of downloaded assets
 
 ---
 
 ## Common Issues
 
-| Issue | Cause | Solution |
-|-------|-------|----------|
-| `Executable doesn't exist` | Chromium not installed | Run `npx playwright install chromium` |
-| `Browser closed unexpectedly` | Memory pressure | Set `PLAYWRIGHT_HEADLESS=true` |
-| `waitForSelector timeout` | Element never appeared | Increase timeout or check selector |
-| `Failed to navigate` | Invalid URL or network | Verify URL is accessible |
-| `Cannot find chromium` | Custom path misconfigured | Set `PLAYWRIGHT_BROWSERS_PATH` to folder containing `chrome-headless-shell` |
+| Issue                         | Cause                     | Solution                                                                    |
+| ----------------------------- | ------------------------- | --------------------------------------------------------------------------- |
+| `Executable doesn't exist`    | Chromium not installed    | Run `npx playwright install chromium`                                       |
+| `Browser closed unexpectedly` | Memory pressure           | Set `PLAYWRIGHT_HEADLESS=true`                                              |
+| `waitForSelector timeout`     | Element never appeared    | Increase timeout or check selector                                          |
+| `Failed to navigate`          | Invalid URL or network    | Verify URL is accessible                                                    |
+| `Cannot find chromium`        | Custom path misconfigured | Set `PLAYWRIGHT_BROWSERS_PATH` to folder containing `chrome-headless-shell` |

@@ -115,7 +115,7 @@ const result = await http.download().image('https://example.com/photo.jpg', {
     quality: 80,
     width: 800,
     height: 600,
-    format: 'webp',  // 'jpeg' | 'png' | 'webp' | 'avif'
+    format: 'webp', // 'jpeg' | 'png' | 'webp' | 'avif'
   },
 });
 // Downloads, converts to WebP, resizes, returns { filepath, size, filename }
@@ -125,18 +125,24 @@ const result = await http.download().image('https://example.com/photo.jpg', {
 
 ```typescript
 interface DownloadOptions {
-  folder?: string;        // Subdirectory (default: '')
-  filename?: string;       // Custom filename (auto-detected from URL)
-  headers?: Record<string, string>;  // Custom headers for auth
+  folder?: string; // Subdirectory (default: '')
+  filename?: string; // Custom filename (auto-detected from URL)
+  headers?: Record<string, string>; // Custom headers for auth
 }
 
 interface ImageOptimizationOptions {
-  quality?: number;       // 1-100 (default: 80)
-  width?: number;         // Max width in pixels
-  height?: number;        // Max height in pixels
-  format?: 'jpeg' | 'png' | 'webp' | 'avif';  // Output format
+  quality?: number; // 1-100 (default: 80)
+  width?: number; // Max width in pixels
+  height?: number; // Max height in pixels
+  format?: 'jpeg' | 'png' | 'webp' | 'avif'; // Output format
 }
 ```
+
+---
+
+## Configuration
+
+No environment variables required (axios URLs are configured per-request).
 
 ---
 
@@ -151,9 +157,9 @@ try {
   await http.get('/api/data');
 } catch (error) {
   if (error instanceof HttpError) {
-    console.log(error.statusCode);  // e.g., 404
-    console.log(error.message);     // e.g., 'Not Found'
-    console.log(error.path);        // e.g., '/api/data'
+    console.log(error.statusCode); // e.g., 404
+    console.log(error.message); // e.g., 'Not Found'
+    console.log(error.path); // e.g., '/api/data'
   }
 }
 ```
@@ -171,12 +177,22 @@ try {
 
 ---
 
+---
+
+## Cross-Cutting
+
+> When modifying this package, also check:
+> - [`@common/common`](../common/) — HttpError class hierarchy is duplicated here; both must stay in sync on error classes and status codes
+> - [`@common/playwright`](../playwright/) — Downloaded files may be processed through browser scraping
+
+---
+
 ## Common Issues
 
-| Issue | Cause | Solution |
-|-------|-------|----------|
-| `HttpError: 500` | Target server error | Check target service logs |
-| `ECONNREFUSED` | Target not reachable | Verify URL and network |
-| `ETIMEDOUT` | Request timeout | Increase `timeout` option |
-| Image download fails | Invalid URL or auth | Check `headers` option |
+| Issue                  | Cause                    | Solution                     |
+| ---------------------- | ------------------------ | ---------------------------- |
+| `HttpError: 500`       | Target server error      | Check target service logs    |
+| `ECONNREFUSED`         | Target not reachable     | Verify URL and network       |
+| `ETIMEDOUT`            | Request timeout          | Increase `timeout` option    |
+| Image download fails   | Invalid URL or auth      | Check `headers` option       |
 | Sharp conversion fails | Unsupported image format | Ensure source is valid image |
