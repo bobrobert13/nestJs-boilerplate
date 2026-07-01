@@ -18,6 +18,16 @@ interface DatabaseConfig {
   };
 }
 
+/**
+ * MongoDB connection service with exponential backoff retry.
+ *
+ * Handles initial connection, reconnection on disconnect, and
+ * graceful disconnection. Implements OnModuleInit to connect
+ * automatically when the module starts.
+ *
+ * The server continues running even after max retries are
+ * exhausted (partial functionality without database).
+ */
 @Injectable()
 export class DatabaseService implements OnModuleInit {
   private readonly logger = new Logger(DatabaseService.name);
@@ -29,6 +39,11 @@ export class DatabaseService implements OnModuleInit {
     await this.connectWithRetry();
   }
 
+  /**
+   * Connect to MongoDB with exponential backoff retry.
+   * Retries up to config.retry.maxRetries times before giving up.
+   * On successful connection, sets up disconnect/reconnect listeners.
+   */
   async connectWithRetry(): Promise<void> {
     const config = this.configService.get<DatabaseConfig>('database');
     if (!config) {
@@ -96,6 +111,9 @@ export class DatabaseService implements OnModuleInit {
     });
   }
 
+  /**
+   * Disconnect from MongoDB gracefully.
+   */
   async disconnect(): Promise<void> {
     await mongoose.disconnect();
     this.logger.log('MongoDB connection closed');

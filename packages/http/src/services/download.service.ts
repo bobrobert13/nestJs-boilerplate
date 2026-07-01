@@ -5,18 +5,37 @@ import sharp from 'sharp';
 import { createHttpError, HttpError } from '../http-error';
 import { DownloadOptions, ImageOptimizationOptions } from '../interfaces/http-options.interface';
 
+/**
+ * Result of a successful download operation.
+ */
 interface DownloadResult {
+  /** Absolute path to the saved file */
   filepath: string;
+  /** File size in bytes */
   size: number;
+  /** Resolved filename */
   filename: string;
 }
 
+/**
+ * Service for downloading files, images, and videos with
+ * optional image optimization via Sharp.
+ *
+ * Created via {@link HttpService.download} — not instantiated directly.
+ */
 export class DownloadService {
   constructor(
     private readonly client: AxiosInstance,
     private readonly baseFolder?: string,
   ) {}
 
+  /**
+   * Downloads a generic file from a URL.
+   *
+   * @param url - Source URL of the file
+   * @param options - Folder, filename, and custom headers
+   * @returns Download result with filepath, size, and filename
+   */
   async file(url: string, options: DownloadOptions = {}): Promise<DownloadResult> {
     const { folder = '', filename, headers } = options;
     const savePath = this.resolvePath(folder);
@@ -51,6 +70,13 @@ export class DownloadService {
     }
   }
 
+  /**
+   * Downloads an image with optional Sharp optimization (resize, format conversion, quality).
+   *
+   * @param url - Source URL of the image
+   * @param options - Folder, filename, headers, and optional image optimization settings
+   * @returns Download result with filepath, size, and filename
+   */
   async image(
     url: string,
     options: DownloadOptions & { optimize?: ImageOptimizationOptions } = {},
@@ -107,6 +133,14 @@ export class DownloadService {
     }
   }
 
+  /**
+   * Downloads a video file. Delegates to {@link file} since the download
+   * mechanics are identical.
+   *
+   * @param url - Source URL of the video
+   * @param options - Folder, filename, and custom headers
+   * @returns Download result with filepath, size, and filename
+   */
   async video(url: string, options: DownloadOptions = {}): Promise<DownloadResult> {
     return this.file(url, options);
   }

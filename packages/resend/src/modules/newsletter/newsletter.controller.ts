@@ -10,6 +10,10 @@ import {
 import { NewsletterService } from './newsletter.service';
 import type { SubscribeDto, UnsubscribeDto } from './interfaces/newsletter.interfaces';
 
+/**
+ * REST controller for newsletter subscription management.
+ * Exposes endpoints for subscribing, unsubscribing, listing subscribers, and stats.
+ */
 @Controller('newsletter')
 export class NewsletterController {
   constructor(private readonly newsletterService: NewsletterService) {}

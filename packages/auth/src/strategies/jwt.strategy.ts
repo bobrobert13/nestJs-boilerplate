@@ -14,6 +14,13 @@ interface AuthConfig {
   };
 }
 
+/**
+ * Passport strategy that validates JWT bearer tokens from the Authorization header.
+ *
+ * @description Extracts the JWT from the `Authorization: Bearer <token>` header,
+ * verifies its signature, issuer, and audience, then calls {@link validate}
+ * to build the {@link AuthenticatedUser} object attached to `req.user`.
+ */
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   constructor(private readonly configService: ConfigService) {
@@ -27,6 +34,13 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     });
   }
 
+  /**
+   * Validates the decoded JWT payload and constructs the authenticated user.
+   *
+   * @param payload - Decoded JWT payload containing `sub`, `email`, and `roles`
+   * @returns An {@link AuthenticatedUser} object attached to the request
+   * @throws UnauthorizedException if the payload is missing required fields
+   */
   async validate(payload: JwtPayload): Promise<AuthenticatedUser> {
     if (!payload.sub || !payload.email) {
       throw new UnauthorizedException('Invalid token payload');

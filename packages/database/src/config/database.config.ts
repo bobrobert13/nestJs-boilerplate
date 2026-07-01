@@ -1,5 +1,16 @@
 import { registerAs } from '@nestjs/config';
 
+/**
+ * Database configuration registered under the 'database' namespace.
+ *
+ * Provides MongoDB connection URI, connection options (autoIndex, timeouts,
+ * replica set), and retry policy (max retries, delays).
+ *
+ * Reads from environment variables:
+ * - `MONGODB_URI` — MongoDB connection string
+ * - `MONGODB_REPLICA_SET` — Replica set name
+ * - `MONGODB_DIRECT_CONNECTION` — Force direct connection
+ */
 export default registerAs('database', () => {
   const mongodbUri =
     process.env.MONGODB_URI || 'mongodb://localhost:27017/manga_scrapping?replicaSet=rs0';

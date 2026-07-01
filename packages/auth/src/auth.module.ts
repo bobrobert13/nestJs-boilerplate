@@ -21,6 +21,15 @@ interface AuthConfig {
   };
 }
 
+/**
+ * Global authentication module providing JWT, Magic Link, and role-based access control.
+ *
+ * @description Configures Passport with JWT as the default strategy and exports
+ * {@link AuthService}, {@link MagicLinkService}, {@link JwtAuthGuard}, and
+ * {@link RolesGuard} for application-wide use.
+ *
+ * Registers async JWT module using values from the `auth` config namespace.
+ */
 @Global()
 @Module({
   imports: [

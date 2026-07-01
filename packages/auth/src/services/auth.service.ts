@@ -21,6 +21,13 @@ interface AuthConfig {
   };
 }
 
+/**
+ * Core authentication service handling credential validation, registration,
+ * JWT token issuance, token refresh, logout, and Argon2 password hashing.
+ *
+ * @description In-memory demo implementation. Replace `validateUser` and
+ * `register` with real database-backed logic for production.
+ */
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
@@ -31,6 +38,13 @@ export class AuthService {
     private readonly configService: ConfigService,
   ) {}
 
+  /**
+   * Validates user credentials against the demo user store.
+   *
+   * @param email - User's email address
+   * @param password - User's plaintext password
+   * @returns An {@link AuthenticatedUser} if valid, or `null` if credentials are rejected
+   */
   async validateUser(email: string, password: string): Promise<AuthenticatedUser | null> {
     this.logger.log(`Validating user: ${email}`);
     
@@ -45,6 +59,15 @@ export class AuthService {
     return null;
   }
 
+  /**
+   * Registers a new user (demo — in-memory only).
+   *
+   * @param email - New user's email address
+   * @param password - New user's plaintext password
+   * @param name - Optional display name
+   * @returns The newly created {@link AuthenticatedUser}
+   * @throws ConflictException if the email is already taken
+   */
   async register(email: string, password: string, name?: string): Promise<AuthenticatedUser> {
     this.logger.log(`Registering user: ${email}`);
 
@@ -59,6 +82,12 @@ export class AuthService {
     };
   }
 
+  /**
+   * Issues a JWT access token and an opaque refresh token for the given user.
+   *
+   * @param user - The authenticated user to generate tokens for
+   * @returns A {@link TokenResponse} with `accessToken`, `refreshToken`, and `expiresIn`
+   */
   async login(user: AuthenticatedUser): Promise<TokenResponse> {
     this.logger.log(`User login: ${user.email}`);
 
@@ -78,6 +107,13 @@ export class AuthService {
     };
   }
 
+  /**
+   * Exchanges a valid refresh token for a new access/refresh token pair.
+   *
+   * @param refreshToken - The opaque refresh token string
+   * @returns A new {@link TokenResponse}
+   * @throws UnauthorizedException if the token is invalid or expired
+   */
   async refreshTokens(refreshToken: string): Promise<TokenResponse> {
     const tokenData = this.refreshTokenStore.get(refreshToken);
 
@@ -99,11 +135,23 @@ export class AuthService {
     return this.login(user);
   }
 
+  /**
+   * Invalidates a refresh token, effectively logging the user out.
+   *
+   * @param refreshToken - The opaque refresh token to revoke
+   */
   async logout(refreshToken: string): Promise<void> {
     this.refreshTokenStore.delete(refreshToken);
     this.logger.log('User logged out');
   }
 
+  /**
+   * Verifies and decodes a JWT access token.
+   *
+   * @param token - Raw JWT string to verify
+   * @returns The decoded {@link JwtPayload}
+   * @throws UnauthorizedException if the token is invalid or expired
+   */
   async validateToken(token: string): Promise<JwtPayload> {
     try {
       return this.jwtService.verify<JwtPayload>(token);
@@ -112,6 +160,12 @@ export class AuthService {
     }
   }
 
+  /**
+   * Hashes a plaintext password using argon2id with configurable cost parameters.
+   *
+   * @param password - Plaintext password to hash
+   * @returns The argon2 hash string
+   */
   async hashPassword(password: string): Promise<string> {
     const config = this.configService.get<AuthConfig>('auth');
     const argon2Options = {
@@ -125,6 +179,13 @@ export class AuthService {
     return argon2.hash(password, argon2Options);
   }
 
+  /**
+   * Compares a plaintext password against an argon2 hash.
+   *
+   * @param password - Plaintext password to verify
+   * @param hash - Argon2 hash to compare against
+   * @returns `true` if the password matches the hash
+   */
   async comparePassword(password: string, hash: string): Promise<boolean> {
     try {
       return await argon2.verify(hash, password);

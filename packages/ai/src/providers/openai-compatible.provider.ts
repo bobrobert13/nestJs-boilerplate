@@ -8,6 +8,14 @@ import {
 } from '../types/ai.types';
 import { IAIProvider } from '../interfaces/provider.interface';
 
+/**
+ * OpenAI-compatible provider implementation.
+ *
+ * Handles any API that follows the OpenAI chat completions and embeddings
+ * schema (OpenAI, Anthropic via proxy, Ollama, LM Studio, vLLM, etc.).
+ *
+ * @implements {IAIProvider}
+ */
 export class OpenAICompatibleProvider implements IAIProvider {
   readonly name: string;
   readonly config: AIConfig;
@@ -15,6 +23,9 @@ export class OpenAICompatibleProvider implements IAIProvider {
 
   protected client: AxiosInstance;
 
+  /**
+   * @param config - Provider configuration with model, API key, and optional base URL
+   */
   constructor(config: AIConfig) {
     this.name = config.provider;
     this.config = config;
@@ -34,6 +45,12 @@ export class OpenAICompatibleProvider implements IAIProvider {
     this.capabilities = this.getCapabilities(config.provider);
   }
 
+  /**
+   * Resolve the default API base URL for well-known providers.
+   * @param provider - Provider identifier
+   * @param apiKey - Optional API key (used for Azure resource resolution)
+   * @returns Base URL string for the provider's API
+   */
   protected getDefaultBaseUrl(provider: string, apiKey?: string): string {
     const bases: Record<string, string> = {
       openai: 'https://api.openai.com/v1',
@@ -54,6 +71,11 @@ export class OpenAICompatibleProvider implements IAIProvider {
     return 'https://api.openai.com/v1';
   }
 
+  /**
+   * Determine provider capabilities based on provider type.
+   * @param provider - Provider identifier
+   * @returns Capability flags for this provider
+   */
   protected getCapabilities(provider: string): ProviderCapability {
     const defaults: ProviderCapability = {
       chat: true,
@@ -79,6 +101,10 @@ export class OpenAICompatibleProvider implements IAIProvider {
     }
   }
 
+  /**
+   * Validate the provider configuration.
+   * @returns true if the model is set
+   */
   validateConfig(): boolean {
     if (!this.config.model) {
       return false;
@@ -86,6 +112,11 @@ export class OpenAICompatibleProvider implements IAIProvider {
     return true;
   }
 
+  /**
+   * Send a chat completion request.
+   * @param options - Chat completion options
+   * @returns AIResponse with response data or error
+   */
   async chat(options: ChatCompletionOptions): Promise<AIResponse> {
     try {
       const model = options.model || this.config.model;
@@ -135,6 +166,11 @@ export class OpenAICompatibleProvider implements IAIProvider {
     }
   }
 
+  /**
+   * Stream chat completions via SSE.
+   * @param options - Chat completion options (stream is implicitly enabled)
+   * @param onChunk - Callback invoked for each streaming data chunk
+   */
   async chatStream(
     options: ChatCompletionOptions,
     onChunk: (chunk: AIResponse) => void,
@@ -178,7 +214,7 @@ export class OpenAICompatibleProvider implements IAIProvider {
                   model: parsed.model || model,
                 });
               } catch {
-                // Ignore parse errors
+                // Ignore parse errors on partial chunks
               }
             }
           }
@@ -198,6 +234,11 @@ export class OpenAICompatibleProvider implements IAIProvider {
     }
   }
 
+  /**
+   * Generate embeddings for one or more text inputs.
+   * @param options - Embedding options with input text(s) and model
+   * @returns AIResponse with embedding vectors data
+   */
   async embeddings(options: EmbeddingOptions): Promise<AIResponse> {
     try {
       const model = options.model || this.getDefaultEmbeddingModel();
@@ -243,6 +284,10 @@ export class OpenAICompatibleProvider implements IAIProvider {
     }
   }
 
+  /**
+   * Get the default embedding model for the current provider.
+   * @returns Model identifier string
+   */
   protected getDefaultEmbeddingModel(): string {
     const models: Record<string, string> = {
       openai: 'text-embedding-3-large',

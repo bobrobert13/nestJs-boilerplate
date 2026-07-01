@@ -10,6 +10,10 @@ interface ResendConfig {
   replyTo?: string;
 }
 
+/**
+ * Service for sending emails via the Resend API.
+ * Supports plain text, HTML, and template-based emails with optional CC/BCC.
+ */
 @Injectable()
 export class ResendService {
   private readonly logger = new Logger(ResendService.name);
@@ -31,6 +35,12 @@ export class ResendService {
     this.replyTo = config?.replyTo;
   }
 
+  /**
+   * Sends an email using the Resend API.
+   * @param options - Email configuration including recipients, subject, and body content.
+   * @returns The send result containing the email ID and delivery details.
+   * @throws If the Resend API returns an error.
+   */
   async sendEmail(options: EmailOptions): Promise<SendEmailResult> {
     const { to, subject, text, html, from, replyTo, cc, bcc } = options;
 
@@ -67,6 +77,14 @@ export class ResendService {
     }
   }
 
+  /**
+   * Sends an email using a template with variable substitution.
+   * Replaces `{{key}}` placeholders in the template string with values from the data object.
+   * @param to - Recipient email address or array of addresses.
+   * @param template - HTML template string with `{{key}}` placeholders. Also used as the email subject.
+   * @param data - Key-value pairs to substitute into the template.
+   * @returns The send result containing the email ID and delivery details.
+   */
   async sendEmailWithTemplate(
     to: string | string[],
     template: string,

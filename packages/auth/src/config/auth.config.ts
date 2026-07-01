@@ -1,5 +1,13 @@
 import { registerAs } from '@nestjs/config';
 
+/**
+ * Configuration interface for the authentication module.
+ *
+ * @description Defines the shape of the `auth` configuration namespace
+ * loaded via `ConfigModule.forFeature(authConfig)`. All nested sections
+ * correspond to environment variables prefixed with their respective keys
+ * (e.g. `JWT_SECRET`, `TWO_FACTOR_ISSUER`, `PASSKEYS_RP_ID`).
+ */
 export interface AuthConfig {
   jwt: {
     secret: string;

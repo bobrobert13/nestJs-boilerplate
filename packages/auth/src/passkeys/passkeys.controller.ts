@@ -16,6 +16,13 @@ import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { Public } from '../decorators/public.decorator';
 import { RegisterPasskeyDto, VerifyPasskeyDto, LoginWithPasskeyDto } from './dto/passkeys.dto';
 
+/**
+ * Controller exposing WebAuthn (passkey) endpoints under `/auth/passkeys`.
+ *
+ * @description Provides registration options/verification, authentication
+ * options/verification, credential listing, and deletion. Registration and
+ * listing require JWT auth; login options and verification are public.
+ */
 @ApiTags('auth', 'passkeys')
 @Controller('auth/passkeys')
 export class PasskeysController {

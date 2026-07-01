@@ -9,16 +9,37 @@ import {
 import { Response } from 'express';
 import mongoose from 'mongoose';
 
+/**
+ * Global exception filter that catches MongoDB connection errors
+ * and returns consistent HTTP responses.
+ *
+ * - MongoDB connection errors (MongooseServerSelectionError, MongoNetworkError) → 503
+ * - NestJS HttpExceptions → passthrough with original status
+ * - Unknown errors → 500
+ *
+ * Register globally in AppModule:
+ * @example
+ * ```typescript
+ * @Module({
+ *   providers: [{ provide: APP_FILTER, useClass: DatabaseExceptionFilter }],
+ * })
+ * export class AppModule {}
+ * ```
+ */
 @Catch()
 export class DatabaseExceptionFilter implements ExceptionFilter {
   private readonly logger = new Logger(DatabaseExceptionFilter.name);
 
+  /**
+   * Handle the caught exception and format the HTTP response.
+   * @param exception - The thrown exception
+   * @param host - ArgumentsHost providing HTTP context
+   */
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
-    // Check if the error is related to MongoDB connection
     const isMongoError =
       exception instanceof mongoose.Error &&
       (exception.name === 'MongooseServerSelectionError' ||
@@ -40,7 +61,6 @@ export class DatabaseExceptionFilter implements ExceptionFilter {
       });
     }
 
-    // If it's not a DB error, let it propagate or handle it as a generic error
     if (exception instanceof HttpException) {
       return response
         .status(exception.getStatus())

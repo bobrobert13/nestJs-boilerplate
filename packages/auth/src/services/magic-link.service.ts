@@ -12,6 +12,13 @@ interface MagicLinkData {
   expiresAt: Date;
 }
 
+/**
+ * Service for passwordless authentication via single-use magic link tokens.
+ *
+ * @description Generates cryptographically secure tokens that expire after
+ * a configurable TTL. Tokens are verified once and then consumed.
+ * Can be globally disabled via the `MAGIC_LINK_ENABLED` env variable.
+ */
 @Injectable()
 export class MagicLinkService implements OnModuleInit {
   private readonly logger = new Logger(MagicLinkService.name);
@@ -30,6 +37,13 @@ export class MagicLinkService implements OnModuleInit {
     }
   }
 
+  /**
+   * Generates a single-use magic link token for the given email.
+   *
+   * @param email - Target email address for the magic link
+   * @returns A hex-encoded token string
+   * @throws Error if magic links are globally disabled
+   */
   async generateMagicLink(email: string): Promise<string> {
     const config = this.configService.get<{ magicLink: MagicLinkConfig }>('auth');
 
@@ -51,6 +65,16 @@ export class MagicLinkService implements OnModuleInit {
     return token;
   }
 
+  /**
+   * Verifies a magic link token and returns the associated email.
+   *
+   * @description Tokens are single-use — once verified they are removed
+   * from the store and cannot be reused.
+   *
+   * @param token - The magic link token to verify
+   * @returns The email address associated with the token
+   * @throws Error if the token is invalid or expired
+   */
   async verifyMagicLink(token: string): Promise<string> {
     const data = this.tokens.get(token);
 
@@ -70,10 +94,21 @@ export class MagicLinkService implements OnModuleInit {
     return email;
   }
 
+  /**
+   * Resends a magic link by generating a fresh token for the given email.
+   *
+   * @param email - Target email address
+   * @returns A new hex-encoded token string
+   */
   async resendMagicLink(email: string): Promise<string> {
     return this.generateMagicLink(email);
   }
 
+  /**
+   * Checks whether magic link authentication is globally enabled.
+   *
+   * @returns `true` if magic links are enabled via configuration
+   */
   isEnabled(): boolean {
     const config = this.configService.get<{ magicLink: MagicLinkConfig }>('auth');
     return config?.magicLink?.enabled || false;

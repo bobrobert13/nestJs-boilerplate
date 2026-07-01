@@ -14,6 +14,15 @@ import {
   MagicLinkVerifyDto,
 } from '../dto/auth.dto';
 
+/**
+ * Auth controller handling user registration, login, token refresh,
+ * magic link authentication, logout, and admin-only demo routes.
+ *
+ * @description Exposes REST endpoints under `/auth`. Most routes are
+ * marked as `@Public()` to allow unauthenticated access during
+ * registration and login flows. Uses Swagger decorators for API
+ * documentation.
+ */
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {

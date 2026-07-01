@@ -3,6 +3,7 @@ import * as ejs from 'ejs';
 import * as fs from 'fs';
 import * as path from 'path';
 
+/** Options passed to EJS template rendering, including SEO metadata and layout selection. */
 export interface RenderOptions {
   title?: string;
   description?: string;
@@ -17,6 +18,10 @@ interface CacheEntry {
   timestamp: number;
 }
 
+/**
+ * Service for rendering EJS templates with layout support and template caching.
+ * Loads templates from the `templates/` directory and injects TailwindCSS via CDN.
+ */
 @Injectable()
 export class ServeStaticService {
   private readonly logger = new Logger(ServeStaticService.name);
@@ -70,6 +75,15 @@ export class ServeStaticService {
     return path.join(this.templatesPath, 'layouts', `${layout}.ejs`);
   }
 
+  /**
+   * Renders a page view within a layout template.
+   * The view file is loaded from `templates/pages/<view>.ejs` and wrapped
+   * in the specified layout from `templates/layouts/<layout>.ejs`.
+   * @param view - Name of the page template (without .ejs extension).
+   * @param options - Render options including title, description, and layout name.
+   * @returns The fully rendered HTML string.
+   * @throws If the view or layout file is not found.
+   */
   async render(view: string, options: RenderOptions = {}): Promise<string> {
     const safeView = this.sanitizeViewName(view);
     const layout = (options.layout as string) || this.defaultLayout;
@@ -111,6 +125,13 @@ export class ServeStaticService {
     );
   }
 
+  /**
+   * Renders a raw EJS template string with optional data.
+   * The TailwindCSS CDN URL is automatically available as `tailwindCdn` in the template context.
+   * @param template - Raw EJS template string to render.
+   * @param data - Key-value pairs available in the template context.
+   * @returns The rendered HTML string.
+   */
   async renderString(
     template: string,
     data: Record<string, unknown> = {},
@@ -122,6 +143,10 @@ export class ServeStaticService {
     return ejs.render(template, baseData, { strict: false });
   }
 
+  /**
+   * Lists all available partial templates from `templates/partials/`.
+   * @returns Array of partial names (without .ejs extension). Returns empty array if the directory doesn't exist.
+   */
   async getPartials(): Promise<string[]> {
     const partialsPath = path.join(this.templatesPath, 'partials');
     try {
@@ -134,6 +159,10 @@ export class ServeStaticService {
     }
   }
 
+  /**
+   * Lists all available page templates from `templates/pages/`.
+   * @returns Array of page names (without .ejs extension). Returns empty array if the directory doesn't exist.
+   */
   async getPages(): Promise<string[]> {
     const pagesPath = path.join(this.templatesPath, 'pages');
     try {
@@ -146,10 +175,18 @@ export class ServeStaticService {
     }
   }
 
+  /**
+   * Returns the absolute filesystem path to the `templates/assets/` directory.
+   * @returns The full path to the assets directory.
+   */
   getAssetsPath(): string {
     return path.join(this.templatesPath, 'assets');
   }
 
+  /**
+   * Clears the in-memory template cache.
+   * Use after modifying template files at runtime to pick up changes without restarting.
+   */
   clearTemplateCache(): void {
     this.clearCache();
     this.logger.log('Template cache cleared');

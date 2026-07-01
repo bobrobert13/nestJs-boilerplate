@@ -307,6 +307,17 @@ export const ProductSchema = SchemaFactory.createForClass(Product);
     return provider.chatStream({ messages, ...options }, onChunk);
   }
 
+  /**
+   * Generate a Mongoose schema from an image (base64 or URL).
+   * Uses AI vision capabilities to analyze document images (invoices, forms, IDs)
+   * and infer MongoDB/Mongoose schema structures.
+   *
+   * @param providerName - AI provider to use (must support vision)
+   * @param imageData - Base64-encoded image data or image URL
+   * @param options - Optional settings (temperature, model)
+   * @returns AIResponse with GeneratedSchema data on success,
+   *          or error prefixed with SCHEMA_GENERATION_ERROR on failure
+   */
   async generateSchemaFromImage(
     providerName: string,
     imageData: string,
@@ -411,6 +422,18 @@ Rules:
     }
   }
 
+  /**
+   * Generate a Mongoose schema from text content.
+   * Analyzes extracted document text or natural language descriptions
+   * and infers MongoDB/Mongoose schema structures. Used by the
+   * dynamic-schema pipeline after document text extraction.
+   *
+   * @param providerName - AI provider to use
+   * @param text - Text content to analyze for schema inference
+   * @param options - Optional settings (temperature, model)
+   * @returns AIResponse with GeneratedSchema data on success,
+   *          or error prefixed with SCHEMA_GENERATION_ERROR on failure
+   */
   async generateSchemaFromText(
     providerName: string,
     text: string,

@@ -18,6 +18,14 @@ import {
   GenerateBackupCodesDto,
 } from './dto/two-factor.dto';
 
+/**
+ * Controller exposing 2FA endpoints under `/auth/2fa`.
+ *
+ * @description Provides TOTP secret generation, QR code delivery,
+ * code verification, backup code management, and enable/disable flows.
+ * Most endpoints require JWT authentication except the public
+ * backup code verification route.
+ */
 @ApiTags('auth', '2fa')
 @Controller('auth/2fa')
 export class TwoFactorController {

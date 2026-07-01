@@ -5,6 +5,13 @@ import { DocumentContent } from '../types/document.types';
 import { IDocumentParser } from '../interfaces/parser.interface';
 import { DOCUMENT_ERROR_CODES } from '../interfaces/parser.interface';
 
+/**
+ * Orchestrates document text extraction by auto-selecting the appropriate
+ * parser (PDF or DOCX) based on the format parameter.
+ *
+ * Aggregates all available `IDocumentParser` implementations and delegates
+ * to the first one that supports the requested format.
+ */
 @Injectable()
 export class DocumentProcessorService {
   private readonly parsers: IDocumentParser[];
@@ -16,6 +23,14 @@ export class DocumentProcessorService {
     this.parsers = [this.pdfService, this.docxService];
   }
 
+  /**
+   * Extracts text content from a document buffer.
+   *
+   * @param buffer - Raw document bytes (PDF or DOCX)
+   * @param format - Document format identifier ('pdf', 'docx', or 'doc')
+   * @returns Structured document content with text and metadata
+   * @throws Error with code `DOCUMENT_PARSE_ERROR` if the format is unsupported or parsing fails
+   */
   async extract(buffer: Buffer, format: string): Promise<DocumentContent> {
     const parser = this.parsers.find((p) => p.supports(format));
 

@@ -19,6 +19,21 @@ interface DatabaseConfig {
   };
 }
 
+/**
+ * Global MongoDB database module.
+ *
+ * Provides Mongoose connection with automatic retry on failure,
+ * transaction support via TransactionManager, and configurable
+ * connection options via environment variables.
+ *
+ * @example
+ * ```typescript
+ * @Module({
+ *   imports: [ConfigModule.forRoot({ isGlobal: true }), DatabaseModule],
+ * })
+ * export class AppModule {}
+ * ```
+ */
 @Global()
 @Module({
   imports: [
