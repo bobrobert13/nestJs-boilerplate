@@ -1,4 +1,5 @@
 /** Field mapping from a source key to a target key. */
+// test: CI changelog-reminder push-mode verification
 export interface DataMapping {
   /** Source field name in raw data */
   source: string;
