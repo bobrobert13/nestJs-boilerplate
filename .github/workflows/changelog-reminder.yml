@@ -1,12 +1,12 @@
-# DocForge — Changelog Auto-Reminder
+# DocForge — Changelog Auto-Maintenance
 #
-# Dual-mode: reminds on PRs + fails check on direct pushes.
-# Ensures CHANGELOG.md is updated whenever source code changes,
-# regardless of how the code reaches develop or main.
+# Dual-mode:
+#   PR → main   : 💬 Comments reminder on the PR
+#   Push → dev/main : 🤖 Auto-commits changelog entry from commit messages
 #
-# Part of doc-forge auto-maintenance system.
+# Zero friction. Zero blocking. The CI does the work for you.
 
-name: Changelog Reminder
+name: Changelog Maintenance
 
 on:
   pull_request:
@@ -25,7 +25,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # ── PR mode: comment on the PR (non-blocking reminder) ──────────────
+  # ── PR mode: comment reminder (non-blocking) ─────────────────────────
   pr-remind:
     name: Remind on PR
     if: github.event_name == 'pull_request'
@@ -37,58 +37,41 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Detect source changes without changelog update
+      - name: Detect source changes without changelog
         id: check
         run: |
           CHANGED=$(git diff --name-only origin/main...HEAD 2>/dev/null || echo "")
 
           SRC_CHANGED=0
-          CHANGELOG_CHANGED=0
+          CHANGELOG_UPDATED=0
 
           for file in $CHANGED; do
             case "$file" in
               packages/*/src/*|apps/*/src/*)
-                SRC_CHANGED=1
-                ;;
+                SRC_CHANGED=1 ;;
               CHANGELOG.md)
-                CHANGELOG_CHANGED=1
-                ;;
+                CHANGELOG_UPDATED=1 ;;
             esac
           done
 
           echo "src_changed=$SRC_CHANGED" >> $GITHUB_OUTPUT
-          echo "changelog_changed=$CHANGELOG_CHANGED" >> $GITHUB_OUTPUT
+          echo "changelog_updated=$CHANGELOG_UPDATED" >> $GITHUB_OUTPUT
 
-          echo "::group::Changed files"
+          echo "::group::Files changed in this PR"
           echo "$CHANGED"
           echo "::endgroup::"
 
       - name: Comment reminder on PR
-        if: steps.check.outputs.src_changed == '1' && steps.check.outputs.changelog_changed == '0'
+        if: steps.check.outputs.src_changed == '1' && steps.check.outputs.changelog_updated == '0'
         uses: actions/github-script@v7
         with:
           script: |
-            const body = `## 📝 Changelog Update Needed
+            const body = `## 📝 Changelog Update Suggested
 
-            This PR changes source code in \`packages/*/src/\` or \`apps/*/src/\` but **CHANGELOG.md** was not modified.
+            This PR changes source code but **CHANGELOG.md** was not modified.
 
-            Please add an entry following the [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format:
-
-            \`\`\`markdown
-            ### Added
-            - feat(scope): description
-
-            ### Changed
-            - refactor(scope): description
-
-            ### Fixed
-            - fix(scope): description
-
-            ### Removed
-            - chore(scope): description
-            \`\`\`
-
-            > 🤖 This reminder is automated by doc-forge. See \`DOCUMENTATION-CONVENTION.md\` for the convention.`;
+            > ℹ️  This is just a reminder — it won't block your merge.
+            > See [DOCUMENTATION-CONVENTION.md](./DOCUMENTATION-CONVENTION.md) for the convention.`;
 
             await github.rest.issues.createComment({
               issue_number: context.issue.number,
@@ -97,68 +80,180 @@ jobs:
               body: body
             });
 
-  # ── Push mode: fail check on direct pushes (visible, non-blocking) ──
-  push-check:
-    name: Verify Changelog
+  # ── Push mode: auto-commit changelog (zero friction) ────────────────
+  auto-changelog:
+    name: Auto-Update Changelog
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Detect source changes
-        id: check
+      - name: Detect source changes and extract commits
+        id: detect
         run: |
-          # For push events, compare the before/after SHAs
           BEFORE="${{ github.event.before }}"
           AFTER="${{ github.event.after }}"
 
           # Handle force-push or first-push (before is all-zeros)
           if [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
-            CHANGED=$(git diff --name-only "$AFTER"~1 "$AFTER" 2>/dev/null || echo "")
+            RANGE="${AFTER}~1..${AFTER}"
           else
-            CHANGED=$(git diff --name-only "$BEFORE" "$AFTER" 2>/dev/null || echo "")
+            RANGE="${BEFORE}..${AFTER}"
           fi
 
+          # Check if source files changed AND changelog was NOT updated
+          CHANGED=$(git diff --name-only "$RANGE" 2>/dev/null || echo "")
+
           SRC_CHANGED=0
-          CHANGELOG_CHANGED=0
+          CHANGELOG_INCLUDED=0
           for file in $CHANGED; do
             case "$file" in
               packages/*/src/*|apps/*/src/*|package.json|nest-cli.json|tsconfig*.json|.env.example)
-                SRC_CHANGED=1
-                ;;
+                SRC_CHANGED=1 ;;
               CHANGELOG.md)
-                CHANGELOG_CHANGED=1
-                ;;
+                CHANGELOG_INCLUDED=1 ;;
             esac
           done
 
           echo "src_changed=$SRC_CHANGED" >> $GITHUB_OUTPUT
-          echo "changelog_changed=$CHANGELOG_CHANGED" >> $GITHUB_OUTPUT
+          echo "changelog_included=$CHANGELOG_INCLUDED" >> $GITHUB_OUTPUT
 
-          echo "::group::Changed files in this push"
+          # Save commit range for next step
+          echo "RANGE=$RANGE" >> $GITHUB_ENV
+
+          echo "::group::Files changed in this push"
           echo "$CHANGED"
           echo "::endgroup::"
 
-      - name: Fail if changelog not updated
-        if: steps.check.outputs.src_changed == '1' && steps.check.outputs.changelog_changed == '0'
+      - name: Generate and insert changelog entries
+        id: generate
+        if: steps.detect.outputs.src_changed == '1' && steps.detect.outputs.changelog_included == '0'
+        shell: python3 {0}
         run: |
-          cat << 'EOF'
-          ┌─────────────────────────────────────────────────────────────┐
-          │  ⚠️  CHANGELOG.md NOT UPDATED                               │
-          │                                                             │
-          │  This push changes source code but CHANGELOG.md was NOT     │
-          │  included in the changes.                                    │
-          │                                                             │
-          │  Please add an entry following Keep a Changelog format:     │
-          │                                                             │
-          │  ### Added / Changed / Fixed / Removed                      │
-          │  - type(scope): description                                 │
-          │                                                             │
-          │  Commit the changelog update and push again.                │
-          │                                                             │
-          │  See DOCUMENTATION-CONVENTION.md for the full convention.   │
-          └─────────────────────────────────────────────────────────────┘
-          EOF
-          exit 1
+          import subprocess, sys
+
+          # ── Extract commit messages from the push ──
+          result = subprocess.run(
+              ['git', 'log', '${{ env.RANGE }}', '--pretty=format:%s', '--no-merges'],
+              capture_output=True, text=True
+          )
+          commits = [c.strip() for c in result.stdout.split('\n') if c.strip()]
+
+          if not commits:
+              print("::notice::No non-merge commits in this push range — skipping")
+              sys.exit(0)
+
+          # ── Categorize commits by conventional prefix ──
+          added, changed, fixed, removed = [], [], [], []
+
+          for msg in commits:
+              entry = f"- {msg}"
+              lower = msg.lower()
+
+              if msg.startswith('feat'):
+                  added.append(entry)
+              elif msg.startswith('fix'):
+                  fixed.append(entry)
+              elif lower.startswith('revert:'):
+                  # Reverts go under Changed with revert prefix
+                  changed.append(entry)
+              elif any(kw in lower for kw in ['remove', 'delete', 'elimin', 'deprecat']):
+                  removed.append(entry)
+              else:
+                  # docs:, chore:, refactor:, test:, perf:, style:, ci:, build:, etc.
+                  changed.append(entry)
+
+          # ── Read current CHANGELOG ──
+          with open('CHANGELOG.md', 'r') as f:
+              content = f.read()
+
+          lines = content.split('\n')
+          result_lines = []
+
+          # Track which sections we've already inserted into
+          # (only insert once at the first matching section header)
+          did_added = bool(added)
+          did_changed = bool(changed)
+          did_fixed = bool(fixed)
+          did_removed = bool(removed)
+
+          for line in lines:
+              result_lines.append(line)
+
+              if did_added and line.strip().startswith('### Added'):
+                  result_lines.append('')
+                  result_lines.extend(added)
+                  did_added = False
+              elif did_changed and line.strip().startswith('### Changed'):
+                  result_lines.append('')
+                  result_lines.extend(changed)
+                  did_changed = False
+              elif did_fixed and line.strip().startswith('### Fixed'):
+                  result_lines.append('')
+                  result_lines.extend(fixed)
+                  did_fixed = False
+              elif did_removed and line.strip().startswith('### Removed'):
+                  result_lines.append('')
+                  result_lines.extend(removed)
+                  did_removed = False
+
+          # ── If a section doesn't exist yet, add it before the next version or at end ──
+          pending = []
+          if did_added:
+              pending.append(('### Added', added))
+          if did_changed:
+              pending.append(('### Changed', changed))
+          if did_fixed:
+              pending.append(('### Fixed', fixed))
+          if did_removed:
+              pending.append(('### Removed', removed))
+
+          if pending:
+              # Find insertion point: after the last existing section, before next ## header
+              insert_at = len(result_lines)
+              for i, line in enumerate(result_lines):
+                  if line.startswith('## ') and i > 5:
+                      insert_at = i
+                      break
+
+              for section_name, entries in pending:
+                  result_lines.insert(insert_at, '')
+                  result_lines.insert(insert_at + 1, section_name)
+                  for j, entry in enumerate(entries):
+                      result_lines.insert(insert_at + 2 + j, entry)
+                  insert_at += 1 + 1 + len(entries)
+
+          # ── Write back ──
+          with open('CHANGELOG.md', 'w') as f:
+              f.write('\n'.join(result_lines))
+
+          print(f"::notice::Inserted {len(added)} added, {len(changed)} changed, {len(fixed)} fixed, {len(removed)} removed entries")
+          print(f"Commits processed: {commits}")
+
+      - name: Commit and push changelog update
+        if: steps.detect.outputs.src_changed == '1' && steps.detect.outputs.changelog_included == '0'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add CHANGELOG.md
+
+          if git diff --cached --quiet; then
+            echo "::notice::No changes to CHANGELOG.md — nothing to commit"
+            exit 0
+          fi
+
+          git commit -m "docs: auto-update CHANGELOG from commit messages
+
+          🤖 Generated by doc-forge changelog auto-maintenance."
+
+          # Pull latest to avoid conflicts, then push
+          git pull --rebase origin ${{ github.ref_name }} || true
+          git push origin ${{ github.ref_name }}
+
+          echo "::notice::CHANGELOG.md auto-updated and pushed successfully"
