@@ -1,4 +1,7 @@
-/** Serializable representation of an HTTP error. */
+/**
+ * Serializable representation of an HTTP error returned by the common package.
+ * Used as the shape for error serialization across the monorepo.
+ */
 export interface HttpErrorResponse {
   status: number;
   statusText: string;
@@ -121,7 +124,10 @@ export function createHttpError(
   url: string,
   data?: unknown,
 ): HttpError {
-  const errors: Record<number, new (message: string, url: string, data?: unknown) => HttpError> = {
+  const errors: Record<
+    number,
+    new (message: string, url: string, data?: unknown) => HttpError
+  > = {
     400: BadRequestError,
     401: UnauthorizedError,
     403: ForbiddenError,
