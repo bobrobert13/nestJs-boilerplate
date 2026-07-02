@@ -15,11 +15,9 @@
 | **Lint**             | `npm run lint`                         |
 | **Test Unit**        | `npm run test`                         |
 | **Test Single File** | `npm run test -- path/to/file.spec.ts` |
-| **Test E2E**         | `npm run test:e2e`                    |
+| **Test E2E**         | `npm run test:e2e`                     |
 | **Format**           | `npm run format`                       |
-| **Prod Start**       | `npm run start:prod`                  |
-| **Package Setup**    | `./setup/setup.sh` (Linux/Mac)        |
-|                     | `setup\setup.bat` (Windows)            |
+| **Prod Start**       | `npm run start:prod`                   |
 
 ---
 
@@ -27,42 +25,42 @@
 
 > **Context budget rule:** For focused changes, read ONLY the files listed below + their DTOs/interfaces. Do NOT load the full AGENTS.md unless the task spans 3+ feature areas. Use this index as a surgical lookup table.
 
-| If the user asks about... | Read these files | May also need |
-|---|---|---|
-| Login / registro / JWT | `packages/auth/src/services/auth.service.ts`, `strategies/auth.controller.ts`, `strategies/jwt.strategy.ts` | `interfaces/auth.interfaces.ts`, `dto/auth.dto.ts` |
-| Magic links | `packages/auth/src/services/magic-link.service.ts`, `strategies/auth.controller.ts` | `config/auth.config.ts` |
-| 2FA / TOTP | `packages/auth/src/two-factor/two-factor.service.ts`, `two-factor.controller.ts` | `interfaces/two-factor.interfaces.ts`, `dto/two-factor.dto.ts` |
-| Passkeys / WebAuthn | `packages/auth/src/passkeys/passkeys.service.ts`, `passkeys.controller.ts` | `dto/passkeys.dto.ts`, `interfaces/passkeys.interfaces.ts` |
-| MongoDB / conexión DB | `packages/database/src/database.service.ts`, `config/database.config.ts` | `database.module.ts` |
-| Transacciones DB | `packages/database/src/transaction/transaction.service.ts`, `decorators/transaction.decorator.ts` | `transaction-manager.ts`, `transactional-wrapper.ts` |
-| Envío de emails | `packages/resend/src/services/resend.service.ts`, `config/resend.config.ts` | `interfaces/email-options.interface.ts` |
-| Newsletter | `packages/resend/src/modules/newsletter/newsletter.service.ts`, `newsletter.controller.ts` | `interfaces/newsletter.interfaces.ts` |
-| IA / ChatGPT / AI / embeddings | `packages/ai/src/ai.service.ts`, `types/ai.types.ts` | `interfaces/provider.interface.ts`, `providers/openai-compatible.provider.ts` |
-| Generar schema desde doc/imagen | `apps/nominas/src/modules/dynamic-schema/services/dynamic-schema.service.ts`, `schema-compiler.service.ts` | `dynamic-schema.controller.ts`, `dto/generate-schema.dto.ts` |
-| Extraer texto de PDF/DOCX | `packages/documents/src/services/document-processor.service.ts`, `pdf.service.ts`, `docx.service.ts` | `interfaces/parser.interface.ts`, `types/document.types.ts` |
-| HTTP requests / descargar archivos | `packages/http/src/services/http.service.ts`, `download.service.ts` | `http-error.ts`, `interfaces/http-options.interface.ts` |
-| Web scraping / Playwright | `packages/playwright/src/playwright.service.ts` | `interfaces/playwright-options.interface.ts`, `constants/playwright.constants.ts` |
-| Tareas en background / Inngest | `packages/inngest/src/inngest.service.ts`, `functions/index.ts` | `serve/inngest.serve.module.ts`, `serve/inngest-events.controller.ts` |
-| CRUD / usuarios / API REST | `apps/nominas/src/modules/usuarios/usuarios.service.ts`, `usuarios.controller.ts`, `usuarios.repository.ts` | `schemas/usuario.schema.ts`, `dto/` |
-| Templates HTML / EJS | `packages/serve-static/src/serve-static.service.ts` | `templates/layouts/`, `templates/pages/` |
-| Errores HTTP / excepciones | `packages/http/src/http-error.ts`, `packages/common/src/database-exception.filter.ts` | — |
-| Crear un NUEVO módulo | AGENTS.md §9 (Creating New Modules) | AGENTS.md §6 Module Patterns |
+| If the user asks about...          | Read these files                                                                                            | May also need                                                                     |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| Login / registro / JWT             | `packages/auth/src/services/auth.service.ts`, `strategies/auth.controller.ts`, `strategies/jwt.strategy.ts` | `interfaces/auth.interfaces.ts`, `dto/auth.dto.ts`                                |
+| Magic links                        | `packages/auth/src/services/magic-link.service.ts`, `strategies/auth.controller.ts`                         | `config/auth.config.ts`                                                           |
+| 2FA / TOTP                         | `packages/auth/src/two-factor/two-factor.service.ts`, `two-factor.controller.ts`                            | `interfaces/two-factor.interfaces.ts`, `dto/two-factor.dto.ts`                    |
+| Passkeys / WebAuthn                | `packages/auth/src/passkeys/passkeys.service.ts`, `passkeys.controller.ts`                                  | `dto/passkeys.dto.ts`, `interfaces/passkeys.interfaces.ts`                        |
+| MongoDB / conexión DB              | `packages/database/src/database.service.ts`, `config/database.config.ts`                                    | `database.module.ts`                                                              |
+| Transacciones DB                   | `packages/database/src/transaction/transaction.service.ts`, `decorators/transaction.decorator.ts`           | `transaction-manager.ts`, `transactional-wrapper.ts`                              |
+| Envío de emails                    | `packages/resend/src/services/resend.service.ts`, `config/resend.config.ts`                                 | `interfaces/email-options.interface.ts`                                           |
+| Newsletter                         | `packages/resend/src/modules/newsletter/newsletter.service.ts`, `newsletter.controller.ts`                  | `interfaces/newsletter.interfaces.ts`                                             |
+| IA / ChatGPT / AI / embeddings     | `packages/ai/src/ai.service.ts`, `types/ai.types.ts`                                                        | `interfaces/provider.interface.ts`, `providers/openai-compatible.provider.ts`     |
+| Generar schema desde doc/imagen    | `apps/nominas/src/modules/dynamic-schema/services/dynamic-schema.service.ts`, `schema-compiler.service.ts`  | `dynamic-schema.controller.ts`, `dto/generate-schema.dto.ts`                      |
+| Extraer texto de PDF/DOCX          | `packages/documents/src/services/document-processor.service.ts`, `pdf.service.ts`, `docx.service.ts`        | `interfaces/parser.interface.ts`, `types/document.types.ts`                       |
+| HTTP requests / descargar archivos | `packages/http/src/services/http.service.ts`, `download.service.ts`                                         | `http-error.ts`, `interfaces/http-options.interface.ts`                           |
+| Web scraping / Playwright          | `packages/playwright/src/playwright.service.ts`                                                             | `interfaces/playwright-options.interface.ts`, `constants/playwright.constants.ts` |
+| Tareas en background / Inngest     | `packages/inngest/src/inngest.service.ts`, `functions/index.ts`                                             | `serve/inngest.serve.module.ts`, `serve/inngest-events.controller.ts`             |
+| CRUD / usuarios / API REST         | `apps/nominas/src/modules/usuarios/usuarios.service.ts`, `usuarios.controller.ts`, `usuarios.repository.ts` | `schemas/usuario.schema.ts`, `dto/`                                               |
+| Templates HTML / EJS               | `packages/serve-static/src/serve-static.service.ts`                                                         | `templates/layouts/`, `templates/pages/`                                          |
+| Errores HTTP / excepciones         | `packages/http/src/http-error.ts`, `packages/common/src/database-exception.filter.ts`                       | —                                                                                 |
+| Crear un NUEVO módulo              | AGENTS.md §9 (Creating New Modules)                                                                         | AGENTS.md §6 Module Patterns                                                      |
 
 ### Cross-Cutting Concerns
 
 When the user's request touches multiple features, ask before expanding scope:
 
-| If the request touches... | Also check... | Why |
-|---|---|---|
-| Auth (login/register) | `@common/resend` | Email verification, magic links |
-| Auth (login/register) | `@common/auth/two-factor/` | May affect 2FA flow |
-| Auth (login/register) | `@common/auth/passkeys/` | May affect WebAuthn flow |
-| Database transactions | `apps/nominas/src/modules/usuarios/` | CRUD modules likely use transactions |
-| AI / schema generation | `@common/documents` | Schema gen often follows document extraction |
-| AI / schema generation | `apps/nominas/src/modules/dynamic-schema/` | Pipeline depends on AI service |
-| HTTP / downloads | `@common/playwright` | Downloaded files may need scraping |
-| Emails / newsletter | `@common/resend` | Newsletter uses Resend under the hood |
-| Templates / EJS | `@common/serve-static` | Template rendering uses EJS + TailwindCSS |
+| If the request touches... | Also check...                              | Why                                          |
+| ------------------------- | ------------------------------------------ | -------------------------------------------- |
+| Auth (login/register)     | `@common/resend`                           | Email verification, magic links              |
+| Auth (login/register)     | `@common/auth/two-factor/`                 | May affect 2FA flow                          |
+| Auth (login/register)     | `@common/auth/passkeys/`                   | May affect WebAuthn flow                     |
+| Database transactions     | `apps/nominas/src/modules/usuarios/`       | CRUD modules likely use transactions         |
+| AI / schema generation    | `@common/documents`                        | Schema gen often follows document extraction |
+| AI / schema generation    | `apps/nominas/src/modules/dynamic-schema/` | Pipeline depends on AI service               |
+| HTTP / downloads          | `@common/playwright`                       | Downloaded files may need scraping           |
+| Emails / newsletter       | `@common/resend`                           | Newsletter uses Resend under the hood        |
+| Templates / EJS           | `@common/serve-static`                     | Template rendering uses EJS + TailwindCSS    |
 
 > **Rule:** If the user asks for a change in any of the "If the request touches..." columns, STOP and ask: "This change could affect [related area]. Should I include that in scope?"
 
@@ -70,20 +68,20 @@ When the user's request touches multiple features, ask before expanding scope:
 
 ## Package Capability Matrix
 
-| Package | Import Path | Key Exports | Documented |
-|---------|------------|-------------|------------|
-| @common/ai | `@common/ai` | AiService, ChatMessage, AIResponse, GeneratedSchema | Full |
-| @common/auth | `@common/auth` | AuthService, JwtAuthGuard, RolesGuard, Public, Roles, MagicLinkService, TwoFactorService, PasskeysService | Full |
-| @common/common | `@common/common` | BaseAdapter\<T\>, DatabaseExceptionFilter, HttpError | Full |
-| @common/database | `@common/database` | TransactionService, TransactionManager, TransactionalWrapper, @Transaction, @TransactionParam | Full |
-| @common/documents | `@common/documents` | DocumentProcessorService, PdfService, DocxService, DocumentContent | Full |
-| @common/http | `@common/http` | HttpService, DownloadService, HttpError, createHttpError, BadRequestError, NotFoundError... | Full |
-| @common/inngest | `@common/inngest` | InngestService, InngestServeModule | Full |
-| @common/playwright | `@common/playwright` | PlaywrightService, PlaywrightOptions | Full |
-| @common/resend | `@common/resend` | ResendService, NewsletterModule, NewsletterService | Full |
-| @common/serve-static | `@common/serve-static` | ServeStaticModule, ServeStaticService | Full |
-| dynamic-schema | `./modules/dynamic-schema/` | DynamicSchemaService, SchemaCompilerService (App Module) | Full |
-| usuarios | `./modules/usuarios/` | UsuariosService, UsuariosRepository (App Module) | Full |
+| Package              | Import Path                 | Key Exports                                                                                               | Documented |
+| -------------------- | --------------------------- | --------------------------------------------------------------------------------------------------------- | ---------- |
+| @common/ai           | `@common/ai`                | AiService, ChatMessage, AIResponse, GeneratedSchema                                                       | Full       |
+| @common/auth         | `@common/auth`              | AuthService, JwtAuthGuard, RolesGuard, Public, Roles, MagicLinkService, TwoFactorService, PasskeysService | Full       |
+| @common/common       | `@common/common`            | BaseAdapter\<T\>, DatabaseExceptionFilter, HttpError                                                      | Full       |
+| @common/database     | `@common/database`          | TransactionService, TransactionManager, TransactionalWrapper, @Transaction, @TransactionParam             | Full       |
+| @common/documents    | `@common/documents`         | DocumentProcessorService, PdfService, DocxService, DocumentContent                                        | Full       |
+| @common/http         | `@common/http`              | HttpService, DownloadService, HttpError, createHttpError, BadRequestError, NotFoundError...               | Full       |
+| @common/inngest      | `@common/inngest`           | InngestService, InngestServeModule                                                                        | Full       |
+| @common/playwright   | `@common/playwright`        | PlaywrightService, PlaywrightOptions                                                                      | Full       |
+| @common/resend       | `@common/resend`            | ResendService, NewsletterModule, NewsletterService                                                        | Full       |
+| @common/serve-static | `@common/serve-static`      | ServeStaticModule, ServeStaticService                                                                     | Full       |
+| dynamic-schema       | `./modules/dynamic-schema/` | DynamicSchemaService, SchemaCompilerService (App Module)                                                  | Full       |
+| usuarios             | `./modules/usuarios/`       | UsuariosService, UsuariosRepository (App Module)                                                          | Full       |
 
 > **Tip:** Use Ctrl+F with the import path to jump directly to the package's API reference in §8.
 
@@ -206,25 +204,26 @@ nestJs-boilerplate/
 
 \`\`\`
 apps/nominas
-├── @common/database    —— MongoDB connection, transactions
-├── @common/inngest     —— Event-driven task queue
-├── @common/playwright  —— Browser automation
-├── usuarios/           —— CRUD example module
-└── dynamic-schema/     —— AI pipeline module
-    ├── @common/ai       —— Schema generation from text/images
-    └── @common/documents —— PDF/DOCX text extraction
+├── @common/database —— MongoDB connection, transactions
+├── @common/inngest —— Event-driven task queue
+├── @common/playwright —— Browser automation
+├── usuarios/ —— CRUD example module
+└── dynamic-schema/ —— AI pipeline module
+├── @common/ai —— Schema generation from text/images
+└── @common/documents —— PDF/DOCX text extraction
 
 @common/auth
-├── two-factor/         —— TOTP 2FA sub-module
-└── passkeys/           —— WebAuthn sub-module
+├── two-factor/ —— TOTP 2FA sub-module
+└── passkeys/ —— WebAuthn sub-module
 
 @common/resend
-└── newsletter/         —— Email newsletter sub-module
+└── newsletter/ —— Email newsletter sub-module
 \`\`\`
 
 ### Standalone Packages
 
 These packages have no internal dependencies and can be extracted independently:
+
 - `@common/ai` — AI providers wrapper
 - `@common/common` — Base adapters, exception filters
 - `@common/http` — HTTP client with downloads
@@ -243,7 +242,13 @@ import { DatabaseModule } from '@common/database';
 import { InngestModule } from '@common/inngest';
 import { PlaywrightModule } from '@common/playwright';
 import { ResendModule } from '@common/resend';
-import { AuthModule, JwtAuthGuard, RolesGuard, Public, Roles } from '@common/auth';
+import {
+  AuthModule,
+  JwtAuthGuard,
+  RolesGuard,
+  Public,
+  Roles,
+} from '@common/auth';
 import { ServeStaticModule, ServeStaticService } from '@common/serve-static';
 import { AiModule, AiService } from '@common/ai';
 import { DatabaseExceptionFilter } from '@common/common';
@@ -397,9 +402,9 @@ export class UsuariosService {
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    DatabaseModule,    // @common/database
-    InngestModule,     // @common/inngest
-    PlaywrightModule,   // @common/playwright
+    DatabaseModule, // @common/database
+    InngestModule, // @common/inngest
+    PlaywrightModule, // @common/playwright
     UsuariosModule,
   ],
   controllers: [UsuariosController],
@@ -425,12 +430,12 @@ mi-modulo/
 ├── mi-modulo.service.ts
 ├── mi-modulo.repository.ts
 ├── dto/
-│   ├── create-mi-entidad.dto.ts
-│   └── update-mi-entidad.dto.ts
+│ ├── create-mi-entidad.dto.ts
+│ └── update-mi-entidad.dto.ts
 ├── interfaces/
-│   └── mi-entidad.interface.ts
+│ └── mi-entidad.interface.ts
 └── schemas/
-    └── mi-entidad.schema.ts
+└── mi-entidad.schema.ts
 \`\`\`
 
 **Pattern B: Services/ (multi-service pipeline)**
@@ -444,8 +449,8 @@ mi-modulo/
 ├── dto/
 ├── schemas/
 └── services/
-    ├── primary.service.ts
-    └── helper.service.ts
+├── primary.service.ts
+└── helper.service.ts
 \`\`\`
 
 > **Related:** [§7 Error Handling Patterns](#7-error-handling-patterns), [§9 Creating New Modules](#9-creating-new-modules)
@@ -456,14 +461,14 @@ mi-modulo/
 
 Each package uses a different error strategy. Know which to catch.
 
-| Package | Strategy | Check Pattern | Throw Pattern |
-|---------|----------|---------------|---------------|
-| @common/ai | `AIResponse.success` boolean | `if (!result.success) { result.error }` | Returns `{ success: false, error: string }`, never throws |
-| @common/documents | JSON-stringified error codes | `JSON.parse(error.message).code` | `throw new Error(JSON.stringify({ code, message }))` |
-| @common/http | OOP class hierarchy | `error instanceof HttpError` / `error.statusCode` | `throw new NotFoundError(msg, url)` or `createHttpError(404, ...)` |
-| @common/database | Native exceptions + retry | `try/catch` — transient errors auto-retried | `throw new NotFoundException(...)` from NestJS |
-| @common/auth | NestJS HTTP exceptions | `try/catch` with `UnauthorizedException` | `throw new UnauthorizedException(...)` |
-| dynamic-schema | Error code strings | `if (!result.success) { result.error }` | Returns `{ success: false, error: 'SCHEMA_GENERATION_ERROR' }` |
+| Package           | Strategy                     | Check Pattern                                     | Throw Pattern                                                      |
+| ----------------- | ---------------------------- | ------------------------------------------------- | ------------------------------------------------------------------ |
+| @common/ai        | `AIResponse.success` boolean | `if (!result.success) { result.error }`           | Returns `{ success: false, error: string }`, never throws          |
+| @common/documents | JSON-stringified error codes | `JSON.parse(error.message).code`                  | `throw new Error(JSON.stringify({ code, message }))`               |
+| @common/http      | OOP class hierarchy          | `error instanceof HttpError` / `error.statusCode` | `throw new NotFoundError(msg, url)` or `createHttpError(404, ...)` |
+| @common/database  | Native exceptions + retry    | `try/catch` — transient errors auto-retried       | `throw new NotFoundException(...)` from NestJS                     |
+| @common/auth      | NestJS HTTP exceptions       | `try/catch` with `UnauthorizedException`          | `throw new UnauthorizedException(...)`                             |
+| dynamic-schema    | Error code strings           | `if (!result.success) { result.error }`           | Returns `{ success: false, error: 'SCHEMA_GENERATION_ERROR' }`     |
 
 > **Rule of thumb:** If the package returns `{ success: boolean }`, check it. If it throws, `try/catch` it.
 
@@ -497,10 +502,11 @@ async createOrderWithInventory(dto: CreateOrderDto) {
 ```
 
 **Transaction Options:**
+
 ```typescript
 await this.transaction.withTransaction(operation, {
-  retry: true,        // Auto-retry on transient errors (default: true)
-  maxRetries: 3,       // Maximum retry attempts (default: 3)
+  retry: true, // Auto-retry on transient errors (default: true)
+  maxRetries: 3, // Maximum retry attempts (default: 3)
 });
 ```
 
@@ -575,6 +581,7 @@ export class ComplexService {
 ```
 
 **TransactionManager Methods:**
+
 - `start(options?)` - Begin a new transaction
 - `commit()` - Commit the current transaction
 - `abort()` - Rollback the current transaction
@@ -594,14 +601,17 @@ export class MyService {
   constructor(private readonly transactional: TransactionalWrapper) {}
 
   async doWork() {
-    return this.transactional.execute(async (session) => {
-      // All operations share the session
-      return await this.repo.create(data, { session });
-    }, {
-      retry: true,
-      maxRetries: 3,
-      isolationLevel: 'snapshot',
-    });
+    return this.transactional.execute(
+      async (session) => {
+        // All operations share the session
+        return await this.repo.create(data, { session });
+      },
+      {
+        retry: true,
+        maxRetries: 3,
+        isolationLevel: 'snapshot',
+      },
+    );
   }
 }
 ```
@@ -620,6 +630,7 @@ export class MyService {
 HTTP client module with error handling and file downloads.
 
 **Basic Usage:**
+
 ```typescript
 import { HttpModule, HttpService } from '@common/http';
 
@@ -634,13 +645,16 @@ export class MyService {
   constructor(private readonly http: HttpService) {}
 
   async fetchData() {
-    const response = await this.http.get<MyType>('https://api.example.com/data');
+    const response = await this.http.get<MyType>(
+      'https://api.example.com/data',
+    );
     console.log(response.data, response.status);
   }
 }
 ```
 
 **HTTP Methods:**
+
 - `get<T>(url, headers?)` → `HttpResponse<T>`
 - `post<T>(url, data?, headers?)` → `HttpResponse<T>`
 - `put<T>(url, data?, headers?)` → `HttpResponse<T>`
@@ -648,6 +662,7 @@ export class MyService {
 - `delete<T>(url, headers?)` → `HttpResponse<T>`
 
 **HttpResponse Interface:**
+
 ```typescript
 interface HttpResponse<T = unknown> {
   data: T;
@@ -660,17 +675,18 @@ interface HttpResponse<T = unknown> {
 **HttpError Hierarchy:**
 All HTTP errors extend `HttpError` and include `statusCode`, `statusText`, `url`, `data`, and a `toJSON()` method.
 
-| Class | Status | Description |
-|-------|--------|-------------|
-| `BadRequestError` | 400 | Bad Request |
-| `UnauthorizedError` | 401 | Unauthorized |
-| `ForbiddenError` | 403 | Forbidden |
-| `NotFoundError` | 404 | Not Found |
-| `TimeoutError` | 408 | Request Timeout |
-| `InternalServerError` | 500 | Internal Server Error |
-| `ServiceUnavailableError` | 503 | Service Unavailable |
+| Class                     | Status | Description           |
+| ------------------------- | ------ | --------------------- |
+| `BadRequestError`         | 400    | Bad Request           |
+| `UnauthorizedError`       | 401    | Unauthorized          |
+| `ForbiddenError`          | 403    | Forbidden             |
+| `NotFoundError`           | 404    | Not Found             |
+| `TimeoutError`            | 408    | Request Timeout       |
+| `InternalServerError`     | 500    | Internal Server Error |
+| `ServiceUnavailableError` | 503    | Service Unavailable   |
 
 **Factory Function:**
+
 ```typescript
 createHttpError(status: number, message: string, url: string, data?: unknown): HttpError
 ```
@@ -689,9 +705,12 @@ export class AssetService {
     const downloader = this.http.download('/tmp/downloads');
 
     // Download any file
-    const { filepath, size } = await downloader.file('https://example.com/report.pdf', {
-      filename: 'report.pdf',
-    });
+    const { filepath, size } = await downloader.file(
+      'https://example.com/report.pdf',
+      {
+        filename: 'report.pdf',
+      },
+    );
 
     // Download and optimize image
     const result = await downloader.image('https://example.com/photo.jpg', {
@@ -699,7 +718,7 @@ export class AssetService {
         quality: 80,
         width: 800,
         height: 600,
-        format: 'webp',  // 'webp' | 'jpeg' | 'png'
+        format: 'webp', // 'webp' | 'jpeg' | 'png'
       },
     });
 
@@ -729,6 +748,7 @@ export class AssetService {
 Event-driven task queue.
 
 **Endpoints:**
+
 - `/api/inngest` - Inngest function sync
 - `/api/inngest-events/hola-inngest` - Test event
 
@@ -741,6 +761,7 @@ Browser automation for web scraping.
 Email service via Resend API with newsletter module.
 
 **Basic Usage:**
+
 ```typescript
 import { ResendService } from '@common/resend';
 
@@ -759,6 +780,7 @@ export class MyService {
 ```
 
 **Newsletter Module:**
+
 ```typescript
 import { NewsletterModule } from '@common/resend';
 
@@ -769,6 +791,7 @@ export class AppModule {}
 ```
 
 **Environment Variables:**
+
 ```env
 RESEND_API_KEY=your_api_key
 RESEND_FROM_EMAIL=your@domain.com
@@ -781,6 +804,7 @@ RESEND_REPLY_TO=reply@domain.com
 Authentication module with JWT, Magic Links, and OAuth support.
 
 **Basic Usage:**
+
 ```typescript
 import { AuthModule, JwtAuthGuard, Public, Roles, RolesGuard } from '@common/auth';
 
@@ -809,13 +833,14 @@ adminAction() {}
 ```
 
 **Services:**
+
 ```typescript
 // AuthService
 const user = await authService.validateUser(email, password);
 const tokens = await authService.login(user);
 await authService.refreshTokens(refreshToken);
-await authService.hashPassword(password);  // Argon2
-await authService.comparePassword(password, hash);  // Argon2
+await authService.hashPassword(password); // Argon2
+await authService.comparePassword(password, hash); // Argon2
 
 // MagicLinkService
 const token = await magicLinkService.generateMagicLink(email);
@@ -823,6 +848,7 @@ const email = await magicLinkService.verifyMagicLink(token);
 ```
 
 **Argon2 Password Hashing:**
+
 ```typescript
 // Hash password with argon2id (more secure than bcrypt)
 const hash = await authService.hashPassword(password);
@@ -830,6 +856,7 @@ const isValid = await authService.comparePassword(plainPassword, hash);
 ```
 
 **Decorators:**
+
 - `@Public()` - Skip JWT validation
 - `@Roles(...roles)` - Require specific roles
 
@@ -873,6 +900,7 @@ await twoFactorService.verifyBackupCodeWithUser(userId, backupCode);
 | POST | `/auth/2fa/disable` | Disable 2FA |
 
 **2FA Environment Variables:**
+
 ```env
 TWO_FACTOR_ISSUER=MyApp
 TWO_FACTOR_ALGORITHM=SHA1
@@ -921,6 +949,7 @@ const verifyResult = await passkeysService.verifyAuthentication(userId, credenti
 | DELETE | `/auth/passkeys/delete/:id` | Delete a passkey |
 
 **Passkeys Environment Variables:**
+
 ```env
 PASSKEYS_RP_ID=localhost
 PASSKEYS_RP_NAME=MyApp
@@ -932,6 +961,7 @@ PASSKEYS_RP_ORIGIN=http://localhost:3000
 Static file serving with EJS template engine and TailwindCSS CDN support.
 
 **Basic Usage:**
+
 ```typescript
 import { ServeStaticModule, ServeStaticService } from '@common/serve-static';
 
@@ -958,6 +988,7 @@ export class AppController {
 ```
 
 **Template Structure:**
+
 ```
 packages/serve-static/templates/
 ├── layouts/          # Layout templates (main.ejs)
@@ -967,6 +998,7 @@ packages/serve-static/templates/
 ```
 
 **Methods:**
+
 - `render(view, options)` - Render page with layout
 - `renderString(template, data)` - Render template string
 - `getPages()` - List available pages
@@ -979,6 +1011,7 @@ packages/serve-static/templates/
 AI Providers wrapper supporting OpenAI, Anthropic, Google Gemini, Moonshot (Kimi), MiniMax and any OpenAI-compatible API.
 
 **Basic Usage:**
+
 ```typescript
 import { AiModule, AiService, ChatMessage } from '@common/ai';
 
@@ -996,7 +1029,7 @@ export class MyService {
     const response = await this.ai.generateText(
       'openai',
       'Explain quantum computing',
-      'You are a helpful assistant'
+      'You are a helpful assistant',
     );
 
     if (response.success) {
@@ -1016,6 +1049,7 @@ export class MyService {
 | `minimax` | MiniMax-Text-01 | MiniMax models |
 
 **Key Methods:**
+
 - `chat(provider, messages, options?)` - Chat completions
 - `generateText(provider, prompt, systemPrompt?, options?)` - Text generation
 - `generateSchema(provider, description, options?)` - Generate Mongoose schemas
@@ -1028,6 +1062,7 @@ export class MyService {
 - `registerProvider(config)` - Add custom provider
 
 **Custom Provider:**
+
 ```typescript
 aiService.registerProvider({
   provider: 'custom',
@@ -1035,7 +1070,6 @@ aiService.registerProvider({
   apiKey: 'not-needed',
   baseUrl: 'http://localhost:11434/v1',
 });
-
 ```
 
 **Schema Generation from Images and Text:**
@@ -1068,6 +1102,7 @@ if (textResult.success) {
 ```
 
 **GeneratedSchema Interface:**
+
 ```typescript
 interface GeneratedSchema {
   fields: SchemaFieldDefinition[];
@@ -1077,6 +1112,7 @@ interface GeneratedSchema {
 ```
 
 **SchemaFieldDefinition:**
+
 ```typescript
 interface SchemaFieldDefinition {
   name: string;
@@ -1088,6 +1124,7 @@ interface SchemaFieldDefinition {
 ```
 
 **SchemaGenerationOptions:**
+
 ```typescript
 interface SchemaGenerationOptions {
   temperature?: number;
@@ -1103,11 +1140,13 @@ AI-powered Mongoose schema generation from documents. Located in `apps/nominas/s
 Converts documents (PDF, DOCX) into MongoDB schemas using AI. The pipeline extracts text from documents, sends it to an AI provider (via `@common/ai`), and automatically compiles the result into a Mongoose schema.
 
 **Pipeline:**
+
 ```
 Document → DocumentProcessorService → AI (generateSchemaFromText) → SchemaCompilerService → Mongoose Schema
 ```
 
 **Module Registration:**
+
 ```typescript
 import { DynamicSchemaModule } from './modules/dynamic-schema/dynamic-schema.module';
 
@@ -1118,6 +1157,7 @@ export class AppModule {}
 ```
 
 **Dependencies:**
+
 - `@common/ai` — AI schema generation
 - `@common/documents` — PDF/DOCX text extraction
 
@@ -1131,6 +1171,7 @@ export class AppModule {}
 | POST | `/dynamic-schema/pipeline` | `{ document, format, provider?, temperature? }` | `{ documentContent, schema, collectionName }` | Full extract → generate → compile pipeline |
 
 **Services:**
+
 - `DynamicSchemaService` — Orchestrates the document→schema→compile workflow
 - `SchemaCompilerService` — Compiles GeneratedSchema into Mongoose Schema objects
 
@@ -1142,6 +1183,7 @@ export class AppModule {}
 | `DOCUMENT_PARSE_ERROR` | Failed to extract text from document |
 
 **Usage Example:**
+
 ```typescript
 @Injectable()
 export class MyService {
@@ -1175,6 +1217,7 @@ export class MyService {
 ### Step 1: Create structure
 
 ```
+
 apps/nominas/src/modules/mi-modulo/
 ├── dto/
 ├── interfaces/
@@ -1183,7 +1226,8 @@ apps/nominas/src/modules/mi-modulo/
 ├── mi-modulo.module.ts
 ├── mi-modulo.repository.ts
 └── mi-modulo.service.ts
-```
+
+````
 
 ### Step 2: Define Schema
 
@@ -1195,7 +1239,7 @@ export class MiEntidad {
 }
 
 export const MiEntidadSchema = SchemaFactory.createForClass(MiEntidad);
-```
+````
 
 ### Step 3: Create Repository, Service, Controller
 
@@ -1203,7 +1247,11 @@ export const MiEntidadSchema = SchemaFactory.createForClass(MiEntidad);
 
 ```typescript
 @Module({
-  imports: [MongooseModule.forFeature([{ name: MiEntidad.name, schema: MiEntidadSchema }])],
+  imports: [
+    MongooseModule.forFeature([
+      { name: MiEntidad.name, schema: MiEntidadSchema },
+    ]),
+  ],
   controllers: [MiEntidadController],
   providers: [MiEntidadRepository, MiEntidadService],
   exports: [MiEntidadService],
@@ -1255,74 +1303,7 @@ import { DatabaseModule } from '@common/database';
 
 ---
 
-## 11. Package Setup Wizard
-
-The project includes an interactive setup wizard for selecting which packages to include.
-
-### Quick Start
-
-**Linux / macOS / Git Bash / WSL:**
-```bash
-chmod +x setup/setup.sh
-./setup/setup.sh
-```
-
-**Windows (cmd.exe or PowerShell):**
-```cmd
-setup\setup.bat
-```
-
-### Setup Options
-
-```bash
-./setup/setup.sh --help   # Show help
-./setup/setup.sh --list   # List available packages
-./setup/setup.sh --reset  # Reset previous selection
-```
-
-### What It Does
-
-1. **Package Selection**: Interactive CLI to choose packages
-2. **Environment Variables**: Collects required env vars per package
-3. **Configuration Updates**:
-   - Updates `nest-cli.json` (includes only selected packages)
-   - Updates `package.json` (adds required dependencies)
-   - Creates `.env` file with all variables
-4. **Preserves Selection**: Saves to `selection.json` for future runs
-
-### Available Packages
-
-| Package | Default | Description |
-|---------|---------|-------------|
-| `@common/ai` | Yes | AI providers wrapper |
-| `@common/auth` | Yes | Authentication with JWT, 2FA, Passkeys |
-| `@common/common` | Yes | Common utilities |
-| `@common/database` | Yes | MongoDB with transactions |
-| `@common/http` | Yes | HTTP client with sharp |
-| `@common/inngest` | No | Event-driven task queue |
-| `@common/playwright` | No | Browser automation |
-| `@common/resend` | No | Email via Resend API |
-| `@common/serve-static` | No | EJS templates with TailwindCSS |
-
-### Configuration Files
-
-| File | Purpose |
-|------|---------|
-| `setup/package-config.json` | Package definitions and metadata |
-| `setup/selection.json` | Saved selection (auto-generated) |
-| `setup/templates/.env.template` | Environment variables template |
-
-### Next Steps After Setup
-
-```bash
-npm install        # Install selected dependencies
-npm run build      # Build project
-npm run start:dev  # Start development server
-```
-
----
-
-## 12. Troubleshooting
+## 11. Troubleshooting
 
 **Port already in use:**
 
@@ -1343,15 +1324,9 @@ mongosh --eval "db.adminCommand('ping')"
 npx playwright install
 ```
 
-**Setup wizard permission denied (Linux):**
-
-```bash
-chmod +x setup/setup.sh
-```
-
 ---
 
-## 13. Deployment Checklist
+## 12. Deployment Checklist
 
 - [ ] Environment variables configured
 - [ ] MongoDB connection string set
@@ -1365,19 +1340,18 @@ chmod +x setup/setup.sh
 
 ---
 
-## 14. Key Files
+## 13. Key Files
 
-| File | Purpose |
-|------|---------|
+| File             | Purpose                  |
+| ---------------- | ------------------------ |
 | `BOILERPLATE.md` | Complete extension guide |
-| `AGENTS.md` | This file |
-| `nest-cli.json` | Monorepo configuration |
-| `packages/*/` | Reusable packages |
-| `setup/` | Package setup wizard |
+| `AGENTS.md`      | This file                |
+| `nest-cli.json`  | Monorepo configuration   |
+| `packages/*/`    | Reusable packages        |
 
 ---
 
-## 15. Docker
+## 14. Docker
 
 ```bash
 # Build image

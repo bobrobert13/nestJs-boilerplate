@@ -3,10 +3,9 @@
 ## Development Setup
 
 1. Clone the repo
-2. Run `./setup/setup.sh` (Linux/Mac) or `setup\setup.bat` (Windows)
-3. `npm install`
-4. Create `.env` from `AGENTS.md` §3 environment variables
-5. `npm run start:dev`
+2. `npm install`
+3. Create `.env` from `AGENTS.md` §3 environment variables
+4. `npm run start:dev`
 
 ## Commit Conventions
 

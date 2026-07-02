@@ -49,8 +49,6 @@ cp .env.example .env
 npm run start:dev
 ```
 
-> For interactive package selection, use the setup wizard: `./setup/setup.sh` (Linux/Mac) or `setup\setup.bat` (Windows).
-
 ## Environment Variables
 
 All configuration is read from `.env` in the project root. See [AGENTS.md §4](../../AGENTS.md#4-development-setup) for the complete reference. Key variables:
