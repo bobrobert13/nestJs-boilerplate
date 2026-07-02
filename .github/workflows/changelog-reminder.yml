@@ -1,7 +1,8 @@
-# DocForge — Changelog PR Reminder
+# DocForge — Changelog Auto-Reminder
 #
-# When a PR changes source code but NOT CHANGELOG.md,
-# post an automated comment reminding the author to update it.
+# Dual-mode: reminds on PRs + fails check on direct pushes.
+# Ensures CHANGELOG.md is updated whenever source code changes,
+# regardless of how the code reaches develop or main.
 #
 # Part of doc-forge auto-maintenance system.
 
@@ -11,14 +12,23 @@ on:
   pull_request:
     branches: [main]
     types: [opened, synchronize, reopened]
+  push:
+    branches: [develop, main]
+    paths-ignore:
+      - 'CHANGELOG.md'
+      - '*.md'
+      - '.github/**'
+      - 'docs/**'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  remind:
-    name: Check Changelog Update
+  # ── PR mode: comment on the PR (non-blocking reminder) ──────────────
+  pr-remind:
+    name: Remind on PR
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
@@ -30,8 +40,7 @@ jobs:
       - name: Detect source changes without changelog update
         id: check
         run: |
-          # Get files changed in this PR vs main
-          CHANGED=$(git diff --name-only origin/main...HEAD 2>/dev/null || git diff --name-only HEAD~1 2>/dev/null || echo "")
+          CHANGED=$(git diff --name-only origin/main...HEAD 2>/dev/null || echo "")
 
           SRC_CHANGED=0
           CHANGELOG_CHANGED=0
@@ -50,12 +59,16 @@ jobs:
           echo "src_changed=$SRC_CHANGED" >> $GITHUB_OUTPUT
           echo "changelog_changed=$CHANGELOG_CHANGED" >> $GITHUB_OUTPUT
 
+          echo "::group::Changed files"
+          echo "$CHANGED"
+          echo "::endgroup::"
+
       - name: Comment reminder on PR
         if: steps.check.outputs.src_changed == '1' && steps.check.outputs.changelog_changed == '0'
         uses: actions/github-script@v7
         with:
           script: |
-            const body = ` ## Changelog Update Needed
+            const body = `## 📝 Changelog Update Needed
 
             This PR changes source code in \`packages/*/src/\` or \`apps/*/src/\` but **CHANGELOG.md** was not modified.
 
@@ -70,9 +83,12 @@ jobs:
 
             ### Fixed
             - fix(scope): description
+
+            ### Removed
+            - chore(scope): description
             \`\`\`
 
-            > This reminder is automated by doc-forge. See \`DOCUMENTATION-CONVENTION.md\` for the convention.`;
+            > 🤖 This reminder is automated by doc-forge. See \`DOCUMENTATION-CONVENTION.md\` for the convention.`;
 
             await github.rest.issues.createComment({
               issue_number: context.issue.number,
@@ -80,3 +96,69 @@ jobs:
               repo: context.repo.repo,
               body: body
             });
+
+  # ── Push mode: fail check on direct pushes (visible, non-blocking) ──
+  push-check:
+    name: Verify Changelog
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect source changes
+        id: check
+        run: |
+          # For push events, compare the before/after SHAs
+          BEFORE="${{ github.event.before }}"
+          AFTER="${{ github.event.after }}"
+
+          # Handle force-push or first-push (before is all-zeros)
+          if [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+            CHANGED=$(git diff --name-only "$AFTER"~1 "$AFTER" 2>/dev/null || echo "")
+          else
+            CHANGED=$(git diff --name-only "$BEFORE" "$AFTER" 2>/dev/null || echo "")
+          fi
+
+          SRC_CHANGED=0
+          CHANGELOG_CHANGED=0
+          for file in $CHANGED; do
+            case "$file" in
+              packages/*/src/*|apps/*/src/*|package.json|nest-cli.json|tsconfig*.json|.env.example)
+                SRC_CHANGED=1
+                ;;
+              CHANGELOG.md)
+                CHANGELOG_CHANGED=1
+                ;;
+            esac
+          done
+
+          echo "src_changed=$SRC_CHANGED" >> $GITHUB_OUTPUT
+          echo "changelog_changed=$CHANGELOG_CHANGED" >> $GITHUB_OUTPUT
+
+          echo "::group::Changed files in this push"
+          echo "$CHANGED"
+          echo "::endgroup::"
+
+      - name: Fail if changelog not updated
+        if: steps.check.outputs.src_changed == '1' && steps.check.outputs.changelog_changed == '0'
+        run: |
+          cat << 'EOF'
+          ┌─────────────────────────────────────────────────────────────┐
+          │  ⚠️  CHANGELOG.md NOT UPDATED                               │
+          │                                                             │
+          │  This push changes source code but CHANGELOG.md was NOT     │
+          │  included in the changes.                                    │
+          │                                                             │
+          │  Please add an entry following Keep a Changelog format:     │
+          │                                                             │
+          │  ### Added / Changed / Fixed / Removed                      │
+          │  - type(scope): description                                 │
+          │                                                             │
+          │  Commit the changelog update and push again.                │
+          │                                                             │
+          │  See DOCUMENTATION-CONVENTION.md for the full convention.   │
+          └─────────────────────────────────────────────────────────────┘
+          EOF
+          exit 1
