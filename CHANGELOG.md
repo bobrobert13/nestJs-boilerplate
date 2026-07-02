@@ -19,6 +19,12 @@
 - meta: Swagger tags added for `auth`, `2fa`, `passkeys`, `dynamic-schema`
 - meta: version synced to 0.2.0 (was 0.0.1 in package.json)
 
+### Removed
+
+- chore: eliminado directorio `setup/` completo (wizard de selección de paquetes, scripts setup.sh/bat, templates, package-config.json) — no era necesario por ahora
+- chore: removida Section 11 (Package Setup Wizard) de AGENTS.md, referencias en Quick Reference, Troubleshooting, Key Files; secciones reenumeradas 12-15 → 11-14
+- chore: removido paso de setup wizard de CONTRIBUTING.md y apps/nominas/README.md
+
 ### Changed
 
 - docs: audit complete — 4 archivos basura/redundantes eliminados (docker-playwright-config.md, inngest-config-context.md, README.mdgit, packages/inngest/src/README.md)
