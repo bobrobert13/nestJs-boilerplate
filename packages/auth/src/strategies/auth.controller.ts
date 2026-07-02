@@ -4,7 +4,7 @@ import { MagicLinkService } from '../services/magic-link.service';
 import { Public } from '../decorators/public.decorator';
 import { Roles } from '../decorators/roles.decorator';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
-import { RolesGuard } from '../guards/roles.guard';
+import { RolesGuard } from '../rbac/roles.guard';
 import {
   RegisterDto,
   LoginDto,

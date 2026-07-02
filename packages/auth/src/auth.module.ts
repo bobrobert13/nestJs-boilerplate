@@ -7,7 +7,7 @@ import { MagicLinkService } from './services/magic-link.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { RolesGuard } from './guards/roles.guard';
+import { RolesGuard } from './rbac/roles.guard';
 import { AuthController } from './strategies/auth.controller';
 import authConfig from './config/auth.config';
 

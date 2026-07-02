@@ -18,6 +18,28 @@
 export type RoleHierarchy<T extends string> = Readonly<Record<T, number>>;
 
 /**
+ * NestJS DI token for a module-level role hierarchy.
+ *
+ * @description Use this token with `{ provide: RBAC_HIERARCHY, useValue: ... }`
+ * inside a feature module so that {@link RolesGuard} becomes hierarchy-aware
+ * (an `admin` automatically satisfies a `@Roles('user')` annotation).
+ *
+ * **Opt-in**: modules that do not register this token get the original
+ * string-equality check, which is the safe backward-compatible default.
+ *
+ * @example
+ * ```typescript
+ * @Module({
+ *   providers: [
+ *     { provide: RBAC_HIERARCHY, useValue: UsuarioRoleHierarchy },
+ *   ],
+ * })
+ * export class UsuariosModule {}
+ * ```
+ */
+export const RBAC_HIERARCHY = Symbol('RBAC_HIERARCHY');
+
+/**
  * Pure utility that checks whether the requester holds at least the required
  * role according to the provided hierarchy.
  *
