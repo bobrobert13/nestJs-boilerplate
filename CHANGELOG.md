@@ -27,6 +27,8 @@
 
 ### Changed
 
+- docs: improve JSDoc for HttpErrorResponse interface
+
 - docs: audit complete — 4 archivos basura/redundantes eliminados (docker-playwright-config.md, inngest-config-context.md, README.mdgit, packages/inngest/src/README.md)
 
 ### Changed (from June 2026 session)
