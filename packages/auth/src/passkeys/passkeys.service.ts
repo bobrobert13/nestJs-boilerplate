@@ -6,8 +6,14 @@ import {
   generateAuthenticationOptions,
   verifyAuthenticationResponse,
 } from '@simplewebauthn/server';
-import { Base64URLString } from '@simplewebauthn/server';
 import { PasskeyCredential, PasskeyVerifyResult } from './interfaces/passkeys.interfaces';
+
+/**
+ * Local type alias for the WebAuthn base64url-encoded string. The v10 server
+ * package no longer re-exports this name from its public API; it is a plain
+ * `string` at runtime, only used for type-level documentation.
+ */
+type Base64URLString = string;
 
 @Injectable()
 export class PasskeysService implements OnModuleInit {
@@ -30,10 +36,10 @@ export class PasskeysService implements OnModuleInit {
   }
 
   async generateRegistrationOptions(userId: string, username: string) {
-    const options = generateRegistrationOptions({
+    const options = await generateRegistrationOptions({
       rpName: this.rpName,
       rpID: this.rpId,
-      userID: userId,
+      userID: new TextEncoder().encode(userId),
       userName: username,
       timeout: 60000,
       attestationType: 'none',
@@ -61,13 +67,19 @@ export class PasskeysService implements OnModuleInit {
         expectedRPID: this.rpId,
       });
 
+      if (!verification.registrationInfo) {
+        this.logger.warn(`Passkey registration returned no registrationInfo for user: ${username}`);
+        return { verified: false };
+      }
+
+      const { registrationInfo } = verification;
       const credential: PasskeyCredential = {
-        id: verification.credentialID,
-        publicKey: Buffer.from(verification.credentialPublicKey).toString('base64'),
-        counter: verification.credential.counter,
-        deviceType: verification.credentialDeviceType || 'unknown',
-        backedUp: verification.credential.backedUp || false,
-        isInsideSecureOrigin: verification.credential.isInsideSecureOrigin || false,
+        id: registrationInfo.credentialID,
+        publicKey: Buffer.from(registrationInfo.credentialPublicKey).toString('base64'),
+        counter: registrationInfo.counter,
+        deviceType: registrationInfo.credentialDeviceType || 'unknown',
+        backedUp: registrationInfo.credentialBackedUp || false,
+        isInsideSecureOrigin: false,
         userId,
         createdAt: new Date(),
       };
@@ -82,7 +94,7 @@ export class PasskeysService implements OnModuleInit {
   }
 
   async generateAuthenticationOptions(userId?: string) {
-    const options = generateAuthenticationOptions({
+    const options = await generateAuthenticationOptions({
       timeout: 60000,
       rpID: this.rpId,
       userVerification: 'preferred',
@@ -120,16 +132,16 @@ export class PasskeysService implements OnModuleInit {
         expectedChallenge: this.getStoredChallenge(userId),
         expectedOrigin: this.rpOrigin,
         expectedRPID: this.rpId,
-        credential: {
-          id: credential.id,
-          publicKey: Buffer.from(credential.publicKey, 'base64'),
+        authenticator: {
+          credentialID: credential.id,
+          credentialPublicKey: Buffer.from(credential.publicKey, 'base64'),
           counter: credential.counter,
           transports: undefined,
         },
         requireUserVerification: false,
       });
 
-      credential.counter = verification.credential.counter;
+      credential.counter = verification.authenticationInfo.newCounter;
       this.credentials.set(credentialId, credential);
 
       this.logger.log(`Passkey authentication successful for user: ${userId}`);
