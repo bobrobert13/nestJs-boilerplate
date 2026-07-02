@@ -2,7 +2,7 @@ import { Controller, Post, Body, UseGuards, Request, HttpCode, HttpStatus } from
 import { AuthService } from '../services/auth.service';
 import { MagicLinkService } from '../services/magic-link.service';
 import { Public } from '../decorators/public.decorator';
-import { Roles } from '../decorators/roles.decorator';
+import { Roles } from '../rbac/roles.decorator';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { RolesGuard } from '../rbac/roles.guard';
 import {
