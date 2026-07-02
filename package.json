@@ -1,8 +1,8 @@
 {
   "name": "api-nominas",
-  "version": "0.0.1",
-  "description": "",
-  "author": "",
+  "version": "0.2.0",
+  "description": "NestJS 11 monorepo boilerplate with MongoDB, Inngest, Playwright — JWT, 2FA, Passkeys, AI, PDF extraction, and more.",
+  "author": "TreborJs",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
@@ -18,7 +18,11 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./apps/nominas/test/jest-e2e.json"
+    "test:e2e": "jest --config ./apps/nominas/test/jest-e2e.json",
+    "docs:check": "node scripts/check-doc-status.js",
+    "docs:generate": "compodoc -p tsconfig.doc.json --output docs/api",
+    "docs:serve": "compodoc -p tsconfig.doc.json --output docs/api --serve",
+    "prepare": "husky"
   },
   "dependencies": {
     "@compodoc/compodoc": "^1.2.1",
@@ -30,8 +34,9 @@
     "@nestjs/passport": "^11.0.4",
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/swagger": "^11.3.2",
-    "axios": "^1.15.2",
+    "@simplewebauthn/server": "^10.0.0",
     "argon2": "^0.31.0",
+    "axios": "^1.15.2",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
     "dotenv": "^17.4.2",
@@ -39,7 +44,6 @@
     "mammoth": "^1.6.0",
     "mongoose": "^9.4.1",
     "otplib": "^12.0.1",
-    "@simplewebauthn/server": "^10.0.0",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
@@ -70,7 +74,9 @@
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.2",
     "globals": "^17.0.0",
+    "husky": "^9.1.7",
     "jest": "^30.0.0",
+    "lint-staged": "^16.4.0",
     "prettier": "^3.4.2",
     "source-map-support": "^0.5.21",
     "supertest": "^7.0.0",
@@ -80,6 +86,18 @@
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.20.0"
+  },
+  "lint-staged": {
+    "*.ts": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.md": [
+      "prettier --write"
+    ],
+    "package.json": [
+      "node scripts/check-doc-status.js"
+    ]
   },
   "jest": {
     "moduleFileExtensions": [

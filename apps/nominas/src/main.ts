@@ -26,6 +26,10 @@ async function bootstrap() {
     .addTag('usuarios')
     .addTag('inngest')
     .addTag('inngest-events')
+    .addTag('auth')
+    .addTag('2fa')
+    .addTag('passkeys')
+    .addTag('dynamic-schema')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);

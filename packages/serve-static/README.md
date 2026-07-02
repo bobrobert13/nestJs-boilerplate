@@ -1,5 +1,7 @@
 # @common/serve-static
 
+<!-- @common/serve-static — status: partial -->
+
 Static file serving module with EJS template engine and TailwindCSS CDN support.
 
 ## Features

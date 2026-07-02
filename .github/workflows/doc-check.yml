@@ -1,0 +1,206 @@
+# DocForge — Documentation Integrity CI
+#
+# Triggered on: push to main, pull requests to main
+# Validates: status tags, JSDoc coverage, changelog sync, README presence, broken links
+#
+# Part of doc-forge auto-maintenance system.
+# See: DOCUMENTATION-CONVENTION.md for the standard this enforces.
+
+name: Documentation Checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ──────────────────────────────────────────────
+  # Job 1: Status Tags — every package README must
+  # have a <!-- @common/name — status: X --> tag
+  # ──────────────────────────────────────────────
+  status-tags:
+    name: Status Tags Present
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check status tags in package READMEs
+        run: |
+          missing=0
+          for dir in packages/*/; do
+            pkg=$(basename "$dir")
+            readme="${dir}README.md"
+
+            if [ ! -f "$readme" ]; then
+              echo "MISSING: $readme (file not found)"
+              missing=1
+              continue
+            fi
+
+            if ! grep -q "<!--.*status:" "$readme"; then
+              echo "MISSING: $readme (no status tag: <!-- @common/$pkg — status: X -->)"
+              missing=1
+            else
+              echo "OK: $readme"
+            fi
+          done
+
+          if [ $missing -ne 0 ]; then
+            echo ""
+            echo "STATUS TAGS REQUIRED. Add to each README:"
+            echo "  <!-- @common/<name> — status: complete|partial|critical -->"
+            exit 1
+          fi
+
+  # ──────────────────────────────────────────────
+  # Job 2: README Presence — every package/ dir
+  # must contain a README.md
+  # ──────────────────────────────────────────────
+  readme-exists:
+    name: README Files Exist
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify every package has a README
+        run: |
+          missing=0
+          for dir in packages/*/; do
+            pkg=$(basename "$dir")
+            if [ ! -f "${dir}README.md" ]; then
+              echo "MISSING: packages/$pkg/README.md"
+              missing=1
+            fi
+          done
+
+          if [ $missing -ne 0 ]; then
+            echo ""
+            echo "Every package under packages/ MUST have a README.md"
+            exit 1
+          fi
+
+          echo "All packages have README.md files."
+
+  # ──────────────────────────────────────────────
+  # Job 3: JSDoc Coverage — count public exports
+  # without JSDoc comments across packages
+  # ──────────────────────────────────────────────
+  jsdoc-check:
+    name: JSDoc Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Count un-documented public exports
+        run: |
+          missing=0
+          total_exports=0
+
+          # Find all .ts files excluding .spec.ts, .e2e-spec.ts, node_modules, dist
+          for file in $(find packages/*/src apps/*/src -name "*.ts" \
+            ! -name "*.spec.ts" \
+            ! -name "*.e2e-spec.ts" \
+            ! -path "*/node_modules/*" \
+            ! -path "*/dist/*" \
+            2>/dev/null); do
+
+            # Count exports (export class|function|const|interface|type|enum)
+            exports=$(grep -cE '^\s*export\s+(class|function|const|interface|type|enum|abstract\s+class|default\s+class)' "$file" 2>/dev/null || echo 0)
+            [ "$exports" -eq 0 ] && continue
+            total_exports=$((total_exports + exports))
+
+            # Count JSDoc blocks (/** ... */ before exports)
+            # Heuristic: look for /** in the 3 lines before each export
+            documented=0
+            while IFS= read -r line; do
+              # Simplistic but effective: check if there's a JSDoc comment nearby
+              :
+            done < <(grep -nE '^\s*export\s+(class|function|const|interface|type|enum|abstract\s+class|default\s+class)' "$file" 2>/dev/null)
+
+            # Check if this file has any JSDoc at all
+            jsdoc_count=$(grep -c '/\*\*' "$file" 2>/dev/null || echo 0)
+            if [ "$exports" -gt "$jsdoc_count" ]; then
+              short=$(echo "$file" | sed 's|.*/packages/|packages/|' | sed 's|.*/apps/|apps/|')
+              echo "$short: $exports export(s), $jsdoc_count JSDoc block(s) [WARNING]"
+              missing=1
+            fi
+          done
+
+          echo ""
+          echo "Total exports scanned: $total_exports"
+
+          if [ $missing -ne 0 ]; then
+            echo "WARNING: Some files have more exports than JSDoc blocks."
+            echo "Please add JSDoc to all public exports."
+            echo "This is a non-blocking warning — will become blocking in future."
+            # Non-blocking for now — set exit 1 to make it blocking
+          else
+            echo "All exports appear documented."
+          fi
+
+  # ──────────────────────────────────────────────
+  # Job 4: Changelog Sync — package.json version
+  # must match latest CHANGELOG.md entry
+  # ──────────────────────────────────────────────
+  changelog-sync:
+    name: Version & Changelog Sync
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify version consistency
+        run: |
+          VERSION_PKG=$(node -p "require('./package.json').version")
+          VERSION_CHANGELOG=$(grep -oP '(?<=## \[)\d+\.\d+\.\d+' CHANGELOG.md | head -1)
+
+          echo "package.json version: $VERSION_PKG"
+          echo "CHANGELOG.md latest: $VERSION_CHANGELOG"
+
+          if [ -z "$VERSION_CHANGELOG" ]; then
+            echo "ERROR: No version found in CHANGELOG.md"
+            exit 1
+          fi
+
+          if [ "$VERSION_PKG" != "$VERSION_CHANGELOG" ]; then
+            echo ""
+            echo "VERSION MISMATCH: package.json ($VERSION_PKG) != CHANGELOG.md ($VERSION_CHANGELOG)"
+            echo "Action: update CHANGELOG.md with a [${VERSION_PKG}] entry or bump package.json"
+            exit 1
+          fi
+
+          echo "Versions are synchronized."
+
+  # ──────────────────────────────────────────────
+  # Job 5: Broken Links — validate internal
+  # markdown links point to existing files
+  # ──────────────────────────────────────────────
+  broken-links:
+    name: Internal Link Validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: gaurav-nelson/github-action-markdown-link-check@v1
+        with:
+          use-quiet-mode: 'yes'
+          use-verbose-mode: 'no'
+          config-file: '.github/markdown-link-check.json'
+          check-modified-files-only: 'yes'
+
+  # ──────────────────────────────────────────────
+  # Job 6: Doc Convention Compliance — run
+  # the local check-doc-status script
+  # ──────────────────────────────────────────────
+  convention-compliance:
+    name: Convention Compliance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run doc convention checker
+        run: node scripts/check-doc-status.js

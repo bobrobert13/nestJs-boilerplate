@@ -1,5 +1,7 @@
 # @common/resend
 
+<!-- @common/resend — status: partial -->
+
 Email sending module for NestJS via Resend API — transactional emails and newsletter support.
 
 ## Features
@@ -201,6 +203,7 @@ try {
 ## Cross-Cutting
 
 > When modifying this package, also check:
+>
 > - [`@common/auth`](../auth/) — Email verification and magic link authentication depend on `ResendService`
 > - [`newsletter/`](src/modules/newsletter/) — Sub-module imports `ResendModule` and `ResendService`
 
