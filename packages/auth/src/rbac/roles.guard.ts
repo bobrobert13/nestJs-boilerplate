@@ -7,7 +7,8 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ROLES_KEY } from './roles.decorator';
-import { hasAtLeastRole, RBAC_HIERARCHY, RoleHierarchy } from './role-hierarchy';
+import { hasAtLeastRole, RBAC_HIERARCHY } from './role-hierarchy';
+import type { RoleHierarchy } from './role-hierarchy';
 
 /**
  * Guard that enforces role-based access control (RBAC).
