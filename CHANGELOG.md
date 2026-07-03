@@ -9,6 +9,18 @@
 
 ### Added
 
+- feat(inngest): add 4 missing create*Payload methods to InngestService
+- feat(usuarios): add admin bootstrap from ADMIN_EMAIL env var
+- feat(usuarios): apply RBAC to controller + add role management endpoint
+- feat(usuarios): add assignRoles + grantAdminByEmail service methods
+- feat(usuarios): add updateRoles + legacy doc normalization
+- feat(usuarios): add roles field to Usuario schema
+- feat(usuarios): add AssignRolesDto with role validation
+- feat(usuarios): add UsuarioRole enum and role hierarchy
+- feat(rbac): consolidate RBAC exports through rbac/
+- feat(rbac): add assertCanModifyOtherRoles self-modification guard
+- feat(rbac): add hasAtLeastRole generic hierarchy utility
+
 - ci: `.github/workflows/doc-check.yml` — 6-job CI pipeline (status tags, README presence, JSDoc coverage, version sync, broken links, convention compliance)
 - ci: `.github/workflows/changelog-reminder.yml` — auto-comments on PRs missing changelog updates
 - ci: `.github/markdown-link-check.json` — config for broken link detection
@@ -26,6 +38,30 @@
 - chore: removido paso de setup wizard de CONTRIBUTING.md y apps/nominas/README.md
 
 ### Changed
+
+- docs(sdd): include fix-pre-existing-issues change record
+- docs(sdd): add archive report for fix-pre-existing-issues
+- docs(specs): sync delta specs from fix-pre-existing-issues to canonical location
+- docs(sdd): include usuarios-add-rbac-tests change record
+- chore(format): apply prettier formatting from previous format run
+- docs(sdd): add archive report for usuarios-add-rbac-tests
+- docs(specs): sync delta specs from usuarios-add-rbac-tests to canonical location
+- test(usuarios): add E2E test for 400 from global ValidationPipe
+- test(usuarios): add onApplicationBootstrap admin seed tests in module spec
+- test(usuarios): add AssignRolesDto validation tests
+- test(rbac): add updateRoles + addRole + findRawByEmail + toPublic tests in repository spec
+- test(usuarios): add assignRoles + grantAdminByEmail + default-roles tests in service spec
+- test(usuarios): add assignRoles delegation + guard chain test in controller spec
+- test(rbac): add hierarchy-aware RolesGuard tests
+- test(rbac): add assertCanModifyOtherRoles self-modification guard tests
+- test(rbac): add hasAtLeastRole hierarchy utility tests
+- chore(test): add jest moduleNameMapper for @common/* paths
+- docs(sdd): include usuarios-rbac change record
+- docs(sdd): add archive report for usuarios-rbac
+- docs(specs): sync delta specs from usuarios-rbac to canonical location
+- docs(agents): document usuarios RBAC pattern in §8
+- refactor(rbac): move Roles decorator to rbac/
+- refactor(rbac): move RolesGuard to rbac/ with optional hierarchy support
 
 - docs: improve JSDoc for HttpErrorResponse interface
 
@@ -60,6 +96,13 @@ Usar este template para cada nueva entrada. Insertar AL INICIO del changelog.
 - scope: descripción (ej. `refactor(@common/http): http-error re-export desde common`)
 
 ### Fixed
+
+- fix(lint): separate lint:fix script and disable prettier rule
+- fix(lint): repair eslint config + remove dead fail() in test
+- fix(scripts): correct lint and format glob patterns in package.json
+- fix(main): add global ValidationPipe to enforce DTO validation
+- fix(passkeys): migrate to @simplewebauthn/server v10 API
+- fix(usuarios-rbac): add @common/auth path + CreateUsuarioDto.roles + import-type guard
 
 - scope: descripción (ej. `fix(@common/ai): error en streaming con Gemini`)
 
