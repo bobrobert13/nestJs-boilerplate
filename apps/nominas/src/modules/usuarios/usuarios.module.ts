@@ -1,8 +1,4 @@
-import {
-  Module,
-  Logger,
-  OnApplicationBootstrap,
-} from '@nestjs/common';
+import { Module, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { RBAC_HIERARCHY } from '@common/auth';

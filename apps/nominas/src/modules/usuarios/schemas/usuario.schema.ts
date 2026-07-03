@@ -14,7 +14,10 @@ export class Usuario {
   @Prop({ required: true })
   apellido: string;
 
-  @ApiProperty({ example: 'john.doe@example.com', description: 'Email address' })
+  @ApiProperty({
+    example: 'john.doe@example.com',
+    description: 'Email address',
+  })
   @Prop({ required: true, unique: true })
   email: string;
 

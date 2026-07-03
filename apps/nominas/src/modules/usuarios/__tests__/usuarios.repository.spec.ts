@@ -62,7 +62,9 @@ describe('UsuariosRepository', () => {
         createdAt: new Date(),
         updatedAt: new Date(),
       };
-      mockModel.find.mockReturnValue({ exec: jest.fn().mockResolvedValue([usuario]) });
+      mockModel.find.mockReturnValue({
+        exec: jest.fn().mockResolvedValue([usuario]),
+      });
 
       const result = await repository.findAll();
 
@@ -73,7 +75,9 @@ describe('UsuariosRepository', () => {
 
   describe('findOne', () => {
     it('should return a usuario by id', async () => {
-      mockModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(mockUsuario) });
+      mockModel.findById.mockReturnValue({
+        exec: jest.fn().mockResolvedValue(mockUsuario),
+      });
 
       const result = await repository.findOne(mockUsuario._id.toString());
 
@@ -81,15 +85,21 @@ describe('UsuariosRepository', () => {
     });
 
     it('should throw NotFoundException if not found', async () => {
-      mockModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(null) });
+      mockModel.findById.mockReturnValue({
+        exec: jest.fn().mockResolvedValue(null),
+      });
 
-      await expect(repository.findOne('nonexistent')).rejects.toThrow(NotFoundException);
+      await expect(repository.findOne('nonexistent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
   describe('findByEmail', () => {
     it('should return a usuario by email', async () => {
-      mockModel.findOne.mockReturnValue({ exec: jest.fn().mockResolvedValue(mockUsuario) });
+      mockModel.findOne.mockReturnValue({
+        exec: jest.fn().mockResolvedValue(mockUsuario),
+      });
 
       const result = await repository.findByEmail(mockUsuario.email);
 
@@ -97,7 +107,9 @@ describe('UsuariosRepository', () => {
     });
 
     it('should return null if not found', async () => {
-      mockModel.findOne.mockReturnValue({ exec: jest.fn().mockResolvedValue(null) });
+      mockModel.findOne.mockReturnValue({
+        exec: jest.fn().mockResolvedValue(null),
+      });
 
       const result = await repository.findByEmail('nonexistent@example.com');
 
@@ -165,9 +177,9 @@ describe('UsuariosRepository', () => {
         exec: jest.fn().mockResolvedValue(null),
       });
 
-      await expect(
-        repository.addRole('ghost', 'admin'),
-      ).rejects.toThrow(NotFoundException);
+      await expect(repository.addRole('ghost', 'admin')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 

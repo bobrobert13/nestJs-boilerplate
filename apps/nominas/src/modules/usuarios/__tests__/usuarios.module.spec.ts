@@ -61,7 +61,9 @@ describe('UsuariosModule', () => {
       // — a no-op (with a warning log) is the safe default.
       mockConfig.get.mockReturnValue(undefined);
 
-      await expect(moduleInstance.onApplicationBootstrap()).resolves.toBeUndefined();
+      await expect(
+        moduleInstance.onApplicationBootstrap(),
+      ).resolves.toBeUndefined();
 
       expect(mockConfig.get).toHaveBeenCalledWith('ADMIN_EMAIL');
       expect(mockService.grantAdminByEmail).not.toHaveBeenCalled();
@@ -76,7 +78,9 @@ describe('UsuariosModule', () => {
 
       expect(mockConfig.get).toHaveBeenCalledWith('ADMIN_EMAIL');
       expect(mockService.grantAdminByEmail).toHaveBeenCalledTimes(1);
-      expect(mockService.grantAdminByEmail).toHaveBeenCalledWith('admin@example.com');
+      expect(mockService.grantAdminByEmail).toHaveBeenCalledWith(
+        'admin@example.com',
+      );
     });
 
     it('resolves cleanly when grantAdminByEmail resolves to undefined (R4.3)', async () => {
@@ -84,7 +88,9 @@ describe('UsuariosModule', () => {
       // on the no-op path. The module must NOT throw or re-resolve.
       mockConfig.get.mockReturnValue('admin@example.com');
 
-      await expect(moduleInstance.onApplicationBootstrap()).resolves.toBeUndefined();
+      await expect(
+        moduleInstance.onApplicationBootstrap(),
+      ).resolves.toBeUndefined();
     });
   });
 
@@ -93,7 +99,8 @@ describe('UsuariosModule', () => {
       // The `RolesGuard` injects via this token. If the binding drifts
       // (wrong shape, wrong token), the guard silently falls back to
       // string-equality and the hierarchy is dead.
-      const registered = moduleRef.get<typeof UsuarioRoleHierarchy>(RBAC_HIERARCHY);
+      const registered =
+        moduleRef.get<typeof UsuarioRoleHierarchy>(RBAC_HIERARCHY);
       expect(registered).toBeDefined();
       // The frozen hierarchy must rank admin > manager > user.
       expect(registered[UsuarioRole.Admin]).toBe(3);

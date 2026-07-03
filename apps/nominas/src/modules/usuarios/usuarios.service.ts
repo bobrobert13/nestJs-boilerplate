@@ -135,7 +135,10 @@ export class UsuariosService {
       return;
     }
 
-    await this.repository.addRole((user as any)._id.toString(), UsuarioRole.Admin);
+    await this.repository.addRole(
+      (user as any)._id.toString(),
+      UsuarioRole.Admin,
+    );
     this.logger.log(
       `ADMIN_EMAIL=${email}: granted admin role to user ${(user as any)._id}.`,
     );

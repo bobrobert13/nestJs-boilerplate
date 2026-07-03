@@ -26,7 +26,9 @@ async function bootstrap() {
   // Swagger configuration
   const config = new DocumentBuilder()
     .setTitle('Boilerplate Service API')
-    .setDescription('API documentation for the NestJS boilerplate with MongoDB, Inngest, and Playwright')
+    .setDescription(
+      'API documentation for the NestJS boilerplate with MongoDB, Inngest, and Playwright',
+    )
     .setVersion('1.0')
     .addTag('usuarios')
     .addTag('inngest')

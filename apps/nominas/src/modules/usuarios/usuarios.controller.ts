@@ -11,7 +11,12 @@ import {
   UseGuards,
   Request,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import {
   JwtAuthGuard,
   Public,
@@ -57,7 +62,10 @@ export class UsuariosController {
   @Public()
   @Post()
   @ApiOperation({ summary: 'Create a new usuario (self-service registration)' })
-  @ApiResponse({ status: 201, description: 'Usuario created with default role [user]' })
+  @ApiResponse({
+    status: 201,
+    description: 'Usuario created with default role [user]',
+  })
   @ApiResponse({ status: 409, description: 'Email already exists' })
   create(@Body() createDto: CreateUsuarioDto) {
     return this.usuariosService.create(createDto);
@@ -67,7 +75,10 @@ export class UsuariosController {
   @Roles(UsuarioRole.Admin, UsuarioRole.Manager)
   @ApiOperation({ summary: 'List all usuarios (admin or manager)' })
   @ApiResponse({ status: 200, description: 'List of usuarios' })
-  @ApiResponse({ status: 403, description: 'Forbidden — requires admin or manager' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden — requires admin or manager',
+  })
   findAll() {
     return this.usuariosService.findAll();
   }

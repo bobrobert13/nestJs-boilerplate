@@ -96,7 +96,10 @@ describe('UsuariosController', () => {
       const result = await controller.update(mockUsuario.id, updateDto);
 
       expect(result.nombre).toBe('Jane');
-      expect(mockService.update).toHaveBeenCalledWith(mockUsuario.id, updateDto);
+      expect(mockService.update).toHaveBeenCalledWith(
+        mockUsuario.id,
+        updateDto,
+      );
     });
   });
 
@@ -137,18 +140,15 @@ describe('UsuariosController', () => {
     // If a guard were missing, the call would short-circuit and the
     // service method would NOT be invoked.
     it('routes requests through the service when guards are bypassed', async () => {
-      const moduleWithGuards: TestingModule =
-        await Test.createTestingModule({
-          controllers: [UsuariosController],
-          providers: [
-            { provide: UsuariosService, useValue: mockService },
-          ],
-        })
-          .overrideGuard(JwtAuthGuard)
-          .useValue({ canActivate: () => true })
-          .overrideGuard(RolesGuard)
-          .useValue({ canActivate: () => true })
-          .compile();
+      const moduleWithGuards: TestingModule = await Test.createTestingModule({
+        controllers: [UsuariosController],
+        providers: [{ provide: UsuariosService, useValue: mockService }],
+      })
+        .overrideGuard(JwtAuthGuard)
+        .useValue({ canActivate: () => true })
+        .overrideGuard(RolesGuard)
+        .useValue({ canActivate: () => true })
+        .compile();
 
       const guardedController =
         moduleWithGuards.get<UsuariosController>(UsuariosController);

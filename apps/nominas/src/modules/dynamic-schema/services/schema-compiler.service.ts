@@ -68,7 +68,14 @@ export class SchemaCompilerService {
       );
     }
 
-    const validTypes = ['string', 'number', 'boolean', 'date', 'array', 'object'];
+    const validTypes = [
+      'string',
+      'number',
+      'boolean',
+      'date',
+      'array',
+      'object',
+    ];
     if (!field.type || !validTypes.includes(field.type)) {
       throw new Error(
         JSON.stringify({

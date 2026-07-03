@@ -1,5 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { UsuariosService } from '../usuarios.service';
 import { UsuariosRepository } from '../usuarios.repository';
 import { CreateUsuarioDto } from '../dto/create-usuario.dto';
@@ -80,7 +84,9 @@ describe('UsuariosService', () => {
       };
       mockRepository.findByEmail.mockResolvedValue(mockUsuario);
 
-      await expect(service.create(createDto)).rejects.toThrow(ConflictException);
+      await expect(service.create(createDto)).rejects.toThrow(
+        ConflictException,
+      );
       expect(mockRepository.create).not.toHaveBeenCalled();
     });
   });
@@ -108,7 +114,9 @@ describe('UsuariosService', () => {
     it('should throw NotFoundException if usuario not found', async () => {
       mockRepository.findOne.mockRejectedValue(new NotFoundException());
 
-      await expect(service.findOne('nonexistent')).rejects.toThrow(NotFoundException);
+      await expect(service.findOne('nonexistent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 

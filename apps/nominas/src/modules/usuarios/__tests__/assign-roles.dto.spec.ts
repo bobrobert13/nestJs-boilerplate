@@ -40,10 +40,7 @@ describe('AssignRolesDto', () => {
       const dto = await runValidation({
         roles: [UsuarioRole.Admin, UsuarioRole.Manager],
       });
-      expect(dto.roles).toEqual([
-        UsuarioRole.Admin,
-        UsuarioRole.Manager,
-      ]);
+      expect(dto.roles).toEqual([UsuarioRole.Admin, UsuarioRole.Manager]);
     });
   });
 

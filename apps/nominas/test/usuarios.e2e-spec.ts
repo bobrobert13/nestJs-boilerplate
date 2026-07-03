@@ -1,15 +1,39 @@
-import { INestApplication, Module, ValidationPipe, Controller, Patch, Param, Body } from '@nestjs/common';
+import {
+  INestApplication,
+  Module,
+  ValidationPipe,
+  Controller,
+  Patch,
+  Param,
+  Body,
+} from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { getConnectionToken, getModelToken, MongooseModule } from '@nestjs/mongoose';
+import {
+  getConnectionToken,
+  getModelToken,
+  MongooseModule,
+} from '@nestjs/mongoose';
 import * as request from 'supertest';
 // Some TypeScript configs need the default import; cast so the call site
 // stays clean.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const supertest = (request as any).default ?? request;
-import { JwtAuthGuard, RolesGuard, Public, Roles, RBAC_HIERARCHY } from '@common/auth';
+import {
+  JwtAuthGuard,
+  RolesGuard,
+  Public,
+  Roles,
+  RBAC_HIERARCHY,
+} from '@common/auth';
 import { AssignRolesDto } from '../src/modules/usuarios/dto/assign-roles.dto';
-import { Usuario, UsuarioSchema } from '../src/modules/usuarios/schemas/usuario.schema';
-import { UsuarioRole, UsuarioRoleHierarchy } from '../src/modules/usuarios/enums/usuario-role.enum';
+import {
+  Usuario,
+  UsuarioSchema,
+} from '../src/modules/usuarios/schemas/usuario.schema';
+import {
+  UsuarioRole,
+  UsuarioRoleHierarchy,
+} from '../src/modules/usuarios/enums/usuario-role.enum';
 import { UsuariosRepository } from '../src/modules/usuarios/usuarios.repository';
 import { UsuariosService } from '../src/modules/usuarios/usuarios.service';
 
