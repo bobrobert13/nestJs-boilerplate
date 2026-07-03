@@ -16,7 +16,6 @@ import {
 import * as request from 'supertest';
 // Some TypeScript configs need the default import; cast so the call site
 // stays clean.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const supertest = (request as any).default ?? request;
 import {
   JwtAuthGuard,

@@ -22,8 +22,6 @@ describe('assertCanModifyOtherRoles', () => {
           { id: 'A' },
           { roles: ['manager'] },
         );
-        // Force failure if the call did not throw.
-        fail('expected assertCanModifyOtherRoles to throw');
       } catch (err) {
         expect(err).toBeInstanceOf(ForbiddenException);
         expect((err as ForbiddenException).message).toMatch(

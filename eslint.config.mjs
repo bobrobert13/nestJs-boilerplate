@@ -5,6 +5,7 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
+    files: ['apps/**/*.ts', 'packages/**/*.ts'],
     ignores: ['eslint.config.mjs', 'dist/', 'node_modules/', 'coverage/'],
   },
   eslint.configs.recommended,
@@ -12,11 +13,13 @@ export default tseslint.config(
   eslintPluginPrettierRecommended,
   {
     languageOptions: {
+      parser: tseslint.parser,
       globals: {
         ...globals.node,
         ...globals.jest,
+        NodeJS: 'readonly',
       },
-      sourceType: 'commonjs',
+      sourceType: 'module',
       parserOptions: {
         projectService: true,
         tsconfigRootDir: import.meta.dirname,
@@ -25,9 +28,9 @@ export default tseslint.config(
   },
   {
     rules: {
-      '@typescript-eslint/no-explicit-any': 'off',
+      'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': 'off',
-      '@typescript-eslint/no-floating-promises': 'off',
+      '@typescript-eslint/no-floating-promices': 'off',
       '@typescript-eslint/no-unsafe-argument': 'off',
       '@typescript-eslint/no-unsafe-member-access': 'off',
       '@typescript-eslint/no-unsafe-call': 'off',
