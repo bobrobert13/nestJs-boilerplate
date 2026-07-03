@@ -28,6 +28,14 @@ export class Usuario {
   @ApiProperty({ example: true, description: 'Whether user is active' })
   @Prop({ default: true })
   activo: boolean;
+
+  @ApiProperty({
+    type: [String],
+    example: ['user'],
+    description: 'Roles assigned to the user. Defaults to ["user"] on create.',
+  })
+  @Prop({ type: [String], default: ['user'], index: true })
+  roles: string[];
 }
 
 export const UsuarioSchema = SchemaFactory.createForClass(Usuario);

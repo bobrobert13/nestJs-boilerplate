@@ -6,17 +6,15 @@ import {
   generateAuthenticationOptions,
   verifyAuthenticationResponse,
 } from '@simplewebauthn/server';
-import { Base64URLString } from '@simplewebauthn/server';
 import { PasskeyCredential, PasskeyVerifyResult } from './interfaces/passkeys.interfaces';
 
 /**
- * Service for WebAuthn (FIDO2 / passkey) registration and authentication.
- *
- * @description Uses the `@simplewebauthn/server` library to generate
- * registration and authentication options, verify attestation/assertion
- * responses, and manage stored credentials. Relies on in-memory storage
- * for demo purposes.
+ * Local type alias for the WebAuthn base64url-encoded string. The v10 server
+ * package no longer re-exports this name from its public API; it is a plain
+ * `string` at runtime, only used for type-level documentation.
  */
+type Base64URLString = string;
+
 @Injectable()
 export class PasskeysService implements OnModuleInit {
   private readonly logger = new Logger(PasskeysService.name);
@@ -37,18 +35,11 @@ export class PasskeysService implements OnModuleInit {
     this.logger.log(`✅ PasskeysService initialized - RP: ${this.rpName} (${this.rpId})`);
   }
 
-  /**
-   * Generates WebAuthn registration options for credential creation.
-   *
-   * @param userId - Unique identifier for the user
-   * @param username - Human-readable username for the credential
-   * @returns Registration options compatible with `navigator.credentials.create()`
-   */
   async generateRegistrationOptions(userId: string, username: string) {
-    const options = generateRegistrationOptions({
+    const options = await generateRegistrationOptions({
       rpName: this.rpName,
       rpID: this.rpId,
-      userID: userId,
+      userID: new TextEncoder().encode(userId),
       userName: username,
       timeout: 60000,
       attestationType: 'none',
@@ -63,14 +54,6 @@ export class PasskeysService implements OnModuleInit {
     return options;
   }
 
-  /**
-   * Verifies a WebAuthn registration response and stores the credential.
-   *
-   * @param userId - The user registering the passkey
-   * @param username - Human-readable username for logging
-   * @param response - The attestation response from `navigator.credentials.create()`
-   * @returns Result with verification status and optional credential ID
-   */
   async verifyRegistration(
     userId: string,
     username: string,
@@ -84,13 +67,19 @@ export class PasskeysService implements OnModuleInit {
         expectedRPID: this.rpId,
       });
 
+      if (!verification.registrationInfo) {
+        this.logger.warn(`Passkey registration returned no registrationInfo for user: ${username}`);
+        return { verified: false };
+      }
+
+      const { registrationInfo } = verification;
       const credential: PasskeyCredential = {
-        id: verification.credentialID,
-        publicKey: Buffer.from(verification.credentialPublicKey).toString('base64'),
-        counter: verification.credential.counter,
-        deviceType: verification.credentialDeviceType || 'unknown',
-        backedUp: verification.credential.backedUp || false,
-        isInsideSecureOrigin: verification.credential.isInsideSecureOrigin || false,
+        id: registrationInfo.credentialID,
+        publicKey: Buffer.from(registrationInfo.credentialPublicKey).toString('base64'),
+        counter: registrationInfo.counter,
+        deviceType: registrationInfo.credentialDeviceType || 'unknown',
+        backedUp: registrationInfo.credentialBackedUp || false,
+        isInsideSecureOrigin: false,
         userId,
         createdAt: new Date(),
       };
@@ -104,14 +93,8 @@ export class PasskeysService implements OnModuleInit {
     }
   }
 
-  /**
-   * Generates WebAuthn authentication options for credential assertion.
-   *
-   * @param userId - Optional user ID to restrict allowed credentials
-   * @returns Authentication options compatible with `navigator.credentials.get()`
-   */
   async generateAuthenticationOptions(userId?: string) {
-    const options = generateAuthenticationOptions({
+    const options = await generateAuthenticationOptions({
       timeout: 60000,
       rpID: this.rpId,
       userVerification: 'preferred',
@@ -131,14 +114,6 @@ export class PasskeysService implements OnModuleInit {
     return options;
   }
 
-  /**
-   * Verifies a WebAuthn authentication response and updates the credential counter.
-   *
-   * @param userId - The user attempting authentication
-   * @param credentialId - The credential ID being asserted
-   * @param response - The assertion response from `navigator.credentials.get()`
-   * @returns A {@link PasskeyVerifyResult} with validity and user information
-   */
   async verifyAuthentication(
     userId: string,
     credentialId: string,
@@ -157,16 +132,16 @@ export class PasskeysService implements OnModuleInit {
         expectedChallenge: this.getStoredChallenge(userId),
         expectedOrigin: this.rpOrigin,
         expectedRPID: this.rpId,
-        credential: {
-          id: credential.id,
-          publicKey: Buffer.from(credential.publicKey, 'base64'),
+        authenticator: {
+          credentialID: credential.id,
+          credentialPublicKey: Buffer.from(credential.publicKey, 'base64'),
           counter: credential.counter,
           transports: undefined,
         },
         requireUserVerification: false,
       });
 
-      credential.counter = verification.credential.counter;
+      credential.counter = verification.authenticationInfo.newCounter;
       this.credentials.set(credentialId, credential);
 
       this.logger.log(`Passkey authentication successful for user: ${userId}`);
@@ -177,23 +152,10 @@ export class PasskeysService implements OnModuleInit {
     }
   }
 
-  /**
-   * Returns all registered passkey credentials for a given user.
-   *
-   * @param userId - The user whose passkeys to retrieve
-   * @returns Array of {@link PasskeyCredential} objects
-   */
   async getUserPasskeys(userId: string): Promise<PasskeyCredential[]> {
     return Array.from(this.credentials.values()).filter((c) => c.userId === userId);
   }
 
-  /**
-   * Deletes a registered passkey credential.
-   *
-   * @param userId - The owner of the credential
-   * @param credentialId - The credential ID to delete
-   * @returns `true` if the credential was found and deleted
-   */
   async deletePasskey(userId: string, credentialId: string): Promise<boolean> {
     const credential = this.credentials.get(credentialId);
     if (!credential || credential.userId !== userId) {

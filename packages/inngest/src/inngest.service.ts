@@ -91,6 +91,71 @@ export class InngestService implements OnModuleInit {
     };
   }
 
+  createJobStartedPayload(
+    jobId: string,
+    strategyName: string,
+  ): InngestEventPayload<'scrapping/job.started'> {
+    return {
+      name: 'scrapping/job.started',
+      data: {
+        jobId,
+        strategyName,
+        timestamp: new Date().toISOString(),
+      },
+    };
+  }
+
+  createJobCompletedPayload(
+    jobId: string,
+    strategyName: string,
+    resultCount?: number,
+  ): InngestEventPayload<'scrapping/job.completed'> {
+    return {
+      name: 'scrapping/job.completed',
+      data: {
+        jobId,
+        strategyName,
+        success: true,
+        ...(resultCount !== undefined ? { resultCount } : {}),
+        timestamp: new Date().toISOString(),
+      },
+    };
+  }
+
+  createJobFailedPayload(
+    jobId: string,
+    strategyName: string,
+    error: string,
+  ): InngestEventPayload<'scrapping/job.failed'> {
+    return {
+      name: 'scrapping/job.failed',
+      data: {
+        jobId,
+        strategyName,
+        error,
+        timestamp: new Date().toISOString(),
+      },
+    };
+  }
+
+  createChapterProcessedPayload(
+    jobId: string,
+    chapterId: string,
+    chapterTitle: string,
+    pagesScraped: number,
+  ): InngestEventPayload<'scrapping/chapter.processed'> {
+    return {
+      name: 'scrapping/chapter.processed',
+      data: {
+        jobId,
+        chapterId,
+        chapterTitle,
+        pagesScraped,
+        timestamp: new Date().toISOString(),
+      },
+    };
+  }
+
   async sendHolaInngest(message: string = 'HOLA INNGEST'): Promise<void> {
     const payload = this.createHolaInngestPayload(message);
     await this.sendEvent(payload);

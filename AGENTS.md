@@ -956,6 +956,130 @@ PASSKEYS_RP_NAME=MyApp
 PASSKEYS_RP_ORIGIN=http://localhost:3000
 ```
 
+### @common/auth - RBAC Pattern in `usuarios`
+
+The `usuarios` module is the reference implementation for RBAC in this
+boilerplate. It combines `@common/auth` primitives (`JwtAuthGuard`,
+`RolesGuard`, `@Public()`, `@Roles()`) with two `@common/auth/rbac`
+additions: a domain-defined `RoleHierarchy<T>` registered through the
+`RBAC_HIERARCHY` DI token, and the `assertCanModifyOtherRoles` helper
+that blocks self-modification.
+
+**Guard chain (class-level):**
+
+```typescript
+import {
+  JwtAuthGuard,
+  Public,
+  Roles,
+  RolesGuard,
+  AuthenticatedUser,
+} from '@common/auth';
+
+@ApiTags('usuarios')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Controller('usuarios')
+export class UsuariosController {
+  @Public()
+  @Post()                            // self-service registration — no auth
+  create(@Body() dto: CreateUsuarioDto) { ... }
+
+  @Roles(UsuarioRole.Admin, UsuarioRole.Manager)
+  @Get()                             // admin or manager
+  findAll() { ... }
+
+  @Roles(UsuarioRole.User)
+  @Get(':id')                        // any authenticated user
+  findOne(@Param('id') id: string) { ... }
+
+  @Roles(UsuarioRole.Admin)
+  @Delete(':id')                     // admin only
+  remove(@Param('id') id: string) { ... }
+}
+```
+
+**Hierarchy registration (module-level):**
+
+```typescript
+import { RBAC_HIERARCHY } from '@common/auth';
+import { UsuarioRole, UsuarioRoleHierarchy } from './enums/usuario-role.enum';
+
+@Module({
+  providers: [
+    {
+      provide: RBAC_HIERARCHY,
+      useValue: UsuarioRoleHierarchy,
+    },
+  ],
+})
+export class UsuariosModule {}
+```
+
+Once the hierarchy is registered, `@Roles(UsuarioRole.User)` admits
+`manager` and `admin` automatically. `@Roles(UsuarioRole.Admin)` admits
+only `admin`. Without the provider, `RolesGuard` falls back to
+string-equality (backward compatible).
+
+**Self-modification guard (service-level):**
+
+```typescript
+import { assertCanModifyOtherRoles } from '@common/auth';
+
+async assignRoles(
+  id: string,
+  roles: UsuarioRole[],
+  requesterId: string,
+): Promise<UsuarioPublic> {
+  const target = await this.repository.findOne(id);
+  // Throws ForbiddenException when requester.id === target.id.
+  assertCanModifyOtherRoles(
+    { id: requesterId },
+    { id: target.id },
+    { roles },
+  );
+  return this.repository.updateRoles(id, roles);
+}
+```
+
+The self-modification rule lives in the service (not the guard) because
+the role-change payload lives in the request body — guards do not have a
+clean, content-type-agnostic way to read it. Defense-in-depth: even if
+`@Roles('admin')` is removed by mistake, the service still rejects
+self-modification.
+
+**Admin bootstrap (`onApplicationBootstrap`):**
+
+```typescript
+@Module({ /* ... */ })
+export class UsuariosModule implements OnApplicationBootstrap {
+  constructor(
+    private readonly service: UsuariosService,
+    private readonly config: ConfigService,
+  ) {}
+
+  async onApplicationBootstrap(): Promise<void> {
+    const email = this.config.get<string>('ADMIN_EMAIL');
+    if (!email) {
+      this.logger.warn('ADMIN_EMAIL not set — admin bootstrap skipped');
+      return;
+    }
+    await this.service.grantAdminByEmail(email);
+  }
+}
+```
+
+`grantAdminByEmail` is idempotent: no-op when the user is already
+admin, no-op when the user does not exist (with a warning log), and
+uses `$addToSet` so other existing roles are preserved.
+
+**Known limitations:**
+
+- Role changes in `usuarios` do NOT reflect in the affected user's JWT
+  until their next login. Follow-up change wires `AuthService` to read
+  from the `usuarios` collection.
+- The 3 spec files in `usuarios/__tests__/` reference the pre-RBAC
+  signatures and will fail CI until the follow-up test update lands.
+
 ### @common/serve-static
 
 Static file serving with EJS template engine and TailwindCSS CDN support.

@@ -1,133 +1,57 @@
-# Auth Specification
+# Capability: auth
 
 ## Purpose
 
-Módulo de autenticación multifactor: JWT, Magic Link, OAuth (placeholder), 2FA/TOTP, Passkeys/WebAuthn.
-
-Documentación asociada: `packages/auth/README.md`, `packages/auth/src/two-factor/README.md`
+The `auth` package (`@common/auth`) provides framework-level authentication and authorization primitives. In addition to the existing authentication flows (JWT, magic links, OAuth, 2FA, passkeys), the package exposes two generic, domain-agnostic RBAC utilities used by feature modules to interpret role hierarchies and to prevent users from escalating their own roles.
 
 ## Requirements
 
-### JWT Authentication
+### Requirement: Role Hierarchy Utility
 
-The system MUST authenticate users via JWT access + refresh tokens.
+The `@common/auth` framework MUST provide a generic `hasAtLeastRole(userRoles, requiredRole, hierarchy)` function that returns `true` when at least one of `userRoles` occupies a rank greater than or equal to `requiredRole` in the provided `hierarchy` map. The function MUST be generic over the role string type. `RolesGuard` MUST call this function so that a `@Roles('user')` annotation admits `manager` and `admin` when an `admin > manager > user` hierarchy is registered. The function MUST be pure and free of side effects.
 
-#### Scenario: Login with valid credentials
+#### Scenario: Higher role satisfies lower role check
 
-- GIVEN a registered user with email and password
-- WHEN the user POSTs to `/api/auth/login` with valid credentials
-- THEN the system returns access token, refresh token, and user data
+- GIVEN a hierarchy `{ admin: 3, manager: 2, user: 1 }` and `userRoles: ['admin']`
+- WHEN `hasAtLeastRole(userRoles, 'user', hierarchy)` is called
+- THEN it returns `true`
 
-#### Scenario: Access protected route
+#### Scenario: Lower role fails higher role check
 
-- GIVEN a valid JWT access token
-- WHEN the user GETs a route with `@UseGuards(JwtAuthGuard)`
-- THEN the system returns the protected resource
+- GIVEN a hierarchy `{ admin: 3, manager: 2, user: 1 }` and `userRoles: ['user']`
+- WHEN `hasAtLeastRole(userRoles, 'admin', hierarchy)` is called
+- THEN it returns `false`
 
-#### Scenario: Expired token rejected
+#### Scenario: One of multiple user roles satisfies the check
 
-- GIVEN an expired JWT access token
-- WHEN the user accesses a protected route
-- THEN the system returns 401 Unauthorized
+- GIVEN a hierarchy `{ admin: 3, manager: 2, user: 1 }` and `userRoles: ['user', 'manager']`
+- WHEN `hasAtLeastRole(userRoles, 'manager', hierarchy)` is called
+- THEN it returns `true`
 
-### Public Routes
+#### Scenario: Empty user roles never satisfy a check
 
-The system MUST allow marking routes as public via `@Public()` decorator.
+- GIVEN a hierarchy `{ admin: 3, manager: 2, user: 1 }` and `userRoles: []`
+- WHEN `hasAtLeastRole(userRoles, 'user', hierarchy)` is called
+- THEN it returns `false`
 
-#### Scenario: Public route accessible without token
+### Requirement: Self-Modification Guard Helper
 
-- GIVEN no authentication token
-- WHEN accessing a route decorated with `@Public()`
-- THEN the system returns the resource without authentication
+The `@common/auth` framework MUST provide an `assertCanModifyOtherRoles(requester, target, roleChanges)` helper that throws `ForbiddenException` when `requester.id === target.id` AND `roleChanges` would alter the requester's own roles. The helper MUST be domain-agnostic: it MUST accept generic requester and target shapes (with at least an `id` field) and MUST NOT import any specific module's DTO or schema. The helper MUST NOT throw when the requester and target differ.
 
-### Role-Based Access
+#### Scenario: Admin tries to change own roles
 
-The system MUST restrict routes by role via `@Roles()` decorator + `RolesGuard`.
+- GIVEN a requester `{ id: 'A' }` and a target `{ id: 'A' }` with `roleChanges: { roles: ['manager'] }`
+- WHEN `assertCanModifyOtherRoles(requester, target, roleChanges)` is called
+- THEN it throws `ForbiddenException` with a message indicating self-modification is forbidden
 
-#### Scenario: Admin-only route
+#### Scenario: Admin changes another user's roles
 
-- GIVEN a user with role "admin"
-- WHEN accessing a route with `@Roles('admin')`
-- THEN the system grants access
+- GIVEN a requester `{ id: 'A' }` and a target `{ id: 'B' }` with `roleChanges: { roles: ['manager'] }`
+- WHEN `assertCanModifyOtherRoles(requester, target, roleChanges)` is called
+- THEN it returns without throwing
 
-#### Scenario: Non-admin user rejected
+#### Scenario: Helper is independent of Mongoose
 
-- GIVEN a user without role "admin"
-- WHEN accessing a route with `@Roles('admin')`
-- THEN the system returns 403 Forbidden
-
-### Password Hashing (Argon2)
-
-The system MUST hash passwords using argon2id (NOT bcrypt).
-
-#### Scenario: Hash and verify password
-
-- GIVEN a plain text password
-- WHEN `authService.hashPassword(password)` is called
-- THEN the system returns an argon2id hash compatible with `authService.comparePassword()`
-
-#### Scenario: Wrong password rejected
-
-- GIVEN a password hash from argon2id
-- WHEN `authService.comparePassword(wrongPassword, hash)` is called
-- THEN the system returns false
-
-### Magic Link
-
-The system MAY provide passwordless login via time-limited magic links.
-
-#### Scenario: Request and verify magic link
-
-- GIVEN a registered email
-- WHEN requesting a magic link via POST `/api/auth/magic-link/request`
-- THEN the system generates a time-limited token (default 300s)
-- WHEN verifying via POST `/api/auth/magic-link/verify`
-- THEN the system authenticates the user
-
-### Two-Factor (2FA) TOTP
-
-The system SHOULD provide TOTP-based two-factor authentication with backup codes.
-
-Documentación asociada: `packages/auth/src/two-factor/README.md`
-
-#### Scenario: Generate 2FA secret
-
-- GIVEN an authenticated user
-- WHEN POST `/api/auth/2fa/generate`
-- THEN the system returns QR code and backup codes
-
-#### Scenario: Enable 2FA with valid code
-
-- GIVEN a generated 2FA secret
-- WHEN POST `/api/auth/2fa/enable` with valid TOTP code
-- THEN the system enables 2FA for the user
-
-### Passkeys (WebAuthn)
-
-The system SHOULD provide passwordless authentication via WebAuthn hardware biometrics.
-
-#### Scenario: Register passkey
-
-- GIVEN an authenticated user
-- WHEN POST `/api/auth/passkeys/register-options`
-- THEN the system returns WebAuthn registration options
-- WHEN POST `/api/auth/passkeys/register-verify` with authenticator response
-- THEN the system registers the passkey
-
-#### Scenario: Login with passkey
-
-- GIVEN a user with registered passkeys
-- WHEN POST `/api/auth/passkeys/login-options`
-- THEN the system returns authentication options
-- WHEN POST `/api/auth/passkeys/login-verify` with authenticator response
-- THEN the system authenticates the user
-
-## Current Status
-
-⚠️ **Stub**: The auth module currently uses a hardcoded demo user (`demo@example.com` / `demo123`). No persistence layer is connected. This is documented but NOT suitable for production without implementing a real UserService.
-
-## Affected Documentation
-
-- `packages/auth/README.md`
-- `packages/auth/src/two-factor/README.md`
-- `AGENTS.md` — section 3 (Packages Index)
+- GIVEN the helper is invoked from a non-Mongoose caller (e.g., a service that holds a plain object)
+- WHEN `assertCanModifyOtherRoles(requester, target, roleChanges)` is called
+- THEN it does not require any Mongoose document type at the call site
