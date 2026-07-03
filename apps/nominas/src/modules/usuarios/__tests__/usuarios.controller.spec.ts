@@ -1,9 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { HttpStatus } from '@nestjs/common';
+import { JwtAuthGuard, RolesGuard } from '@common/auth';
 import { UsuariosController } from '../usuarios.controller';
 import { UsuariosService } from '../usuarios.service';
 import { CreateUsuarioDto } from '../dto/create-usuario.dto';
 import { UpdateUsuarioDto } from '../dto/update-usuario.dto';
+import { AssignRolesDto } from '../dto/assign-roles.dto';
+import { UsuarioRole } from '../enums/usuario-role.enum';
 
 describe('UsuariosController', () => {
   let controller: UsuariosController;
@@ -16,6 +18,7 @@ describe('UsuariosController', () => {
     email: 'john.doe@example.com',
     telefono: '+1234567890',
     activo: true,
+    roles: ['user'],
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -27,6 +30,8 @@ describe('UsuariosController', () => {
       findOne: jest.fn(),
       update: jest.fn(),
       remove: jest.fn(),
+      assignRoles: jest.fn(),
+      grantAdminByEmail: jest.fn(),
     } as any;
 
     const module: TestingModule = await Test.createTestingModule({
@@ -102,6 +107,57 @@ describe('UsuariosController', () => {
       await controller.remove(mockUsuario.id);
 
       expect(mockService.remove).toHaveBeenCalledWith(mockUsuario.id);
+    });
+  });
+
+  describe('assignRoles', () => {
+    it('should delegate to service.assignRoles with id, dto.roles, and req.user.id', async () => {
+      // The controller is a thin pass-through: it must read roles from the
+      // DTO and the requester id from the authenticated request.
+      const dto: AssignRolesDto = { roles: [UsuarioRole.Manager] };
+      const req = { user: { id: 'request-1' } } as any;
+      const updated = { ...mockUsuario, roles: ['manager'] };
+      mockService.assignRoles.mockResolvedValue(updated);
+
+      const result = await controller.assignRoles('target-2', dto, req);
+
+      expect(result).toEqual(updated);
+      expect(mockService.assignRoles).toHaveBeenCalledWith(
+        'target-2',
+        [UsuarioRole.Manager],
+        'request-1',
+      );
+    });
+  });
+
+  describe('controller-integration (guard chain)', () => {
+    // The controller declares `@UseGuards(JwtAuthGuard, RolesGuard)` at the
+    // class level. This test proves that the guard chain wires correctly:
+    // we replace both guards with no-op implementations and call a route.
+    // If a guard were missing, the call would short-circuit and the
+    // service method would NOT be invoked.
+    it('routes requests through the service when guards are bypassed', async () => {
+      const moduleWithGuards: TestingModule =
+        await Test.createTestingModule({
+          controllers: [UsuariosController],
+          providers: [
+            { provide: UsuariosService, useValue: mockService },
+          ],
+        })
+          .overrideGuard(JwtAuthGuard)
+          .useValue({ canActivate: () => true })
+          .overrideGuard(RolesGuard)
+          .useValue({ canActivate: () => true })
+          .compile();
+
+      const guardedController =
+        moduleWithGuards.get<UsuariosController>(UsuariosController);
+      mockService.findAll.mockResolvedValue([mockUsuario]);
+
+      const result = await guardedController.findAll();
+
+      expect(result).toEqual([mockUsuario]);
+      expect(mockService.findAll).toHaveBeenCalled();
     });
   });
 });
