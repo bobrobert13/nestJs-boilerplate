@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Resend } from 'resend';
+import { CreateEmailOptions, Resend } from 'resend';
 import { EmailOptions, SendEmailResult } from '../interfaces/email-options.interface';
 
 interface ResendConfig {
@@ -29,7 +29,7 @@ export class ResendService {
       this.logger.warn('Resend API key not configured. Email sending will be disabled.');
     }
 
-    this.client = new Resend({ apiKey: config?.apiKey || '' });
+    this.client = new Resend(config?.apiKey || '');
     this.fromEmail = config?.fromEmail || 'onboarding@resend.dev';
     this.fromName = config?.fromName || 'My App';
     this.replyTo = config?.replyTo;
@@ -44,16 +44,16 @@ export class ResendService {
   async sendEmail(options: EmailOptions): Promise<SendEmailResult> {
     const { to, subject, text, html, from, replyTo, cc, bcc } = options;
 
-    const payload: Record<string, any> = {
+    const payload: CreateEmailOptions = {
       from: from || `${this.fromName} <${this.fromEmail}>`,
       to: Array.isArray(to) ? to : [to],
       subject,
+      text: text || '',
     };
 
-    if (text) payload.text = text;
     if (html) payload.html = html;
-    if (replyTo) payload.reply_to = replyTo;
-    else if (this.replyTo) payload.reply_to = this.replyTo;
+    if (replyTo) payload.replyTo = replyTo;
+    else if (this.replyTo) payload.replyTo = this.replyTo;
     if (cc) payload.cc = Array.isArray(cc) ? cc : [cc];
     if (bcc) payload.bcc = Array.isArray(bcc) ? bcc : [bcc];
 
