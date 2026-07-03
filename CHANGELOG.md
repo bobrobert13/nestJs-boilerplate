@@ -39,6 +39,8 @@
 
 ### Changed
 
+- chore(monorepo): add npm workspaces and align passport dep
+
 - docs(sdd): include fix-pre-existing-issues change record
 - docs(sdd): add archive report for fix-pre-existing-issues
 - docs(specs): sync delta specs from fix-pre-existing-issues to canonical location
@@ -96,6 +98,10 @@ Usar este template para cada nueva entrada. Insertar AL INICIO del changelog.
 - scope: descripción (ej. `refactor(@common/http): http-error re-export desde common`)
 
 ### Fixed
+
+- fix(resend): update service to v4 SDK API (constructor + CreateEmailOptions)
+- fix(usuarios): export UsuarioPublic interface to fix TS4053 in controller
+- fix(tsc): resolve 388 latent TypeScript errors
 
 - fix(lint): separate lint:fix script and disable prettier rule
 - fix(lint): repair eslint config + remove dead fail() in test
