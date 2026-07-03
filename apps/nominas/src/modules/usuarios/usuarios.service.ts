@@ -5,7 +5,7 @@ import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
 import { UsuarioRole } from './enums/usuario-role.enum';
 
-interface UsuarioPublic {
+export interface UsuarioPublic {
   id: string;
   nombre: string;
   apellido: string;
