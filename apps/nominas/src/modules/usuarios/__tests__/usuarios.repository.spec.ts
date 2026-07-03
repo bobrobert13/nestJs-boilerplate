@@ -103,7 +103,7 @@ describe('UsuariosRepository', () => {
 
       const result = await repository.findByEmail(mockUsuario.email);
 
-      expect(result.email).toBe(mockUsuario.email);
+      expect(result!.email).toBe(mockUsuario.email);
     });
 
     it('should return null if not found', async () => {

@@ -1,5 +1,4 @@
 export {
-  HttpErrorResponse,
   HttpError,
   BadRequestError,
   UnauthorizedError,
@@ -10,3 +9,4 @@ export {
   ServiceUnavailableError,
   createHttpError,
 } from '@common/common';
+export type { HttpErrorResponse } from '@common/common';

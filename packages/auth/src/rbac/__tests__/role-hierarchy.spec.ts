@@ -52,7 +52,7 @@ describe('hasAtLeastRole', () => {
       // 'guest' is not in the hierarchy — hasAtLeastRole treats it as rank 0
       // and therefore cannot satisfy even a rank-1 requirement.
       expect(
-        hasAtLeastRole<TestRole>(['guest'] as TestRole[], 'user', hierarchy),
+        hasAtLeastRole<TestRole>(['guest'] as unknown as TestRole[], 'user', hierarchy),
       ).toBe(false);
     });
   });

@@ -31,6 +31,6 @@
       "@common/documents": ["packages/documents/src/index.ts"],
       "@common/auth": ["packages/auth/src/index.ts"]
     },
-    "types": ["node"]
+    "types": ["node", "jest"]
   }
 }
