@@ -22,6 +22,10 @@ import {
   GenerateSchemaFromTextDto,
   GenerateSchemaFromImageDto,
   CompileSchemaDto,
+  CompileDryRunDto,
+  CompileFromJsonSchemaDto,
+  CompileFromDslDto,
+  InferFromCollectionDto,
   ExtractDocumentDto,
 } from './dto/generate-schema.dto';
 import { GeneratedSchema } from '@common/ai';
@@ -191,4 +195,92 @@ export class DynamicSchemaController {
     }
     return { success: true, collectionName };
   }
+
+  @Post('compile/dry-run')
+  @ApiOperation({ summary: 'Validate a GeneratedSchema without registering the Mongoose model' })
+  @ApiResponse({ status: 200, description: 'Validation result' })
+  @ApiResponse({ status: 400, description: 'Validation errors' })
+  @HttpCode(HttpStatus.OK)
+  async compileDryRun(@Body() dto: CompileDryRunDto) {
+    const result = await this.dynamicSchemaService.compileSchema(
+      dto.schema as GeneratedSchema,
+      dto.collectionName,
+      true,
+    );
+    if (!result.success) {
+      throw new BadRequestException(result.error);
+    }
+    return { valid: true, normalizedSchema: result.generatedSchema, collectionName: result.collectionName };
+  }
+
+  @Post('compile-from-json-schema')
+  @ApiOperation({ summary: 'Compile from JSON Schema draft-07 document' })
+  @ApiResponse({ status: 200, description: 'Compiled and registered' })
+  @ApiResponse({ status: 400, description: 'JSON Schema invalid or compilation error' })
+  @HttpCode(HttpStatus.OK)
+  async compileFromJsonSchema(@Body() dto: CompileFromJsonSchemaDto) {
+    const result = await this.dynamicSchemaService.compileFromJsonSchema({
+      jsonSchema: dto.jsonSchema,
+      collectionName: dto.collectionName,
+    });
+    if (!result.success) {
+      throw new BadRequestException(result.error);
+    }
+    return {
+      schema: result.generatedSchema,
+      collectionName: result.collectionName,
+      fieldsHash: result.fieldsHash,
+      idempotent: result.idempotent,
+    };
+  }
+
+  @Post('compile-from-dsl')
+  @ApiOperation({ summary: 'Compile from declarative DSL string' })
+  @ApiResponse({ status: 200, description: 'Compiled and registered' })
+  @ApiResponse({ status: 400, description: 'DSL parse error or compilation error' })
+  @HttpCode(HttpStatus.OK)
+  async compileFromDsl(@Body() dto: CompileFromDslDto) {
+    const result = await this.dynamicSchemaService.compileFromDsl({ dsl: dto.dsl });
+    if (!result.success) {
+      throw new BadRequestException(result.error);
+    }
+    return {
+      schema: result.generatedSchema,
+      collectionName: result.collectionName,
+      fieldsHash: result.fieldsHash,
+      idempotent: result.idempotent,
+    };
+  }
+
+  @Post('infer-from-collection/:collectionName')
+  @ApiOperation({ summary: 'Infer schema from existing Mongo collection by sampling docs' })
+  @ApiResponse({ status: 200, description: 'Schema inferred and registered' })
+  @ApiResponse({ status: 404, description: 'Collection not found' })
+  @ApiResponse({ status: 400, description: 'Inference or compilation error' })
+  @HttpCode(HttpStatus.OK)
+  async inferFromCollection(
+    @Param('collectionName') collectionName: string,
+    @Body() dto: InferFromCollectionDto,
+  ) {
+    const result = await this.dynamicSchemaService.inferFromCollection({
+      collectionName,
+      sampleSize: dto.sampleSize,
+    });
+    if (!result.success) {
+      const status = (result.error ?? "").startsWith("COLLECTION_NOT_FOUND")
+        ? HttpStatus.NOT_FOUND
+        : HttpStatus.BAD_REQUEST;
+      if (status === HttpStatus.NOT_FOUND) {
+        throw new NotFoundException(result.error);
+      }
+      throw new BadRequestException(result.error);
+    }
+    return {
+      schema: result.generatedSchema,
+      collectionName: result.collectionName,
+      fieldsHash: result.fieldsHash,
+      idempotent: result.idempotent,
+    };
+  }
+
 }

@@ -1,217 +1,143 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { AiService } from '@common/ai';
-import { DocumentProcessorService, DocumentContent } from '@common/documents';
+import { DocumentContent, DocumentProcessorService } from '@common/documents';
 import { GeneratedSchema } from '@common/ai';
 import { SchemaCompilerService } from './schema-compiler.service';
+import { SchemaRegistryService } from './schema-registry.service';
+import { TextSourceAdapter } from '../adapters/text-source.adapter';
+import { ImageSourceAdapter } from '../adapters/image-source.adapter';
+import { DocumentSourceAdapter } from '../adapters/document-source.adapter';
+import { JsonSchemaSourceAdapter, JsonSchemaInput } from '../adapters/json-schema-source.adapter';
+import { DslSourceAdapter, DslInput } from '../adapters/dsl-source.adapter';
+import { MongoInferenceSourceAdapter, MongoInferenceInput } from '../adapters/mongo-inference-source.adapter';
+import { SchemaSource } from '../interfaces/schema-source.enum';
 
 export interface PipelineResult {
   success: boolean;
   documentContent?: DocumentContent;
   generatedSchema?: GeneratedSchema;
   collectionName?: string;
+  fieldsHash?: string;
+  idempotent?: boolean;
   error?: string;
 }
 
+/**
+ * Orchestrates the dynamic-schema pipeline. Source adapters implement
+ * Strategy pattern via SourceAdapter<T>. SchemaCompilerService handles
+ * validation + Mongoose model registration. SchemaRegistryService handles
+ * persistence + rehydration.
+ */
 @Injectable()
 export class DynamicSchemaService {
   private readonly logger = new Logger(DynamicSchemaService.name);
 
   constructor(
-    private readonly aiService: AiService,
+    private readonly textAdapter: TextSourceAdapter,
+    private readonly imageAdapter: ImageSourceAdapter,
+    private readonly documentAdapter: DocumentSourceAdapter,
+    private readonly jsonSchemaAdapter: JsonSchemaSourceAdapter,
+    private readonly dslAdapter: DslSourceAdapter,
+    private readonly inferenceAdapter: MongoInferenceSourceAdapter,
+    private readonly compiler: SchemaCompilerService,
+    private readonly registry: SchemaRegistryService,
     private readonly documentProcessor: DocumentProcessorService,
-    private readonly schemaCompiler: SchemaCompilerService,
   ) {}
+  // ───────── Source → Schema (no compile, no persist) ─────────
 
-  async generateSchemaFromText(
-    text: string,
-    provider?: string,
-    temperature?: number,
-  ): Promise<PipelineResult> {
+  async generateSchemaFromText(text: string, provider?: string, temperature?: number): Promise<PipelineResult> {
     try {
-      this.logger.log('Generating schema from text...');
-
-      const result = await this.aiService.generateSchemaFromText(
-        provider || 'openai',
-        text,
-        { temperature },
-      );
-
-      if (!result.success) {
-        return {
-          success: false,
-          error: result.error || 'SCHEMA_GENERATION_ERROR',
-        };
-      }
-
-      const schema = result.data as GeneratedSchema;
-
-      if (!schema.fields || !Array.isArray(schema.fields)) {
-        return {
-          success: false,
-          error: 'SCHEMA_GENERATION_ERROR: Invalid schema format returned',
-        };
-      }
-
-      return {
-        success: true,
-        generatedSchema: schema,
-        collectionName: schema.collectionName,
-      };
-    } catch (error) {
-      this.logger.error('Error generating schema from text', error);
-      return {
-        success: false,
-        error: `SCHEMA_GENERATION_ERROR: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      };
+      const schema = await this.textAdapter.convert({ text }, { provider, temperature });
+      return { success: true, generatedSchema: schema, collectionName: schema.collectionName };
+    } catch (err) {
+      return this.toErrorResult(err, "SCHEMA_GENERATION_ERROR");
     }
   }
 
-  async generateSchemaFromImage(
-    imageData: string,
-    provider?: string,
-    temperature?: number,
-  ): Promise<PipelineResult> {
+  async generateSchemaFromImage(imageData: string, provider?: string, temperature?: number): Promise<PipelineResult> {
     try {
-      this.logger.log('Generating schema from image...');
-
-      const result = await this.aiService.generateSchemaFromImage(
-        provider || 'openai',
-        imageData,
-        { temperature },
-      );
-
-      if (!result.success) {
-        return {
-          success: false,
-          error: result.error || 'SCHEMA_GENERATION_ERROR',
-        };
-      }
-
-      const schema = result.data as GeneratedSchema;
-
-      if (!schema.fields || !Array.isArray(schema.fields)) {
-        return {
-          success: false,
-          error: 'SCHEMA_GENERATION_ERROR: Invalid schema format returned',
-        };
-      }
-
-      return {
-        success: true,
-        generatedSchema: schema,
-        collectionName: schema.collectionName,
-      };
-    } catch (error) {
-      this.logger.error('Error generating schema from image', error);
-      return {
-        success: false,
-        error: `SCHEMA_GENERATION_ERROR: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      };
+      const schema = await this.imageAdapter.convert({ imageData }, { provider, temperature });
+      return { success: true, generatedSchema: schema, collectionName: schema.collectionName };
+    } catch (err) {
+      return this.toErrorResult(err, "SCHEMA_GENERATION_ERROR");
     }
   }
 
-  async extractDocument(
-    documentBuffer: Buffer,
-    format: string,
-  ): Promise<PipelineResult> {
+  async extractDocument(buffer: Buffer, format: string): Promise<PipelineResult> {
     try {
-      this.logger.log(`Extracting document content (format: ${format})...`);
-
-      const content = await this.documentProcessor.extract(documentBuffer, format);
-
-      return {
-        success: true,
-        documentContent: content,
-      };
-    } catch (error) {
-      this.logger.error('Error extracting document', error);
-      let errorCode = 'DOCUMENT_PARSE_ERROR';
-      if (error instanceof Error) {
-        try {
-          const parsed = JSON.parse(error.message);
-          errorCode = parsed.code || errorCode;
-        } catch {
-          // Not JSON error
-        }
+      const content = await this.documentProcessor.extract(buffer, format);
+      return { success: true, documentContent: content };
+    } catch (err) {
+      let code = "DOCUMENT_PARSE_ERROR";
+      if (err instanceof Error) {
+        try { const p = JSON.parse(err.message); code = p.code || code; } catch { /* not JSON */ }
       }
-      return {
-        success: false,
-        error: errorCode,
-      };
+      return { success: false, error: code };
     }
   }
 
-  async compileSchema(
-    schema: GeneratedSchema,
-    collectionName: string,
-  ): Promise<PipelineResult> {
-    try {
-      this.logger.log(`Compiling schema for collection: ${collectionName}...`);
+  // ───────── Compile paths (persist + register) ─────────
 
-      const result = this.schemaCompiler.compileAndRegister(schema, collectionName);
-      if (!result.success) {
-        return { success: false, error: (result.errors || []).join('; ') };
-      }
-      return {
-        success: true,
-        generatedSchema: schema,
-        collectionName: result.collectionName,
-      };
-    } catch (error) {
-      this.logger.error('Error compiling schema', error);
-      return {
-        success: false,
-        error: `SCHEMA_COMPILATION_ERROR: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      };
+  async compileSchema(schema: GeneratedSchema, collectionName: string, dryRun = false): Promise<PipelineResult> {
+    const result = this.compiler.compileAndRegister(schema, collectionName, { dryRun });
+    if (!result.success) return { success: false, error: (result.errors || []).join("; ") };
+    if (dryRun) return { success: true, generatedSchema: result.normalizedSchema, collectionName: result.collectionName };
+    const persisted = await this.registry.register(result.normalizedSchema ?? schema, { source: SchemaSource.Manual });
+    if (!persisted.ok) return { success: false, error: persisted.errors.join("; ") };
+    return {
+      success: true,
+      generatedSchema: result.normalizedSchema,
+      collectionName: result.collectionName,
+      fieldsHash: persisted.fieldsHash,
+      idempotent: persisted.idempotent,
+    };
+  }
+
+  async compileFromJsonSchema(input: JsonSchemaInput): Promise<PipelineResult> {
+    try {
+      const schema = await this.jsonSchemaAdapter.convert(input, {});
+      return await this.compileSchema(schema, schema.collectionName);
+    } catch (err) {
+      return this.toErrorResult(err, "SCHEMA_GENERATION_ERROR");
     }
   }
 
-  async fullPipeline(
-    documentBuffer: Buffer,
-    format: string,
-    provider?: string,
-    temperature?: number,
-  ): Promise<PipelineResult> {
+  async compileFromDsl(input: DslInput): Promise<PipelineResult> {
     try {
-      // Step 1: Extract document
-      const extractResult = await this.extractDocument(documentBuffer, format);
-      if (!extractResult.success) {
-        return extractResult;
-      }
-
-      const documentContent = extractResult.documentContent!;
-
-      // Step 2: Generate schema from text
-      const schemaResult = await this.generateSchemaFromText(
-        documentContent.text,
-        provider,
-        temperature,
-      );
-
-      if (!schemaResult.success) {
-        return schemaResult;
-      }
-
-      const schema = schemaResult.generatedSchema!;
-
-      // Step 3: Compile schema
-      const compileResult = await this.compileSchema(schema, schema.collectionName);
-      if (!compileResult.success) {
-        return compileResult;
-      }
-
-      return {
-        success: true,
-        documentContent,
-        generatedSchema: schema,
-        collectionName: schema.collectionName,
-      };
-    } catch (error) {
-      this.logger.error('Error in full pipeline', error);
-      return {
-        success: false,
-        error: `Pipeline error: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      };
+      const schema = await this.dslAdapter.convert(input, {});
+      return await this.compileSchema(schema, schema.collectionName);
+    } catch (err) {
+      return this.toErrorResult(err, "DSL_PARSE_ERROR");
     }
+  }
+
+  async inferFromCollection(input: MongoInferenceInput): Promise<PipelineResult> {
+    try {
+      const schema = await this.inferenceAdapter.convert(input, {});
+      return await this.compileSchema(schema, schema.collectionName);
+    } catch (err) {
+      return this.toErrorResult(err, "INFERENCE_ERROR");
+    }
+  }
+
+  // ───────── Pipeline (document → schema) ─────────
+
+  async fullPipeline(buffer: Buffer, format: string, provider?: string, temperature?: number): Promise<PipelineResult> {
+    try {
+      const extractResult = await this.extractDocument(buffer, format);
+      if (!extractResult.success) return extractResult;
+      const generated = await this.generateSchemaFromText(extractResult.documentContent!.text, provider, temperature);
+      if (!generated.success) return generated;
+      return await this.compileSchema(generated.generatedSchema!, generated.collectionName!);
+    } catch (err) {
+      return this.toErrorResult(err, "Pipeline error");
+    }
+  }
+
+  private toErrorResult(err: unknown, defaultCode: string): PipelineResult {
+    if (err instanceof Error) {
+      this.logger.error(defaultCode + ": " + err.message);
+      return { success: false, error: err.message || defaultCode };
+    }
+    return { success: false, error: defaultCode };
   }
 }
