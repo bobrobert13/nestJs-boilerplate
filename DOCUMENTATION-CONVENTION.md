@@ -143,7 +143,6 @@ graph LR
     end
     subgraph "Communication"
         resend["@common/resend<br/>Email + Newsletter"]
-        inngest["@common/inngest<br/>Task Queue + Events"]
     end
     subgraph "Integration"
         playwright["@common/playwright<br/>Browser Automation"]
@@ -158,6 +157,5 @@ graph LR
     database --> common
     auth --> database
     resend --> database
-    inngest --> database
     documents --> ai
 ```

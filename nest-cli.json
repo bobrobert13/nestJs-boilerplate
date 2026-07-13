@@ -29,15 +29,6 @@
         "tsConfigPath": "packages/database/tsconfig.json"
       }
     },
-    "inngest": {
-      "type": "library",
-      "root": "packages/inngest",
-      "entryFile": "index",
-      "sourceRoot": "packages/inngest/src",
-      "compilerOptions": {
-        "tsConfigPath": "packages/inngest/tsconfig.json"
-      }
-    },
     "playwright": {
       "type": "library",
       "root": "packages/playwright",

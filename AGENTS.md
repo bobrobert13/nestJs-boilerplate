@@ -60,7 +60,6 @@ graph TB
     subgraph "Integration Packages"
         AI["@common/ai<br/>Multi-Provider AI"]
         PW["@common/playwright<br/>Browser Automation"]
-        INNGEST["@common/inngest<br/>Task Queue"]
         HTTP["@common/http<br/>HTTP Client"]
         DOCS["@common/documents<br/>PDF/DOCX Extraction"]
         RESEND["@common/resend<br/>Email + Newsletter"]
@@ -69,7 +68,6 @@ graph TB
 
     NOMINAS --> AUTH
     NOMINAS --> DB
-    NOMINAS --> INNGEST
     NOMINAS --> PW
     NOMINAS --> AI
     NOMINAS --> DOCS
@@ -80,7 +78,6 @@ graph TB
     DYNAMIC --> DOCS
     AUTH --> DB
     RESEND --> RESEND_SVC["Resend API<br/>(external)"]
-    INNGEST --> INNGEST_SVC["Inngest Server<br/>(self-hosted)"]
     PW --> CHROMIUM["Chromium<br/>(Docker)"]
     AI --> LLM_API["OpenAI · Anthropic ·<br/>Gemini · Moonshot · MiniMax"]
 ```
@@ -108,7 +105,7 @@ graph LR
 | TypeScript | 5.7.x | Lenguaje |
 | MongoDB | 7.0 | Base de datos (ReplicaSet) |
 | Mongoose | 9.x | ODM |
-| Inngest | 4.x | Task queue |
+
 | Playwright | 1.59.x | Browser automation |
 | Swagger | 11.3.x | API docs |
 | Docker | — | Node 22.18.0-slim |

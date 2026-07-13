@@ -57,7 +57,7 @@ docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 | API Base | `http://localhost:3000/api` |
 | Swagger | `http://localhost:3000/api` |
 | Health Check | `http://localhost:3000/api/usuarios` |
-| Inngest Sync | `http://localhost:3000/api/inngest` |
+
 
 ---
 
@@ -65,7 +65,6 @@ docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 
 - [ ] `JWT_SECRET` configurado con valor seguro (min 32 chars)
 - [ ] MongoDB connection string con credenciales
-- [ ] Inngest keys configuradas
 - [ ] `RESEND_API_KEY` configurada (si se usa email)
 - [ ] `npm run build` exitoso
 - [ ] `npm run lint` sin errores

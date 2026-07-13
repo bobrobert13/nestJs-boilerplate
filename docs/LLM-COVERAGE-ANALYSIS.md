@@ -32,7 +32,6 @@
 | @common/common | 3 | 25 | 0% | 0% |
 | @common/documents | 5 | 17 | 0% | 0% |
 | @common/http | 3 | 27 | 0% | 0% |
-| @common/inngest | 4 | 10 | 0% | 0% |
 | @common/playwright | 3 | 19 | 0% | 0% |
 | @common/resend | 6 | 30 | 0% | 0% |
 | @common/serve-static | 1 | 12 | 0% | 0% |

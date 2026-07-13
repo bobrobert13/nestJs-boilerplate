@@ -64,7 +64,6 @@ setup/
 | `@common/common` | Common utilities | (none) |
 | `@common/database` | MongoDB connection with transactions | mongoose |
 | `@common/http` | HTTP client with axios and sharp | axios, sharp |
-| `@common/inngest` | Event-driven task queue | inngest |
 | `@common/playwright` | Browser automation | playwright |
 | `@common/resend` | Email service via Resend API | resend |
 | `@common/serve-static` | Static file serving with EJS templates | ejs |

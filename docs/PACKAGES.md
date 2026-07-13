@@ -14,7 +14,6 @@
 | [@common/database](../packages/database/README.md) | ✅ | ⚠️ | — | ❌ | partial |
 | [@common/documents](../packages/documents/README.md) | ✅ | ⚠️ | — | ❌ | partial |
 | [@common/http](../packages/http/README.md) | ✅ | ⚠️ | — | ❌ | partial |
-| [@common/inngest](../packages/inngest/README.md) | ✅ | ⚠️ | ✅ | ✅ | **complete** |
 | [@common/playwright](../packages/playwright/README.md) | ✅ | ⚠️ | — | ❌ | partial |
 | [@common/resend](../packages/resend/README.md) | ✅* | ❌ | — | ❌ | partial |
 | [@common/serve-static](../packages/serve-static/README.md) | ✅* | ❌ | — | ❌ | partial |
@@ -36,7 +35,6 @@ graph LR
     subgraph "Layer 2 — Business"
         AUTH["@common/auth"] --> DB
         RESEND["@common/resend"]
-        INNGEST["@common/inngest"]
     end
     subgraph "Layer 3 — Integration"
         AI["@common/ai"]
@@ -87,9 +85,6 @@ graph LR
 - **Incluye:** HTTP client (axios), download service con sharp para optimización de imágenes
 - **Falta:** JSDoc completo, tests, unificar http-error con common
 
-#### `@common/inngest` — Task Queue ⭐ (mejor documentado)
-- **Ubicación:** `packages/inngest/`
-- **Endpoints:** `/api/inngest`, `/api/inngest-events/hola-inngest`
 - **Tiene:** Tests unitarios + integración, Swagger decorators, README bilingüe
 - **Falta:** JSDoc completo en métodos
 
@@ -135,7 +130,6 @@ graph LR
 | `@common/database` | ✅ | ✅ | ⚠️ | partial |
 | `@common/documents` | ✅ | ✅ | ⚠️ | partial |
 | `@common/http` | ✅ | ✅ | ⚠️ | partial |
-| `@common/inngest` | ✅ | ✅ | ⚠️ | **complete** |
 | `@common/playwright` | ✅ | ✅ | ⚠️ | partial |
 | `@common/resend` | ✅* | ✅ | ❌ | partial |
 | `@common/serve-static` | ✅* | ✅ | ❌ | partial |
@@ -167,7 +161,6 @@ Cada spec de dominio referencia su documentación asociada:
 | Email | `openspec/specs/email/spec.md` | `packages/resend/README.md` | `packages/resend/src/` |
 | Documents | `openspec/specs/documents/spec.md` | `packages/documents/README.md` | `packages/documents/src/` |
 | HTTP | `openspec/specs/http/spec.md` | `packages/http/README.md` | `packages/http/src/` |
-| Inngest | `openspec/specs/inngest/spec.md` | `packages/inngest/README.md` | `packages/inngest/src/` |
 | Playwright | `openspec/specs/playwright/spec.md` | `packages/playwright/README.md` | `packages/playwright/src/` |
 | Serve Static | `openspec/specs/serve-static/spec.md` | `packages/serve-static/README.md` | `packages/serve-static/src/` |
 
@@ -202,7 +195,6 @@ rg "status: critical" packages/*/README.md
 |----------|---------------|
 | NestJS 11 | https://docs.nestjs.com/ |
 | Mongoose 9 | https://mongoosejs.com/docs/ |
-| Inngest 4 | https://www.inngest.com/docs |
 | Playwright | https://playwright.dev/docs/ |
 | Resend | https://resend.com/docs |
 | Swagger NestJS | https://docs.nestjs.com/openapi/introduction |

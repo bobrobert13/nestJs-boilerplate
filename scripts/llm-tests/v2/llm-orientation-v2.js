@@ -108,14 +108,6 @@ const TEST_CASES = [
 
     weight: 3 },
 
-  { id: "Q17", category: "debugging",
-
-    question: "Donde esta la logica de retry de Inngest y como se activa?",
-
-    expected: ["sendEvent", "sendEvents", "retries", "throw", "resend", "InngestService", "self-healing"],
-
-    weight: 3 },
-
   { id: "Q18", category: "edge-case",
 
     question: "Que archivos debo crear/modificar si quiero agregar un nuevo endpoint en el modulo dynamic-schema?",

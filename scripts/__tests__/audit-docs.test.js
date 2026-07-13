@@ -58,7 +58,7 @@ test("sin --strict retorna exit 0", function () {
 test("detecta packages principales del repo", function () {
   const data = JSON.parse(run(["--json"]));
   const names = data.packages.map(function (p) { return p.name; });
-  const expected = ["ai", "auth", "common", "database", "documents", "http", "inngest", "playwright", "resend", "serve-static"];
+  const expected = ["ai", "auth", "common", "database", "documents", "http", "playwright", "resend", "serve-static"];
   for (const n of expected) {
     if (names.indexOf(n) === -1) throw new Error("No detecto " + n);
   }
