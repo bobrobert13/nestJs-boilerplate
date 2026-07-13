@@ -672,11 +672,11 @@ Se recomienda crear `CHANGELOG.md` para rastrear cambios versionados. Formato:
 | `fix-package-cleanup` | ✅ Complete | apply | root (package.json, tsconfig) | — |
 | `fix-unify-http-error` | ✅ Complete | apply | `common`, `http` | — |
 | `fix-cross-reference-docs` | ✅ Complete | apply | all packages | — |
-| `dynamic-schema-pipeline-hardening` | 🔄 In Progress | apply | `@common/ai`, `@common/documents`, `@common/database`, `dynamic-schema` | `openspec/specs/dynamic-schema/spec.md` (new), delta specs for `ai`/`documents`/`database` |
+| `dynamic-schema-pipeline-hardening` | ✅ Complete | archive | `@common/ai`, `@common/documents`, `@common/database`, `dynamic-schema` | `openspec/specs/dynamic-schema/spec.md` (new), delta specs for `ai`/`documents`/`database` (merged) |
 
 ### Auditoría Reciente
 
-Change `dynamic-schema-pipeline-hardening` (en curso) realizó una auditoría completa del pipeline de generación de schemas Mongoose. Hallazgos:
+Change `dynamic-schema-pipeline-hardening` (completado) realizó una auditoría completa del pipeline de generación de schemas Mongoose. Hallazgos:
 
 - **5 críticos** resueltos: image vision real, registro real del modelo Mongoose, registro dinámico, repositorio real, persistencia entre reinicios.
 - **8 medios** resueltos: validación de collectionName, tipos array/object con items/properties, retry con `response_format` + temperature 0, validación post-generación, spec OpenSpec para el módulo, observabilidad, rehidratación al arranque, formatos enum validados.
@@ -703,7 +703,7 @@ Ver `openspec/changes/dynamic-schema-pipeline-hardening/proposal.md` para los 16
 | `@common/resend` | ✅ | ✅ | ⚠️ | partial |
 | `@common/serve-static` | ✅ | ✅ (expandido) | ⚠️ | partial |
 | `apps/nominas` | ✅ (nuevo) | — | ⚠️ | partial |
-| `dynamic-schema` (apps) | ✅ | ✅ (nuevo) | ⚠️ | partial |
+| `dynamic-schema` (apps) | ✅ | ✅ | ⚠️ | **complete** |
 
 **Status tracking:** Los status tags `<!-- @common/<name> — status: ... -->` al inicio de cada README se actualizan manualmente o via revisión de código.
 
