@@ -142,7 +142,8 @@ export class OpenAICompatibleProvider implements IAIProvider {
                 },
               };
             }
-            return { type: part.type === 'text' ? 'text' : part.type, text: part.text };
+            if (part.type === 'text') return { type: 'text', text: part.text };
+            return { type: part.type, source: (part as { source?: unknown }).source };
           }
           // Google Gemini uses {inline_data: {mime_type, data}}
           if (providerName === 'google') {
@@ -156,7 +157,8 @@ export class OpenAICompatibleProvider implements IAIProvider {
             if (part.type === 'inline_data') {
               return part;
             }
-            return { text: part.text };
+            if (part.type === 'text') return { text: part.text };
+            return { text: '' };
           }
           // OpenAI / compatible: pass image_url through, convert inline_data.
           if (part.type === 'inline_data') {

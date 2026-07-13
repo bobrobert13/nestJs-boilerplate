@@ -323,6 +323,16 @@ export const ProductSchema = SchemaFactory.createForClass(Product);
       };
     }
 
+    // Capability guard: vision must be supported.
+    if (!provider.capabilities.vision) {
+      return {
+        success: false,
+        error: 'VISION_NOT_SUPPORTED: provider "' + providerName + '" does not support vision',
+        provider: providerName,
+        model: options?.model || 'unknown',
+      };
+    }
+
     const systemPrompt = `You are an expert at analyzing document images and inferring MongoDB/Mongoose schema structures.
 
 Given an image of a document (invoice, form, ID, etc.), analyze the visual structure and output a JSON schema that represents the fields visible in the document.
@@ -344,73 +354,77 @@ Rules:
 - Analyze the image to determine appropriate field names and types
 - Include all visible fields from the document`;
 
-    const userPrompt = `Analyze this document image and extract the schema fields. Return only the JSON schema. Image data: ${imageData.substring(0, 100)}...`;
+    // Build multimodal user message with the FULL image (not a 100-char substring).
+    const userMessage: ChatMessage = {
+      role: 'user',
+      content: [
+        { type: 'text', text: 'Analyze this document image and extract the schema fields. Return ONLY the JSON schema.' },
+        { type: 'image_url', image_url: { url: imageData } },
+      ],
+    };
+    const messages: ChatMessage[] = [
+      { role: 'system', content: systemPrompt },
+      userMessage,
+    ];
+
+    const tryParse = (raw: string): { ok: true; schema: GeneratedSchema } | { ok: false; raw: string } => {
+      const cleaned: string = String(raw).replace(/\`\`\`json\\n?/g, '').replace(/\`\`\`\\n?/g, '').trim();
+      try {
+        const schema = JSON.parse(cleaned);
+        if (!schema.fields || !Array.isArray(schema.fields)) return { ok: false, raw: cleaned };
+        return { ok: true, schema };
+      } catch {
+        return { ok: false, raw: cleaned };
+      }
+    };
+    const extractContent = (resp: AIResponse): string => {
+      const d = resp.data as { choices?: Array<{ message: { content: string } }> } | undefined;
+      return (d && d.choices && d.choices[0] && d.choices[0].message && d.choices[0].message.content) || '';
+    };
 
     try {
-      const response = await this.chat(providerName, [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-      ], {
+      const response = await this.chat(providerName, messages, {
         temperature: options?.temperature ?? 0.3,
         model: options?.model,
+        responseFormat: 'json_object',
       });
+      if (!response.success) return response as AIResponse<GeneratedSchema>;
 
-      if (!response.success) {
-        return response as AIResponse<GeneratedSchema>;
-      }
+      const first = tryParse(extractContent(response));
+      if (first.ok) return { ...response, data: { ...first.schema, source: 'image' } };
 
-      // Parse the JSON response
-      const content = response.data as string;
-      const jsonMatch = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-      
-      try {
-        const schema = JSON.parse(jsonMatch) as GeneratedSchema;
-        return {
-          ...response,
-          data: schema,
-        };
-      } catch {
-        // Retry once if JSON parse fails
-        const retryResponse = await this.chat(providerName, [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: `Retry: ${userPrompt}` },
-        ], {
-          temperature: options?.temperature ?? 0.3,
-          model: options?.model,
-        });
+      // Retry: temperature 0 + reinforced prompt.
+      const retryResponse = await this.chat(
+        providerName,
+        [
+          { role: 'system', content: systemPrompt + ' IMPORTANT: Your previous response was not valid JSON. Reply with a single JSON object only, no markdown.' },
+          userMessage,
+        ],
+        { temperature: 0, model: options?.model, responseFormat: 'json_object' },
+      );
 
-        if (!retryResponse.success) {
-          return retryResponse as AIResponse<GeneratedSchema>;
-        }
+      if (!retryResponse.success) return retryResponse as AIResponse<GeneratedSchema>;
 
-        const retryContent = retryResponse.data as string;
-        const retryJsonMatch = retryContent.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-        
-        try {
-          const schema = JSON.parse(retryJsonMatch) as GeneratedSchema;
-          return {
-            ...retryResponse,
-            data: schema,
-          };
-        } catch {
-          return {
-            success: false,
-            error: 'SCHEMA_GENERATION_ERROR: AI returned malformed JSON after retry',
-            provider: providerName,
-            model: options?.model || 'unknown',
-          };
-        }
-      }
+      const retryContent = extractContent(retryResponse);
+      const reparsed = tryParse(retryContent);
+      if (reparsed.ok) return { ...retryResponse, data: { ...reparsed.schema, source: 'image' } };
+
+      return {
+        success: false,
+        error: 'SCHEMA_GENERATION_ERROR: AI returned malformed JSON after retry. Last raw: ' + retryContent.slice(0, 500),
+        provider: providerName,
+        model: options?.model || 'unknown',
+      };
+
     } catch (error) {
       return {
         success: false,
-        error: `SCHEMA_GENERATION_ERROR: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        error: 'SCHEMA_GENERATION_ERROR: ' + (error instanceof Error ? error.message : 'Unknown error'),
         provider: providerName,
         model: options?.model || 'unknown',
       };
     }
   }
-
   async generateSchemaFromText(
     providerName: string,
     text: string,
@@ -455,58 +469,53 @@ Rules:
       ], {
         temperature: options?.temperature ?? 0.3,
         model: options?.model,
+        responseFormat: 'json_object',
       });
+      if (!response.success) return response as AIResponse<GeneratedSchema>;
 
-      if (!response.success) {
-        return response as AIResponse<GeneratedSchema>;
-      }
-
-      // Parse the JSON response
-      const content = response.data as string;
-      const jsonMatch = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-      
-      try {
-        const schema = JSON.parse(jsonMatch) as GeneratedSchema;
-        return {
-          ...response,
-          data: schema,
-        };
-      } catch {
-        // Retry once if JSON parse fails
-        const retryResponse = await this.chat(providerName, [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: `Retry: ${text}` },
-        ], {
-          temperature: options?.temperature ?? 0.3,
-          model: options?.model,
-        });
-
-        if (!retryResponse.success) {
-          return retryResponse as AIResponse<GeneratedSchema>;
-        }
-
-        const retryContent = retryResponse.data as string;
-        const retryJsonMatch = retryContent.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-        
+      const extractContent = (resp: AIResponse): string => {
+        const d = resp.data as { choices?: Array<{ message: { content: string } }> } | undefined;
+        return (d && d.choices && d.choices[0] && d.choices[0].message && d.choices[0].message.content) || '';
+      };
+      const tryParse = (raw: string): { ok: true; schema: GeneratedSchema } | { ok: false; raw: string } => {
+        const cleaned: string = String(raw).replace(/\`\`\`json\\n?/g, '').replace(/\`\`\`\\n?/g, '').trim();
         try {
-          const schema = JSON.parse(retryJsonMatch) as GeneratedSchema;
-          return {
-            ...retryResponse,
-            data: schema,
-          };
+          const schema = JSON.parse(cleaned);
+          if (!schema.fields || !Array.isArray(schema.fields)) return { ok: false, raw: cleaned };
+          return { ok: true, schema };
         } catch {
-          return {
-            success: false,
-            error: 'SCHEMA_GENERATION_ERROR: AI returned malformed JSON after retry',
-            provider: providerName,
-            model: options?.model || 'unknown',
-          };
+          return { ok: false, raw: cleaned };
         }
-      }
+      };
+
+      const first = tryParse(extractContent(response));
+      if (first.ok) return { ...response, data: { ...first.schema, source: 'text' } };
+
+      // Retry: temperature 0 + reinforced prompt.
+      const retryResponse = await this.chat(providerName, [
+        { role: 'system', content: systemPrompt + ' IMPORTANT: Your previous response was not valid JSON. Reply with a single JSON object only, no markdown.' },
+        { role: 'user', content: text },
+      ], {
+        temperature: 0,
+        model: options?.model,
+        responseFormat: 'json_object',
+      });
+      if (!retryResponse.success) return retryResponse as AIResponse<GeneratedSchema>;
+
+      const retryContent = extractContent(retryResponse);
+      const reparsed = tryParse(retryContent);
+      if (reparsed.ok) return { ...retryResponse, data: { ...reparsed.schema, source: 'text' } };
+
+      return {
+        success: false,
+        error: 'SCHEMA_GENERATION_ERROR: AI returned malformed JSON after retry. Last raw: ' + retryContent.slice(0, 500),
+        provider: providerName,
+        model: options?.model || 'unknown',
+      };
     } catch (error) {
       return {
         success: false,
-        error: `SCHEMA_GENERATION_ERROR: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        error: 'SCHEMA_GENERATION_ERROR: ' + (error instanceof Error ? error.message : 'Unknown error'),
         provider: providerName,
         model: options?.model || 'unknown',
       };
