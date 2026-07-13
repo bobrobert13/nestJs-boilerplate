@@ -1,0 +1,50 @@
+# State DAG for change: dynamic-schema-pipeline-hardening
+# Auto-managed by /sdd-continue. Do not edit manually.
+
+change: dynamic-schema-pipeline-hardening
+createdAt: 2026-12-07
+
+phases:
+  proposal:
+    status: done
+    completedAt: 2026-12-07
+  specs:
+    status: in_progress
+    completedAt: null
+    children:
+      - specs/dynamic-schema/spec.md
+      - specs/ai/spec.md (delta)
+      - specs/documents/spec.md (delta)
+      - specs/database/spec.md (delta)
+  design:
+    status: pending
+    completedAt: null
+    dependsOn: [proposal]
+  tasks:
+    status: pending
+    completedAt: null
+    dependsOn: [specs, design]
+  apply:
+    status: pending
+    completedAt: null
+    dependsOn: [tasks]
+  verify:
+    status: pending
+    completedAt: null
+    dependsOn: [apply]
+  archive:
+    status: pending
+    completedAt: null
+    dependsOn: [verify]
+
+affectedDomains:
+  - dynamic-schema
+  - ai
+  - documents
+  - database
+
+affectedPackages:
+  - '@common/ai'
+  - '@common/documents'
+  - '@common/database'
+  - 'apps/nominas/dynamic-schema'
