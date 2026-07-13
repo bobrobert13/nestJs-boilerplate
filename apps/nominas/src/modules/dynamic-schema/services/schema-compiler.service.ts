@@ -100,13 +100,19 @@ export class SchemaCompilerService {
   }
 
   private getMongooseType(type: SchemaFieldDefinition['type']): any {
+    const SchemaTypes = Schema.Types;
     const typeMap: Record<SchemaFieldDefinition['type'], any> = {
       string: String,
       number: Number,
       boolean: Boolean,
       date: Date,
+      // For arrays we just keep [Object] here; per-field items.type is resolved
+      // in the recursive buildFieldDefinition helper added in the dynamic-schema
+      // refactor (FASE 3).
       array: [Object],
       object: Object,
+      mixed: SchemaTypes.Mixed,
+      objectId: SchemaTypes.ObjectId,
     };
 
     return typeMap[type] || String;
