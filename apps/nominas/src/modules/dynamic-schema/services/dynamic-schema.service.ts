@@ -148,12 +148,14 @@ export class DynamicSchemaService {
     try {
       this.logger.log(`Compiling schema for collection: ${collectionName}...`);
 
-      const compiled = this.schemaCompiler.compileSchema(schema, collectionName);
-
+      const result = this.schemaCompiler.compileAndRegister(schema, collectionName);
+      if (!result.success) {
+        return { success: false, error: (result.errors || []).join('; ') };
+      }
       return {
         success: true,
         generatedSchema: schema,
-        collectionName,
+        collectionName: result.collectionName,
       };
     } catch (error) {
       this.logger.error('Error compiling schema', error);

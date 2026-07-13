@@ -1,128 +1,181 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Schema } from 'mongoose';
+import { InjectConnection } from '@nestjs/mongoose';
+import { Connection, Schema } from 'mongoose';
 import { GeneratedSchema, SchemaFieldDefinition } from '@common/ai';
+import { validateCollectionName } from '../validators/collection-name.validator';
+import { validateFields } from '../validators/schema-field.validator';
+
+export interface CompileOptions {
+  dryRun?: boolean;
+}
+
+export interface CompileResult {
+  success: boolean;
+  collectionName: string;
+  fieldsHash: string;
+  idempotent?: boolean;
+  errors?: string[];
+  schema?: Schema;
+  normalizedSchema?: GeneratedSchema;
+}
 
 @Injectable()
 export class SchemaCompilerService {
   private readonly logger = new Logger(SchemaCompilerService.name);
+  private readonly legacyMode: boolean;
   private readonly compiledSchemas: Map<string, Schema> = new Map();
+  private readonly hashByCollection: Map<string, string> = new Map();
 
-  constructor() {}
-
-  compileSchema(schema: GeneratedSchema, collectionName: string): Schema {
-    if (!schema.fields || !Array.isArray(schema.fields)) {
-      throw new Error(
-        JSON.stringify({
-          code: 'SCHEMA_COMPILATION_ERROR',
-          message: 'Invalid schema: fields must be an array',
-        }),
-      );
+  constructor(@InjectConnection() private readonly connection: Connection) {
+    this.legacyMode = process.env.DYNAMIC_SCHEMA_LEGACY === "true";
+    if (this.legacyMode) {
+      this.logger.warn("DYNAMIC_SCHEMA_LEGACY=true: schema will NOT be registered. Rollback only.");
     }
+  }
+  compileOnly(schema: GeneratedSchema, collectionName: string): CompileResult {
+    return this.compileAndRegister(schema, collectionName, { dryRun: true });
+  }
 
-    if (!collectionName || typeof collectionName !== 'string') {
-      throw new Error(
-        JSON.stringify({
-          code: 'SCHEMA_COMPILATION_ERROR',
-          message: 'Invalid collection name',
-        }),
-      );
-    }
+  compileAndRegister(schema: GeneratedSchema, collectionName: string, options: CompileOptions = {}): CompileResult {
+    const errors: string[] = [];
+    const nameResult = validateCollectionName(collectionName);
+    if (!nameResult.valid) errors.push(...nameResult.errors.map((e) => "SCHEMA_VALIDATION_ERROR: " + e));
+    const fieldsResult = validateFields(schema?.fields);
+    if (!fieldsResult.valid) errors.push(...fieldsResult.errors.map((e) => "SCHEMA_VALIDATION_ERROR: " + e));
+    if (errors.length > 0) return { success: false, collectionName, fieldsHash: "", errors };
 
-    try {
-      // Create a plain object to pass to Schema constructor
-      const schemaDefinition: Record<string, any> = {};
+    const normalized: GeneratedSchema = { ...schema, collectionName, timestamps: schema.timestamps ?? true };
+    const fieldsHash = computeFieldsHash(normalized.fields);
 
-      for (const field of schema.fields) {
-        this.validateFieldDefinition(field);
-        schemaDefinition[field.name] = this.fieldToSchemaProp(field);
+    if (this.isCollectionRegistered(collectionName)) {
+      const existingHash = this.hashByCollection.get(collectionName);
+      if (existingHash === fieldsHash) {
+        this.logger.log("compileAndRegister: idempotent hit for " + collectionName);
+        return { success: true, collectionName, fieldsHash, idempotent: true };
       }
-
-      const mongooseSchema = new Schema(schemaDefinition, {
-        timestamps: true,
-      });
-
-      // Store the compiled schema
-      this.compiledSchemas.set(collectionName, mongooseSchema);
-
-      this.logger.log(`Schema compiled for collection: ${collectionName}`);
-
-      return mongooseSchema;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      throw new Error(
-        JSON.stringify({
-          code: 'SCHEMA_COMPILATION_ERROR',
-          message: `Failed to compile schema: ${message}`,
-        }),
-      );
+      this.logger.warn("compileAndRegister: " + collectionName + " already registered with different fields");
     }
+
+    let mongooseSchema: Schema;
+    try {
+      mongooseSchema = this.buildMongooseSchema(normalized);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      return { success: false, collectionName, fieldsHash, errors: ["SCHEMA_COMPILATION_ERROR: " + message] };
+    }
+
+    if (!options.dryRun && !this.legacyMode) {
+      try {
+        this.connection.model(collectionName, mongooseSchema);
+        this.logger.log("Registered Mongoose model for collection: " + collectionName);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Unknown error";
+        return { success: false, collectionName, fieldsHash, errors: ["SCHEMA_COMPILATION_ERROR: connection.model failed: " + message] };
+      }
+    }
+
+    this.compiledSchemas.set(collectionName, mongooseSchema);
+    this.hashByCollection.set(collectionName, fieldsHash);
+    return { success: true, collectionName, fieldsHash, schema: mongooseSchema, normalizedSchema: normalized };
+  }
+  private buildMongooseSchema(generated: GeneratedSchema): Schema {
+    const definition: Record<string, unknown> = {};
+    for (const field of generated.fields) {
+      definition[field.name] = this.buildFieldDefinition(field);
+    }
+    const opts: Record<string, unknown> = { timestamps: generated.timestamps ?? true };
+    if (generated.options?.strict !== undefined) opts.strict = generated.options.strict;
+    if (generated.options?.versionKey !== undefined) opts.versionKey = generated.options.versionKey;
+    if (generated.options?.minimize !== undefined) opts.minimize = generated.options.minimize;
+    return new Schema(definition, opts);
   }
 
-  private validateFieldDefinition(field: SchemaFieldDefinition): void {
-    if (!field.name || typeof field.name !== 'string') {
-      throw new Error(
-        JSON.stringify({
-          code: 'SCHEMA_COMPILATION_ERROR',
-          message: `Invalid field name: ${field.name}`,
-        }),
-      );
+  private buildFieldDefinition(field: SchemaFieldDefinition): unknown {
+    const def: Record<string, unknown> = { type: this.getMongooseType(field.type) };
+    if (field.required) def.required = true;
+    if (field.unique) def.unique = true;
+    if (field.index) def.index = true;
+    if (field.default !== undefined) def.default = field.default;
+    if (field.ref) def.ref = field.ref;
+    if (Array.isArray(field.enum)) def.enum = field.enum;
+    if (field.validate) Object.assign(def, field.validate);
+    if (field.type === "array" && field.items) {
+      def.type = [this.buildFieldDefinition(field.items)];
     }
-
-    const validTypes = ['string', 'number', 'boolean', 'date', 'array', 'object'];
-    if (!field.type || !validTypes.includes(field.type)) {
-      throw new Error(
-        JSON.stringify({
-          code: 'SCHEMA_COMPILATION_ERROR',
-          message: `Invalid field type '${field.type}' for field '${field.name}'. Must be one of: ${validTypes.join(', ')}`,
-        }),
-      );
+    if (field.type === "object" && field.properties) {
+      const nested: Record<string, unknown> = {};
+      for (const [propName, propDef] of Object.entries(field.properties)) {
+        nested[propName] = this.buildFieldDefinition({ ...propDef, name: propName });
+      }
+      def.type = Schema.Types.Mixed;
+      def.of = nested;
     }
+    return def;
   }
 
-  private fieldToSchemaProp(field: SchemaFieldDefinition): any {
-    const propDefinition: any = {
-      type: this.getMongooseType(field.type),
-    };
-
-    if (field.required) {
-      propDefinition.required = true;
-    }
-
-    if (field.default !== undefined) {
-      propDefinition.default = field.default;
-    }
-
-    if (field.validate && typeof field.validate === 'object') {
-      Object.assign(propDefinition, field.validate);
-    }
-
-    return propDefinition;
-  }
-
-  private getMongooseType(type: SchemaFieldDefinition['type']): any {
-    const SchemaTypes = Schema.Types;
-    const typeMap: Record<SchemaFieldDefinition['type'], any> = {
+  private getMongooseType(type: SchemaFieldDefinition["type"]): unknown {
+    const typeMap: Record<SchemaFieldDefinition["type"], unknown> = {
       string: String,
       number: Number,
       boolean: Boolean,
       date: Date,
-      // For arrays we just keep [Object] here; per-field items.type is resolved
-      // in the recursive buildFieldDefinition helper added in the dynamic-schema
-      // refactor (FASE 3).
       array: [Object],
       object: Object,
-      mixed: SchemaTypes.Mixed,
-      objectId: SchemaTypes.ObjectId,
+      mixed: Schema.Types.Mixed,
+      objectId: Schema.Types.ObjectId,
     };
-
     return typeMap[type] || String;
+  }
+
+  isCollectionRegistered(collectionName: string): boolean {
+    if (this.legacyMode) return this.compiledSchemas.has(collectionName);
+    return this.connection.modelNames().includes(collectionName);
+  }
+
+  unregister(collectionName: string): boolean {
+    this.compiledSchemas.delete(collectionName);
+    this.hashByCollection.delete(collectionName);
+    if (!this.legacyMode) {
+      try {
+        this.connection.deleteModel(collectionName);
+        this.logger.log("Unregistered Mongoose model: " + collectionName);
+        return true;
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Unknown error";
+        this.logger.warn("deleteModel failed for " + collectionName + ": " + message);
+        return false;
+      }
+    }
+    return true;
   }
 
   getCompiledSchema(collectionName: string): Schema | undefined {
     return this.compiledSchemas.get(collectionName);
   }
 
-  isCollectionRegistered(collectionName: string): boolean {
-    return this.compiledSchemas.has(collectionName);
+  static computeFieldsHashStatic(fields: SchemaFieldDefinition[]): string {
+    return computeFieldsHash(fields);
   }
+
+  rehydrate(metadata: { collectionName: string; schemaDefinition: string }): { ok: boolean; error?: string } {
+    try {
+      const parsed = JSON.parse(metadata.schemaDefinition) as GeneratedSchema;
+      const result = this.compileAndRegister(parsed, metadata.collectionName, { dryRun: false });
+      return result.success ? { ok: true } : { ok: false, error: result.errors?.join("; ") };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      return { ok: false, error: message };
+    }
+  }
+}
+
+function computeFieldsHash(fields: SchemaFieldDefinition[]): string {
+  const sorted = [...fields].sort((a, b) => a.name.localeCompare(b.name));
+  const json = JSON.stringify(sorted);
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < json.length; i++) {
+    hash ^= json.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return (hash >>> 0).toString(16).padStart(8, "0");
 }
