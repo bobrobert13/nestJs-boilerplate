@@ -69,10 +69,6 @@ services:
       - PLAYWRIGHT_HEADLESS=true
       - PLAYWRIGHT_TIMEOUT=30000
       - PLAYWRIGHT_RETRIES=3
-      # Inngest
-      - INNGEST_EVENT_KEY=${INNGEST_EVENT_KEY:-your_event_key}
-      - INNGEST_SIGNING_KEY=${INNGEST_SIGNING_KEY:-your_signing_key}
-      - INNGEST_BASE_URL=${INNGEST_BASE_URL:-https://inngest.treborjs-dev.online/}
     ports:
       - "${APP_PORT:-3000}:3000"
     depends_on:

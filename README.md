@@ -1,6 +1,6 @@
 # NestJS Boilerplate
 
-Monorepo NestJS 11 con MongoDB, Inngest, Playwright y patrones extensibles para servicios backend.
+Monorepo NestJS 11 con MongoDB, Playwright y patrones extensibles para servicios backend.
 
 ## Quick Start
 
@@ -19,7 +19,7 @@ API → http://localhost:3000/api · Swagger → http://localhost:3000/api
 | `AGENTS.md` | Índice maestro para agentes IA + reglas de trabajo |
 | `DOCUMENTATION-CONVENTION.md` | Convención de documentación IA-friendly |
 | `README.Docker.md` | Despliegue con Docker |
-| `INNGEST_SETUP.md` | Setup de Inngest self-hosted |
+
 | `apps/nominas/PATTERNS.md` | Patrones de diseño para módulos de negocio |
 | `apps/nominas/CONTRIBUTING.md` | Cómo crear un nuevo módulo |
 | `packages/*/README.md` | Documentación individual por paquete |
@@ -34,7 +34,6 @@ API → http://localhost:3000/api · Swagger → http://localhost:3000/api
 | `@common/database` | MongoDB + transacciones |
 | `@common/auth` | JWT, 2FA, Passkeys, Magic Link |
 | `@common/ai` | Wrapper multi-provider (OpenAI, Anthropic, Gemini, etc.) |
-| `@common/inngest` | Cola de tareas + eventos |
 | `@common/playwright` | Automatización de navegador |
 | `@common/resend` | Emails + Newsletter |
 | `@common/documents` | Extracción PDF/DOCX |
@@ -46,7 +45,6 @@ API → http://localhost:3000/api · Swagger → http://localhost:3000/api
 
 - **Framework:** NestJS 11 + TypeScript 5.7
 - **Base de datos:** MongoDB 7.0 + Mongoose 9 (ReplicaSet para transacciones)
-- **Task queue:** Inngest 4 (self-hosted)
 - **Auth:** JWT, Argon2, 2FA/TOTP, Passkeys/WebAuthn, Magic Links
 - **AI:** OpenAI, Anthropic, Google Gemini, Moonshot, MiniMax
 - **Browser automation:** Playwright 1.59

@@ -18,7 +18,6 @@ openspec/
 │   ├── email/spec.md
 │   ├── documents/spec.md
 │   ├── http/spec.md
-│   ├── inngest/spec.md
 │   ├── playwright/spec.md
 │   └── serve-static/spec.md
 ├── changes/                 ← Cambios activos

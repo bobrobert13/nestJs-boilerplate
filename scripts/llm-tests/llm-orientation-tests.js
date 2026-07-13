@@ -93,7 +93,7 @@ const TEST_CASES = [
   {
     id: "Q10",
     question: "Cuales son las variables de entorno requeridas para arrancar el proyecto?",
-    expected: ["MONGODB_URI", "INNGEST_EVENT_KEY", "INNGEST_SIGNING_KEY", "INNGEST_BASE_URL", "JWT_SECRET", "RESEND_API_KEY", "PLAYWRIGHT_HEADLESS"],
+    expected: ["MONGODB_URI", "JWT_SECRET", "RESEND_API_KEY", "PLAYWRIGHT_HEADLESS"],
     weight: 5,
   },
 ];

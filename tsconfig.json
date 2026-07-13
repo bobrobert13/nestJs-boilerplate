@@ -24,7 +24,6 @@
     "paths": {
       "@common/common": ["packages/common/src/index.ts"],
       "@common/database": ["packages/database/src/index.ts"],
-      "@common/inngest": ["packages/inngest/src/index.ts"],
       "@common/playwright": ["packages/playwright/src/index.ts"],
       "@common/http": ["packages/http/src/index.ts"],
       "@common/ai": ["packages/ai/src/index.ts"],

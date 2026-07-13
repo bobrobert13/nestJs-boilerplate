@@ -96,10 +96,6 @@ MONGO_PORT=27017
 # Application
 APP_PORT=3000
 
-# Inngest
-INNGEST_EVENT_KEY=your_event_key_here
-INNGEST_SIGNING_KEY=your_signing_key_here
-INNGEST_BASE_URL=https://inngest.treborjs-dev.online/
 ```
 
 ## Endpoints
@@ -107,7 +103,7 @@ INNGEST_BASE_URL=https://inngest.treborjs-dev.online/
 - **API**: http://localhost:3000/api
 - **Swagger**: http://localhost:3000/api/docs
 - **Health**: http://localhost:3000/api/usuarios
-- **Inngest**: http://localhost:3000/api/inngest
+
 
 ## Desarrollo
 
@@ -156,7 +152,6 @@ docker run -d \
 boilerplate-service/
 ├── packages/                 # Shared packages (@common/*)
 │   ├── database/           # MongoDB module
-│   ├── inngest/           # Task queue
 │   └── playwright/         # Browser automation
 └── apps/
     └── nominas/

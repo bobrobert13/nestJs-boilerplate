@@ -22,7 +22,6 @@ Procesar paquete por paquete, siguiendo el orden de **mayor impacto en LLM**:
 | 7 | `@common/documents` | 17 | Baja | Pocos metodos publicos |
 | 8 | `@common/resend` | 30 | Media | Newsletter y sendEmail |
 | 9 | `@common/serve-static` | 12 | Baja | API pequena |
-| 10 | `@common/inngest` | 10 | Baja | Ya marcado `complete` (verificar nada mas) |
 | 11 | `apps/nominas/usuarios` | ~25 | Alta | Ejemplo del repo, deberia liderar |
 | 12 | `apps/nominas/dynamic-schema` | ~25 | Media | Multi-flujo |
 

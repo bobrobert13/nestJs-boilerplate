@@ -69,7 +69,7 @@ test("--force ejecuta sin error", function () {
 
 // Test 5: ejecutar con path especifico
 test("ejecutar con path especifico", function () {
-  const out = run(["packages/inngest/src/inngest.service.ts"]);
+  const out = run(["packages/common/src/index.ts"]);
   if (out.indexOf("Total:") === -1) throw new Error("Sin Total");
 });
 
