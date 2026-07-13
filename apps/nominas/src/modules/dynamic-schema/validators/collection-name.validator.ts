@@ -6,12 +6,12 @@
  * - Maximum length 64 chars
  */
 export const RESERVED_COLLECTION_NAMES = new Set<string>([
-  "system",
-  "admin",
-  "local",
-  "config",
-  "__schema__",
-  "__dynamic_schemas__",
+  'system',
+  'admin',
+  'local',
+  'config',
+  '__schema__',
+  '__dynamic_schemas__',
 ]);
 
 export interface CollectionNameValidationResult {
@@ -19,11 +19,13 @@ export interface CollectionNameValidationResult {
   errors: string[];
 }
 
-export function validateCollectionName(name: string): CollectionNameValidationResult {
+export function validateCollectionName(
+  name: string,
+): CollectionNameValidationResult {
   const errors: string[] = [];
 
-  if (!name || typeof name !== "string") {
-    errors.push("collectionName is required and must be a string");
+  if (!name || typeof name !== 'string') {
+    errors.push('collectionName is required and must be a string');
     return { valid: false, errors };
   }
 

@@ -20,13 +20,19 @@ export interface DynamicSchemaMetadata {
 
 @Injectable()
 export class DynamicSchemaRepository {
+  /**
+   * Injected dependencies.
+   */
   constructor(
     @InjectModel(DynamicSchemaEntity.name)
-    private readonly model: Model<DynamicSchemaDocument>,
+    private readonly _model: Model<DynamicSchemaDocument>,
   ) {}
 
+  /**
+   * findAll method.
+   */
   async findAll(): Promise<DynamicSchemaMetadata[]> {
-    const docs = await this.model
+    const docs = await this._model
       .find()
       .sort({ registeredAt: -1 })
       .lean()
@@ -34,32 +40,44 @@ export class DynamicSchemaRepository {
     return docs.map(toMetadata);
   }
 
+  /**
+   * findByCollectionName method.
+   */
   async findByCollectionName(
     collectionName: string,
   ): Promise<DynamicSchemaMetadata | null> {
-    const doc = await this.model.findOne({ collectionName }).lean().exec();
+    const doc = await this._model.findOne({ collectionName }).lean().exec();
     return doc ? toMetadata(doc) : null;
   }
 
+  /**
+   * create method.
+   */
   async create(
     data: Omit<DynamicSchemaMetadata, 'registeredAt'>,
   ): Promise<DynamicSchemaMetadata> {
-    const doc: unknown = await this.model.create({
+    const doc: unknown = await this._model.create({
       ...data,
       registeredAt: new Date(),
     });
     return toMetadata(doc);
   }
 
+  /**
+   * remove method.
+   */
   async remove(collectionName: string): Promise<boolean> {
-    const result = await this.model.deleteOne({ collectionName }).exec();
+    const result = await this._model.deleteOne({ collectionName }).exec();
     return result.deletedCount > 0;
   }
 
+  /**
+   * upsert method.
+   */
   async upsert(
     data: Omit<DynamicSchemaMetadata, 'registeredAt'>,
   ): Promise<DynamicSchemaMetadata> {
-    const doc = await this.model
+    const doc = await this._model
       .findOneAndUpdate(
         { collectionName: data.collectionName },
         { ...data, registeredAt: new Date() },

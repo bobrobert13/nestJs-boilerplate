@@ -1,7 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import { GeneratedSchema, SchemaFieldDefinition, SchemaFieldType } from '@common/ai';
+import {
+  GeneratedSchema,
+  SchemaFieldDefinition,
+  SchemaFieldType,
+} from '@common/ai';
 import { SchemaSource } from '../interfaces/schema-source.enum';
-import { SourceAdapter, AdapterContext, AdapterValidation } from './source-adapter.interface';
+import {
+  SourceAdapter,
+  AdapterContext,
+  AdapterValidation,
+} from './source-adapter.interface';
 
 /**
  * Draft-07 JSON Schema subset -> GeneratedSchema.
@@ -23,33 +31,59 @@ export interface JsonSchemaInput {
 export class JsonSchemaSourceAdapter implements SourceAdapter<JsonSchemaInput> {
   readonly source = SchemaSource.JsonSchema;
 
+  /**
+   * validate method.
+   */
   validate(input: JsonSchemaInput): AdapterValidation {
     const errors: string[] = [];
-    if (!input || typeof input !== "object") {
-      errors.push("JsonSchemaInput.jsonSchema is required");
-    } else if (!input.jsonSchema || typeof input.jsonSchema !== "object") {
-      errors.push("JsonSchemaInput.jsonSchema must be an object");
+    /**
+     * if method.
+     */
+    if (!input || typeof input !== 'object') {
+      errors.push('JsonSchemaInput.jsonSchema is required');
+    } else if (!input.jsonSchema || typeof input.jsonSchema !== 'object') {
+      errors.push('JsonSchemaInput.jsonSchema must be an object');
     }
     return { valid: errors.length === 0, errors };
   }
 
-  async convert(input: JsonSchemaInput, _context: AdapterContext): Promise<GeneratedSchema> {
+  /**
+   * convert method.
+   */
+  async convert(
+    input: JsonSchemaInput,
+    _context: AdapterContext,
+  ): Promise<GeneratedSchema> {
     const v = this.validate(input);
+    /**
+     * if method.
+     */
     if (!v.valid) {
-      const err = new Error("SCHEMA_VALIDATION_ERROR: " + v.errors.join("; "));
+      const err = new Error('SCHEMA_VALIDATION_ERROR: ' + v.errors.join('; '));
       throw err;
     }
     const schema = input.jsonSchema;
-    const properties = (schema.properties as Record<string, Record<string, unknown>> | undefined) ?? {};
-    const required = Array.isArray(schema.required) ? (schema.required as string[]) : [];
+    const properties =
+      (schema.properties as
+        | Record<string, Record<string, unknown>>
+        | undefined) ?? {};
+    const required = Array.isArray(schema.required)
+      ? (schema.required as string[])
+      : [];
 
     const fields: SchemaFieldDefinition[] = [];
+    /**
+     * for method.
+     */
     for (const [name, propSchema] of Object.entries(properties)) {
       fields.push(this.toField(name, propSchema, required.includes(name)));
     }
 
     const collectionName =
-      input.collectionName || (typeof schema.title === "string" ? this.singularize(schema.title).toLowerCase() : "entity");
+      input.collectionName ||
+      (typeof schema.title === 'string'
+        ? this.singularize(schema.title).toLowerCase()
+        : 'entity');
 
     return {
       fields,
@@ -59,35 +93,76 @@ export class JsonSchemaSourceAdapter implements SourceAdapter<JsonSchemaInput> {
     };
   }
 
-  private toField(name: string, schema: Record<string, unknown>, required: boolean): SchemaFieldDefinition {
-    const jsonType = Array.isArray(schema.type) ? (schema.type[0] as string) : (schema.type as string);
+  private toField(
+    name: string,
+    schema: Record<string, unknown>,
+    required: boolean,
+  ): SchemaFieldDefinition {
+    const jsonType = Array.isArray(schema.type)
+      ? (schema.type[0] as string)
+      : (schema.type as string);
     const map: Record<string, SchemaFieldType> = {
-      string: "string",
-      number: "number",
-      integer: "number",
-      boolean: "boolean",
-      array: "array",
-      object: "object",
-      null: "string",
+      string: 'string',
+      number: 'number',
+      integer: 'number',
+      boolean: 'boolean',
+      array: 'array',
+      object: 'object',
+      null: 'string',
     };
-    const fieldType = map[jsonType] ?? "string";
+    const fieldType = map[jsonType] ?? 'string';
     const field: SchemaFieldDefinition = { name, type: fieldType };
+    /**
+     * if method.
+     */
     if (required) field.required = true;
 
+    /**
+     * if method.
+     */
     if (Array.isArray(schema.enum)) {
       field.enum = schema.enum;
     }
-    if (typeof schema.default !== "undefined") {
+    /**
+     * if method.
+     */
+    if (typeof schema.default !== 'undefined') {
       field.default = schema.default;
     }
 
-    if (fieldType === "array" && schema.items && typeof schema.items === "object") {
-      field.items = this.toField("item", schema.items as Record<string, unknown>, false);
+    /**
+     * if method.
+     */
+    if (
+      fieldType === 'array' &&
+      schema.items &&
+      typeof schema.items === 'object'
+    ) {
+      field.items = this.toField(
+        'item',
+        schema.items as Record<string, unknown>,
+        false,
+      );
     }
-    if (fieldType === "object" && schema.properties && typeof schema.properties === "object") {
-      const nestedProps = schema.properties as Record<string, Record<string, unknown>>;
-      const nestedRequired = Array.isArray(schema.required) ? (schema.required as string[]) : [];
+    /**
+     * if method.
+     */
+    if (
+      fieldType === 'object' &&
+      schema.properties &&
+      typeof schema.properties === 'object'
+    ) {
+      const nestedProps = schema.properties as Record<
+        string,
+        Record<string, unknown>
+      >;
+      const nestedRequired = Array.isArray(schema.required)
+        ? (schema.required as string[])
+        : [];
       const nested: Record<string, SchemaFieldDefinition> = {};
+      /**
+       * for method.
+       */
       for (const [n, p] of Object.entries(nestedProps)) {
         nested[n] = this.toField(n, p, nestedRequired.includes(n));
       }
@@ -97,9 +172,18 @@ export class JsonSchemaSourceAdapter implements SourceAdapter<JsonSchemaInput> {
   }
 
   private singularize(s: string): string {
-    if (!s) return "entity";
-    if (s.endsWith("ies")) return s.slice(0, -3) + "y";
-    if (s.endsWith("s") && !s.endsWith("ss")) return s.slice(0, -1);
+    /**
+     * if method.
+     */
+    if (!s) return 'entity';
+    /**
+     * if method.
+     */
+    if (s.endsWith('ies')) return s.slice(0, -3) + 'y';
+    /**
+     * if method.
+     */
+    if (s.endsWith('s') && !s.endsWith('ss')) return s.slice(0, -1);
     return s;
   }
 }

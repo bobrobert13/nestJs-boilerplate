@@ -6,14 +6,14 @@ export interface FieldValidationResult {
 }
 
 const VALID_TYPES: SchemaFieldType[] = [
-  "string",
-  "number",
-  "boolean",
-  "date",
-  "array",
-  "object",
-  "mixed",
-  "objectId",
+  'string',
+  'number',
+  'boolean',
+  'date',
+  'array',
+  'object',
+  'mixed',
+  'objectId',
 ];
 
 /**
@@ -21,41 +21,47 @@ const VALID_TYPES: SchemaFieldType[] = [
  */
 export function validateFieldDefinition(
   field: SchemaFieldDefinition,
-  pathPrefix = "",
+  pathPrefix = '',
 ): FieldValidationResult {
   const errors: string[] = [];
   const fullPath = pathPrefix ? `${pathPrefix}.${field.name}` : field.name;
 
-  if (!field.name || typeof field.name !== "string") {
+  if (!field.name || typeof field.name !== 'string') {
     errors.push(`field name is required (at ${fullPath})`);
   } else if (!/^[a-zA-Z_$][a-zA-Z0-9_$]{0,63}$/.test(field.name)) {
     errors.push(`field name "${field.name}" must be a valid JS identifier`);
   }
 
   if (!field.type || !VALID_TYPES.includes(field.type)) {
-    errors.push(`field "${fullPath}" has invalid type "${field.type}". Must be one of: ${VALID_TYPES.join(", ")}`);
+    errors.push(
+      `field "${fullPath}" has invalid type "${field.type}". Must be one of: ${VALID_TYPES.join(', ')}`,
+    );
   }
 
   if (field.enum && !Array.isArray(field.enum)) {
     errors.push(`field "${fullPath}" enum must be an array`);
   }
 
-  if (field.ref && typeof field.ref !== "string") {
+  if (field.ref && typeof field.ref !== 'string') {
     errors.push(`field "${fullPath}" ref must be a string`);
   }
 
-  if (field.type === "array") {
+  if (field.type === 'array') {
     if (!field.items) {
-      errors.push(`SCHEMA_VALIDATION_ERROR: array field "${fullPath}" requires items`);
+      errors.push(
+        `SCHEMA_VALIDATION_ERROR: array field "${fullPath}" requires items`,
+      );
     } else {
       const itemsResult = validateFieldDefinition(field.items, fullPath);
       errors.push(...itemsResult.errors);
     }
   }
 
-  if (field.type === "object") {
-    if (!field.properties || typeof field.properties !== "object") {
-      errors.push(`SCHEMA_VALIDATION_ERROR: object field "${fullPath}" requires properties`);
+  if (field.type === 'object') {
+    if (!field.properties || typeof field.properties !== 'object') {
+      errors.push(
+        `SCHEMA_VALIDATION_ERROR: object field "${fullPath}" requires properties`,
+      );
     } else {
       for (const [propName, propDef] of Object.entries(field.properties)) {
         if (!propDef.name) {
@@ -78,7 +84,7 @@ export function validateFields(
 ): FieldValidationResult {
   const errors: string[] = [];
   if (!fields || !Array.isArray(fields) || fields.length === 0) {
-    errors.push("fields must be a non-empty array");
+    errors.push('fields must be a non-empty array');
     return { valid: false, errors };
   }
   const seen = new Set<string>();

@@ -16,12 +16,21 @@ import { GeneratedSchema } from '@common/ai';
 export class SchemaRegistryService implements OnModuleInit {
   private readonly logger = new Logger(SchemaRegistryService.name);
 
+  /**
+   * Injected dependencies.
+   */
   constructor(
-    private readonly compiler: SchemaCompilerService,
-    private readonly repository: DynamicSchemaRepository,
+    private readonly _compiler: SchemaCompilerService,
+    private readonly _repository: DynamicSchemaRepository,
   ) {}
 
+  /**
+   * onModuleInit method.
+   */
   async onModuleInit(): Promise<void> {
+    /**
+     * if method.
+     */
     if (process.env.DYNAMIC_SCHEMA_LEGACY === 'true') {
       this.logger.warn('DYNAMIC_SCHEMA_LEGACY=true: skipping rehydration');
       return;
@@ -29,9 +38,15 @@ export class SchemaRegistryService implements OnModuleInit {
     let rehydrated = 0;
     let errors = 0;
     try {
-      const all = await this.repository.findAll();
+      const all = await this._repository.findAll();
+      /**
+       * for method.
+       */
       for (const meta of all) {
-        const result = this.compiler.rehydrate(meta);
+        const result = this._compiler.rehydrate(meta);
+        /**
+         * if method.
+         */
         if (result.ok) rehydrated++;
         else {
           errors++;
@@ -69,15 +84,18 @@ export class SchemaRegistryService implements OnModuleInit {
       }
     | { ok: false; errors: string[] }
   > {
-    const result = this.compiler.compileAndRegister(
+    const result = this._compiler.compileAndRegister(
       schema,
       schema.collectionName,
     );
+    /**
+     * if method.
+     */
     if (!result.success)
       return { ok: false, errors: result.errors || ['compile failed'] };
 
     try {
-      await this.repository.upsert({
+      await this._repository.upsert({
         collectionName: result.collectionName,
         schemaDefinition: JSON.stringify(result.normalizedSchema ?? schema),
         fieldsHash: result.fieldsHash,
@@ -99,18 +117,27 @@ export class SchemaRegistryService implements OnModuleInit {
     };
   }
 
+  /**
+   * list method.
+   */
   async list(): Promise<DynamicSchemaMetadata[]> {
-    return this.repository.findAll();
+    return this._repository.findAll();
   }
 
+  /**
+   * unregister method.
+   */
   async unregister(
     collectionName: string,
   ): Promise<{ ok: boolean; error?: string }> {
-    const meta = await this.repository.findByCollectionName(collectionName);
+    const meta = await this._repository.findByCollectionName(collectionName);
+    /**
+     * if method.
+     */
     if (!meta)
       return { ok: false, error: 'COLLECTION_NOT_FOUND: ' + collectionName };
-    const removed = this.compiler.unregister(collectionName);
-    await this.repository.remove(collectionName);
+    const removed = this._compiler.unregister(collectionName);
+    await this._repository.remove(collectionName);
     return { ok: removed };
   }
 }

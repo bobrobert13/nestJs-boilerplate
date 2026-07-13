@@ -102,11 +102,16 @@ export class ExtractDocumentDto {
 }
 
 export class CompileDryRunDto {
-  @ApiProperty({ description: 'The generated schema to validate without registering' })
+  @ApiProperty({
+    description: 'The generated schema to validate without registering',
+  })
   @IsNotEmpty()
   schema: any;
 
-  @ApiProperty({ description: 'Collection name to validate against', example: 'users' })
+  @ApiProperty({
+    description: 'Collection name to validate against',
+    example: 'users',
+  })
   @IsString()
   @IsNotEmpty()
   collectionName: string;
@@ -129,7 +134,11 @@ export class CompileFromJsonSchemaDto {
   @IsNotEmpty()
   jsonSchema: Record<string, unknown>;
 
-  @ApiPropertyOptional({ description: 'Override collectionName; defaults to title lowercased + singularized', example: 'user' })
+  @ApiPropertyOptional({
+    description:
+      'Override collectionName; defaults to title lowercased + singularized',
+    example: 'user',
+  })
   @IsString()
   @IsOptional()
   collectionName?: string;
@@ -137,8 +146,10 @@ export class CompileFromJsonSchemaDto {
 
 export class CompileFromDslDto {
   @ApiProperty({
-    description: 'Mini-DSL string. Example: Entity Employee { name:string required; age:number; tags: string[]; }',
-    example: 'Entity Employee { name:string required; age:number; tags: string[]; }',
+    description:
+      'Mini-DSL string. Example: Entity Employee { name:string required; age:number; tags: string[]; }',
+    example:
+      'Entity Employee { name:string required; age:number; tags: string[]; }',
   })
   @IsString()
   @IsNotEmpty()
@@ -146,7 +157,12 @@ export class CompileFromDslDto {
 }
 
 export class InferFromCollectionDto {
-  @ApiPropertyOptional({ description: 'How many documents to sample (default 50, max 200)', default: 50, minimum: 1, maximum: 200 })
+  @ApiPropertyOptional({
+    description: 'How many documents to sample (default 50, max 200)',
+    default: 50,
+    minimum: 1,
+    maximum: 200,
+  })
   @IsOptional()
   sampleSize?: number;
 }
