@@ -1,4 +1,4 @@
-<!-- @common/serve-static — status: partial -->
+<!-- @common/serve-static — status: docs-complete | jsdoc-pending -->
 
 # @common/serve-static — Static File Serving with EJS
 

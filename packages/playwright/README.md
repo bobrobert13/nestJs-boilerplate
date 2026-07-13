@@ -1,4 +1,4 @@
-<!-- @common/playwright — status: partial -->
+<!-- @common/playwright — status: docs-complete | jsdoc-pending -->
 
 # @common/playwright
 

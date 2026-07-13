@@ -1,4 +1,4 @@
-<!-- @common/ai — status: partial -->
+<!-- @common/ai — status: docs-complete | jsdoc-pending -->
 
 # @common/ai
 

@@ -1,4 +1,4 @@
-<!-- @common/http — status: partial -->
+<!-- @common/http — status: docs-complete | jsdoc-pending -->
 
 # @common/http
 

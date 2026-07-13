@@ -638,17 +638,26 @@ Se recomienda crear `CHANGELOG.md` para rastrear cambios versionados. Formato:
 
 | Archivo | Propósito |
 |---------|-----------|
-| `BOILERPLATE.md` | Guía completa del proyecto (ES, 481 líneas) |
 | `AGENTS.md` | Este archivo — índice maestro |
 | `DOCUMENTATION-CONVENTION.md` | Convención de documentación IA-friendly |
 | `README.Docker.md` | Documentación completa de Docker |
+| `INNGEST_SETUP.md` | Setup específico de Inngest self-hosted |
 | `nest-cli.json` | Configuración del monorepo |
-| `setup/` | Package setup wizard |
+| `setup/README.md` | Wizard de selección de packages |
 | `packages/*/README.md` | Documentación individual por paquete |
-| `CHANGELOG.md` | Historial de cambios (pendiente de crear) |
+| `apps/nominas/PATTERNS.md` | Patrones de diseño para módulos de negocio |
+| `apps/nominas/CONTRIBUTING.md` | Guía para agregar nuevos módulos |
+| `apps/nominas/src/modules/*/README.md` | Docs de módulos de la app |
+| `apps/nominas/src/modules/auth/src/two-factor/README.md` | Detalle de implementación 2FA |
+| `docs/COVERAGE.md` | Reporte auto-generado de cobertura JSDoc |
+| `docs/JSDOC-MIGRATION-PLAN.md` | Plan para Fase 3 (JSDoc asistida) |
+| `CHANGELOG.md` | Historial de cambios |
 | `openspec/config.yaml` | Configuración SDD del proyecto |
 | `openspec/specs/*/spec.md` | Especificaciones por dominio |
 | `openspec/changes/` | Cambios activos y archivados |
+| `.github/workflows/docs-ci.yml` | CI para validación documental |
+
+> **Nota:** `BOILERPLATE.md` (versión antigua, 481 líneas) fue consolidado en este archivo y los docs de `apps/nominas/` durante el change `documentation-llm-readiness-audit`.
 
 ---
 
@@ -668,18 +677,23 @@ Se recomienda crear `CHANGELOG.md` para rastrear cambios versionados. Formato:
 
 ### Documentación por Paquete
 
+> Tabla actualizada por `documentation-llm-readiness-audit` (Fase 1+2 completadas).
+
 | Package | README | Spec OpenSpec | JSDoc | Status |
 |---------|--------|---------------|-------|--------|
-| `@common/ai` | ✅ | ✅ | ❌ | partial |
+| `@common/ai` | ✅ | ✅ | ⚠️ | partial |
 | `@common/auth` | ✅ | ✅ | ⚠️ | partial |
-| `@common/common` | ⚠️ | — | ❌ | partial |
-| `@common/database` | ✅ | ✅ | ⚠️ | partial |
-| `@common/documents` | ✅ | ✅ | ⚠️ | partial |
-| `@common/http` | ✅ | ✅ | ⚠️ | partial |
-| `@common/inngest` | ✅ | ✅ | ⚠️ | **complete** |
-| `@common/playwright` | ✅ | ✅ | ⚠️ | partial |
-| `@common/resend` | ✅* | ✅ | ❌ | partial |
-| `@common/serve-static` | ✅* | ✅ | ❌ | partial |
+| `@common/common` | ✅ | ✅ (nuevo) | ⚠️ | partial |
+| `@common/database` | ✅ | ✅ (expandido) | ⚠️ | partial |
+| `@common/documents` | ✅ | ✅ (expandido) | ⚠️ | partial |
+| `@common/http` | ✅ | ✅ (expandido) | ⚠️ | partial |
+| `@common/inngest` | ✅ | ✅ (expandido) | ⚠️ | **complete** |
+| `@common/playwright` | ✅ | ✅ (expandido) | ⚠️ | partial |
+| `@common/resend` | ✅ | ✅ | ⚠️ | partial |
+| `@common/serve-static` | ✅ | ✅ (expandido) | ⚠️ | partial |
+| `apps/nominas` | ✅ (nuevo) | — | ⚠️ | partial |
+
+**Status tracking:** Los status tags `<!-- @common/<name> — status: ... -->` al inicio de cada README se actualizan manualmente o via revisión de código.
 
 ### Issues Conocidos
 

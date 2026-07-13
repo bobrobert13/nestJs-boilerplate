@@ -16,11 +16,16 @@ API → http://localhost:3000/api · Swagger → http://localhost:3000/api
 
 | Archivo | Contenido |
 |---------|-----------|
-| `BOILERPLATE.md` | Guía completa del boilerplate (ES) |
 | `AGENTS.md` | Índice maestro para agentes IA + reglas de trabajo |
 | `DOCUMENTATION-CONVENTION.md` | Convención de documentación IA-friendly |
 | `README.Docker.md` | Despliegue con Docker |
+| `INNGEST_SETUP.md` | Setup de Inngest self-hosted |
+| `apps/nominas/PATTERNS.md` | Patrones de diseño para módulos de negocio |
+| `apps/nominas/CONTRIBUTING.md` | Cómo crear un nuevo módulo |
 | `packages/*/README.md` | Documentación individual por paquete |
+| `docs/COVERAGE.md` | Reporte de cobertura JSDoc (auto) |
+
+> `BOILERPLATE.md` fue consolidado en `AGENTS.md` + docs de `apps/nominas/` durante el change `documentation-llm-readiness-audit`.
 
 ## Paquetes (`packages/`)
 

@@ -1,4 +1,4 @@
-<!-- @common/auth — status: partial -->
+<!-- @common/auth — status: docs-complete | jsdoc-pending -->
 
 # @common/auth - Authentication Module
 

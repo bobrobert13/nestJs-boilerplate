@@ -1,4 +1,4 @@
-<!-- @common/inngest — status: complete -->
+<!-- @common/inngest — status: docs-complete | jsdoc-pending -->
 
 # @common/inngest
 

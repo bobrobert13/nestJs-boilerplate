@@ -1,4 +1,4 @@
-<!-- @common/resend — status: partial -->
+<!-- @common/resend — status: docs-complete | jsdoc-pending -->
 
 # @common/resend — Email Module
 

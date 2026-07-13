@@ -50,6 +50,12 @@ lerna-debug.log*
 .temp
 .tmp
 
+# Auto-generated LLM context sidecars (regenerated via `npm run docs:context`)
+**/*.llm-context.md
+!docs/**/*.md
+!packages/*/src/**/*.ts
+!apps/*/src/**/*.ts
+
 # Runtime data
 pids
 *.pid

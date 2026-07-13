@@ -1,4 +1,4 @@
-<!-- @common/documents — status: partial -->
+<!-- @common/documents — status: docs-complete | jsdoc-pending -->
 
 # @common/documents
 
