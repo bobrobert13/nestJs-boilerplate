@@ -89,9 +89,95 @@ export class OpenAICompatibleProvider implements IAIProvider {
   async chat(options: ChatCompletionOptions): Promise<AIResponse> {
     try {
       const model = options.model || this.config.model;
-      const response = await this.client.post('/chat/completions', {
+
+      // Vision capability guard: reject multimodal content early if provider
+      // doesn't support it, instead of letting the upstream API return a 400.
+      const wantsVision = options.messages.some((m) =>
+        Array.isArray(m.content) &&
+        m.content.some((p) => p.type !== 'text'),
+      );
+      if (wantsVision && !this.capabilities.vision) {
+        return {
+          success: false,
+          error: 'VISION_NOT_SUPPORTED: provider "' + this.config.provider + '" has capabilities.vision=false',
+          provider: this.config.provider,
+          model,
+        };
+      }
+
+      // Serialize messages: convert MessageContentPart[] to the wire shape
+      // expected by the target provider. By default we use the OpenAI image_url
+      // shape, which most OpenAI-compatible APIs accept.
+      const messages = options.messages.map((m) => {
+        if (typeof m.content === 'string') return m;
+        const providerName = this.config.provider;
+        const converted = m.content.map((part) => {
+          // Anthropic uses {type: 'image', source: {...}}
+          if (providerName === 'anthropic') {
+            if (part.type === 'image_url') {
+              const url = part.image_url.url;
+              const match = url.match(/^data:([^;]+);base64,(.+)$/);
+              if (match) {
+                return {
+                  type: 'image',
+                  source: {
+                    type: 'base64',
+                    media_type: match[1],
+                    data: match[2],
+                  },
+                };
+              }
+              return {
+                type: 'image',
+                source: { type: 'url', media_type: 'image/jpeg', data: url },
+              };
+            }
+            if (part.type === 'inline_data') {
+              return {
+                type: 'image',
+                source: {
+                  type: 'base64',
+                  media_type: part.inline_data.mime_type,
+                  data: part.inline_data.data,
+                },
+              };
+            }
+            return { type: part.type === 'text' ? 'text' : part.type, text: part.text };
+          }
+          // Google Gemini uses {inline_data: {mime_type, data}}
+          if (providerName === 'google') {
+            if (part.type === 'image_url') {
+              const url = part.image_url.url;
+              const match = url.match(/^data:([^;]+);base64,(.+)$/);
+              if (match) {
+                return { inline_data: { mime_type: match[1], data: match[2] } };
+              }
+            }
+            if (part.type === 'inline_data') {
+              return part;
+            }
+            return { text: part.text };
+          }
+          // OpenAI / compatible: pass image_url through, convert inline_data.
+          if (part.type === 'inline_data') {
+            return {
+              type: 'image_url',
+              image_url: {
+                url: 'data:' + part.inline_data.mime_type + ';base64,' + part.inline_data.data,
+              },
+            };
+          }
+          // text or image_url: pass as-is
+          return part;
+        });
+        return { ...m, content: converted };
+      });
+
+      // OpenAI: ask for JSON object explicitly when response_format is supported.
+      // Other providers ignore unknown fields; safe to omit.
+      const body: Record<string, unknown> = {
         model,
-        messages: options.messages,
+        messages,
         temperature: options.temperature ?? 0.7,
         max_tokens: options.maxTokens,
         top_p: options.topP,
@@ -99,7 +185,12 @@ export class OpenAICompatibleProvider implements IAIProvider {
         presence_penalty: options.presencePenalty,
         stop: options.stop,
         stream: false,
-      });
+      };
+      if (options.responseFormat === 'json_object' && this.config.provider === 'openai') {
+        body.response_format = { type: 'json_object' };
+      }
+
+      const response = await this.client.post('/chat/completions', body);
 
       const data = response.data as Record<string, unknown>;
       const choices = (data.choices as Array<{ message: { role: string; content: string }; finish_reason: string }>) || [];

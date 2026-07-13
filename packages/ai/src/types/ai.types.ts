@@ -41,6 +41,12 @@ export interface ChatCompletionOptions {
   presencePenalty?: number;
   stop?: string | string[];
   stream?: boolean;
+  /**
+   * If 'json_object' and the provider supports it (e.g. OpenAI), the response
+   * is constrained to valid JSON. Ignored silently on providers that do not
+   * understand this field.
+   */
+  responseFormat?: 'json_object';
 }
 
 export interface EmbeddingOptions {
