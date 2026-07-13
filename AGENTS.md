@@ -672,6 +672,17 @@ Se recomienda crear `CHANGELOG.md` para rastrear cambios versionados. Formato:
 | `fix-package-cleanup` | ✅ Complete | apply | root (package.json, tsconfig) | — |
 | `fix-unify-http-error` | ✅ Complete | apply | `common`, `http` | — |
 | `fix-cross-reference-docs` | ✅ Complete | apply | all packages | — |
+| `dynamic-schema-pipeline-hardening` | 🔄 In Progress | apply | `@common/ai`, `@common/documents`, `@common/database`, `dynamic-schema` | `openspec/specs/dynamic-schema/spec.md` (new), delta specs for `ai`/`documents`/`database` |
+
+### Auditoría Reciente
+
+Change `dynamic-schema-pipeline-hardening` (en curso) realizó una auditoría completa del pipeline de generación de schemas Mongoose. Hallazgos:
+
+- **5 críticos** resueltos: image vision real, registro real del modelo Mongoose, registro dinámico, repositorio real, persistencia entre reinicios.
+- **8 medios** resueltos: validación de collectionName, tipos array/object con items/properties, retry con `response_format` + temperature 0, validación post-generación, spec OpenSpec para el módulo, observabilidad, rehidratación al arranque, formatos enum validados.
+- **3 bajos** resueltos: idempotencia por `fieldsHash`, validación previa de `format`, sin duplicación silenciosa.
+
+Ver `openspec/changes/dynamic-schema-pipeline-hardening/proposal.md` para los 16 hallazgos detallados y el rollback plan con flag `DYNAMIC_SCHEMA_LEGACY=true`.
 
 > ✅ Complete · 🔄 In Progress · 🔲 Pending · ❌ Blocked
 
@@ -692,6 +703,7 @@ Se recomienda crear `CHANGELOG.md` para rastrear cambios versionados. Formato:
 | `@common/resend` | ✅ | ✅ | ⚠️ | partial |
 | `@common/serve-static` | ✅ | ✅ (expandido) | ⚠️ | partial |
 | `apps/nominas` | ✅ (nuevo) | — | ⚠️ | partial |
+| `dynamic-schema` (apps) | ✅ | ✅ (nuevo) | ⚠️ | partial |
 
 **Status tracking:** Los status tags `<!-- @common/<name> — status: ... -->` al inicio de cada README se actualizan manualmente o via revisión de código.
 
@@ -725,6 +737,8 @@ Cada spec de dominio referencia su documentación asociada:
 | Inngest | `openspec/specs/inngest/spec.md` | `packages/inngest/README.md` | `packages/inngest/src/` |
 | Playwright | `openspec/specs/playwright/spec.md` | `packages/playwright/README.md` | `packages/playwright/src/` |
 | Serve Static | `openspec/specs/serve-static/spec.md` | `packages/serve-static/README.md` | `packages/serve-static/src/` |
+| Dynamic Schema | `openspec/specs/dynamic-schema/spec.md` | `apps/nominas/src/modules/dynamic-schema/README.md` | `apps/nominas/src/modules/dynamic-schema/` |
+| Auth (apps) | — | `apps/nominas/src/modules/auth/README.md` | `apps/nominas/src/modules/auth/` |
 
 ### Cómo Buscar Documentación
 
