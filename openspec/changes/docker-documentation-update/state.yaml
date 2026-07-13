@@ -1,0 +1,18 @@
+schema: spec-driven
+change: docker-documentation-update
+phase: verify
+created: 2026-07-13
+depends: []
+status: completed
+packages:
+  - docs (README.Docker.md, ARCHITECTURE.md, AGENTS.md, CHANGELOG.md)
+specs:
+  - none (no domain spec affected)
+tasks:
+  - 1: tree packages actualizado
+  - 2: external service dependencies
+  - 3: env vars completas
+  - 4: entrypoint script doc
+  - 5: dev vs prod table
+  - 6: troubleshooting expandido
+  - 7: cross-references actualizadas

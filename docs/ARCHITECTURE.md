@@ -54,15 +54,23 @@ graph TB
 
 ```mermaid
 graph LR
-    subgraph "Docker Deployment"
+    subgraph "Docker (internal)"
         DOCKER_COMPOSE["docker-compose.yml"]
         MONGODB["MongoDB 7.0<br/>ReplicaSet: rs0"]
         SERVICE["boilerplate-service<br/>Node 22 slim"]
     end
 
+    subgraph "External Services"
+        RESEND_API["Resend API"]
+        AI_PROVIDERS["AI Providers<br/>OpenAI · Anthropic · Gemini"]
+    end
+
     DOCKER_COMPOSE --> MONGODB
     DOCKER_COMPOSE --> SERVICE
+    MONGODB --> VOLUME["mongodb_data<br/>(persistent volume)"]
     SERVICE --> MONGODB
+    SERVICE --> RESEND_API
+    SERVICE --> AI_PROVIDERS
     SERVICE --> |healthcheck| HEALTH["GET /api/usuarios"]
     SERVICE --> |swagger| SWAGGER["GET /api"]
 ```

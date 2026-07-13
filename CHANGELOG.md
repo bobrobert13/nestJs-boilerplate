@@ -6,6 +6,19 @@
 > Este registro se actualiza automáticamente como parte del checklist de finalización del agente IA.
 > No requiere intervención manual.
 
+## [0.4.0] - 2026-07-13
+
+### Changed
+- docs(docker): `README.Docker.md` reescrito — estructura 10 packages, env vars completas, entrypoint, troubleshooting expandido
+- docs(docker): `docs/ARCHITECTURE.md` diagrama Docker con servicios externos (Resend, AI providers)
+- docs(docker): `AGENTS.md` §7 endpoints/checklist actualizados (Inngest removido, AI providers agregado)
+- chore: `openspec/changes/docker-documentation-update/` creado
+
+### Removed
+- docs: Inngest endpoint removido de AGENTS.md endpoints table y checklist
+
+---
+
 ## [0.3.0] - 2026-07-12
 
 ### Added (documentation-llm-readiness-audit)
