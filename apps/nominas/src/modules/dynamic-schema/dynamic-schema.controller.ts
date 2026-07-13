@@ -1,10 +1,14 @@
 import {
   Controller,
   Post,
+  Get,
+  Delete,
+  Param,
   Body,
   HttpCode,
   HttpStatus,
   BadRequestException,
+  NotFoundException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -13,6 +17,7 @@ import {
   ApiConsumes,
 } from '@nestjs/swagger';
 import { DynamicSchemaService } from './services/dynamic-schema.service';
+import { SchemaRegistryService } from './services/schema-registry.service';
 import {
   GenerateSchemaFromTextDto,
   GenerateSchemaFromImageDto,
@@ -25,7 +30,10 @@ import { DocumentContent } from '@common/documents';
 @ApiTags('dynamic-schema')
 @Controller('dynamic-schema')
 export class DynamicSchemaController {
-  constructor(private readonly dynamicSchemaService: DynamicSchemaService) {}
+  constructor(
+    private readonly dynamicSchemaService: DynamicSchemaService,
+    private readonly registry: SchemaRegistryService,
+  ) {}
 
   @Post('extract')
   @ApiOperation({ summary: 'Extract text content from a document (PDF/DOCX)' })
@@ -134,7 +142,10 @@ export class DynamicSchemaController {
   })
   @ApiResponse({ status: 400, description: 'Pipeline failed' })
   @HttpCode(HttpStatus.OK)
-  async fullPipeline(@Body() dto: ExtractDocumentDto & { provider?: string; temperature?: number }) {
+  async fullPipeline(
+    @Body()
+    dto: ExtractDocumentDto & { provider?: string; temperature?: number },
+  ) {
     const buffer = Buffer.from(dto.document, 'base64');
     const result = await this.dynamicSchemaService.fullPipeline(
       buffer,
@@ -152,5 +163,32 @@ export class DynamicSchemaController {
       schema: result.generatedSchema,
       collectionName: result.collectionName,
     };
+  }
+
+  // ───────── Lifecycle endpoints (added in dynamic-schema-pipeline-hardening) ─────────
+
+  @Get('schemas')
+  @ApiOperation({ summary: 'List all registered dynamic schemas' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns metadata of all registered schemas',
+  })
+  @HttpCode(HttpStatus.OK)
+  async listSchemas() {
+    const schemas = await this.registry.list();
+    return { schemas };
+  }
+
+  @Delete('schemas/:collectionName')
+  @ApiOperation({ summary: 'Unregister a dynamic schema' })
+  @ApiResponse({ status: 200, description: 'Schema unregistered' })
+  @ApiResponse({ status: 404, description: 'Schema not found' })
+  @HttpCode(HttpStatus.OK)
+  async unregisterSchema(@Param('collectionName') collectionName: string) {
+    const result = await this.registry.unregister(collectionName);
+    if (!result.ok) {
+      throw new NotFoundException(result.error);
+    }
+    return { success: true, collectionName };
   }
 }
