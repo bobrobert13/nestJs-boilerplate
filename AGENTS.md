@@ -564,7 +564,6 @@ docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
    - [ ] Variables de entorno nuevas documentadas
    - [ ] Spec de dominio actualizada si cambia comportamiento
    - [ ] `openspec/changes/{name}/tasks.md` marcado con los tasks completados
-   - [ ] `CHANGELOG.md` actualizado con entrada del cambio
 
 ### Mapa de Decisión para IA
 
@@ -598,7 +597,7 @@ Cuando una IA complete cualquiera de estas acciones, DEBE documentar:
 | Nueva variable de entorno | README.md del paquete + AGENTS.md sección 5 |
 | Nuevo endpoint | Swagger decorators (`@ApiTags`, `@ApiOperation`...) + README.md |
 | Nueva dependencia externa | `package.json` + README.md dependencies table |
-| Breaking change | `CHANGELOG.md` + marcar en README |
+| Breaking change | Marcar en README |
 | Bug fix | JSDoc actualizado si la firma cambia |
 
 ### Template de Commit para Documentación
@@ -610,24 +609,9 @@ docs(@common/<name>): qué se documentó
 - JSDoc agregado en Service.method()
 ```
 
-### Archivo CHANGELOG (pendiente de crear)
-
-Se recomienda crear `CHANGELOG.md` para rastrear cambios versionados. Formato:
-
-```markdown
-# Changelog
-
-## [0.1.0] - 2026-06-12
-### Added
-- @common/resend: README.md, NewsletterModule
-- @common/serve-static: README.md
-- AGENTS.md: documentación autónoma, reglas, diagramas
-
-### Changed
-- README.md: ahora describe el proyecto real, no el starter de NestJS
-```
-
 ---
+
+
 
 ## 10. Troubleshooting
 
@@ -648,20 +632,16 @@ Se recomienda crear `CHANGELOG.md` para rastrear cambios versionados. Formato:
 | `AGENTS.md` | Este archivo — índice maestro |
 | `DOCUMENTATION-CONVENTION.md` | Convención de documentación IA-friendly |
 | `README.Docker.md` | Documentación completa de Docker |
-| `INNGEST_SETUP.md` | Setup específico de Inngest self-hosted |
 | `nest-cli.json` | Configuración del monorepo |
 | `packages/*/README.md` | Documentación individual por paquete |
 | `apps/nominas/PATTERNS.md` | Patrones de diseño para módulos de negocio |
 | `apps/nominas/CONTRIBUTING.md` | Guía para agregar nuevos módulos |
 | `apps/nominas/src/modules/*/README.md` | Docs de módulos de la app |
 | `apps/nominas/src/modules/auth/src/two-factor/README.md` | Detalle de implementación 2FA |
-| `docs/COVERAGE.md` | Reporte auto-generado de cobertura JSDoc |
 | `docs/JSDOC-MIGRATION-PLAN.md` | Plan para Fase 3 (JSDoc asistida) |
-| `CHANGELOG.md` | Historial de cambios |
 | `openspec/config.yaml` | Configuración SDD del proyecto |
 | `openspec/specs/*/spec.md` | Especificaciones por dominio |
 | `openspec/changes/` | Cambios activos y archivados |
-| `.github/workflows/docs-ci.yml` | CI para validación documental |
 
 > **Nota:** `BOILERPLATE.md` (versión antigua, 481 líneas) fue consolidado en este archivo y los docs de `apps/nominas/` durante el change `documentation-llm-readiness-audit`.
 

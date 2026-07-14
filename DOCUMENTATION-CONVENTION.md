@@ -111,7 +111,7 @@ Cuando un agente/IA realiza cualquiera de estas acciones, DEBE documentar el cam
 | Nueva variable de entorno | Agregar al README y a AGENTS.md |
 | Nuevo endpoint | Swagger decorators + tabla en README |
 | Nueva dependencia | Agregar a dependencies en README |
-| Breaking change | Marcar en CHANGELOG |
+| Breaking change | Marcar en README |
 
 ### Template para commits de documentación
 

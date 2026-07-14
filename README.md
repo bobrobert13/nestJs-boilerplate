@@ -23,7 +23,6 @@ API → http://localhost:3000/api · Swagger → http://localhost:3000/api
 | `apps/nominas/PATTERNS.md` | Patrones de diseño para módulos de negocio |
 | `apps/nominas/CONTRIBUTING.md` | Cómo crear un nuevo módulo |
 | `packages/*/README.md` | Documentación individual por paquete |
-| `docs/COVERAGE.md` | Reporte de cobertura JSDoc (auto) |
 
 > `BOILERPLATE.md` fue consolidado en `AGENTS.md` + docs de `apps/nominas/` durante el change `documentation-llm-readiness-audit`.
 
