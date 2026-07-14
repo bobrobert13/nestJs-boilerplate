@@ -8,6 +8,8 @@ import { AuthModule, JwtAuthGuard, RolesGuard } from '@common/auth';
 import { UsuariosModule } from './modules/usuarios/usuarios.module';
 import { DynamicSchemaModule } from './modules/dynamic-schema/dynamic-schema.module';
 import { validateEnv } from './config/env.validation';
+import { ScraperModule } from './modules/scraper/scraper.module';
+import { CronModule } from './common/cron/cron.module';
 
 @Module({
   imports: [
@@ -21,6 +23,8 @@ import { validateEnv } from './config/env.validation';
     AuthModule,
     UsuariosModule,
     DynamicSchemaModule,
+    CronModule,
+    ScraperModule,
   ],
   controllers: [],
   providers: [
