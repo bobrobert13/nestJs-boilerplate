@@ -13,7 +13,7 @@
 | [3. OpenSpec — SDD Workflow](#3-openspec--sdd-workflow) | Cómo usar specs y cambios |
 | [4. Paquetes — Índice](#4-paquetes--índice) | Todos los packages y su estado |
 | [5. Convenciones de Código](#5-convenciones-de-código) | Imports, naming, DI, módulos |
-| [6. Configuración](#6-configuración) | .env, setup wizard, tsconfig paths |
+| [6. Configuración](#6-configuración) | .env, tsconfig paths |
 | [7. Despliegue](#7-despliegue) | Docker, producción, checklist |
 | [8. Reglas para Trabajo Autónomo](#8-reglas-para-trabajo-autónomo) | Cómo debe trabajar una IA aquí |
 | [9. Documentación Autónoma](#9-documentación-autónoma) | Propuesta de auto-documentación |
@@ -37,9 +37,9 @@
 | Test Coverage | `npm run test:cov` |
 | Format | `npm run format` |
 | Prod Start | `npm run start:prod` |
-| Setup Wizard | `./setup/setup.sh` (Linux/Mac) · `setup\setup.bat` (Windows) |
 
 ---
+
 
 ## 2. Stack y Arquitectura
 
@@ -447,15 +447,6 @@ RESEND_REPLY_TO=
 
 > **Nota:** `@common/auth`, `@common/resend` y `@common/serve-static` NO están en `tsconfig.json` paths. Se resuelven mediante `nest-cli.json` o instalación directa.
 
-### Setup Wizard
-
-```bash
-./setup/setup.sh              # Linux/Mac
-setup\setup.bat               # Windows
-./setup/setup.sh --list       # Listar paquetes disponibles
-./setup/setup.sh --reset      # Resetear selección
-```
-
 ---
 
 ## 7. Despliegue
@@ -624,7 +615,6 @@ Se recomienda crear `CHANGELOG.md` para rastrear cambios versionados. Formato:
 | Puerto 3000 en uso | `netstat -ano \| findstr :3000` · `taskkill /PID <PID> /F` |
 | MongoDB no conecta | `mongosh --eval "db.adminCommand('ping')"` |
 | Playwright no encuentra browser | `npx playwright install` |
-| Setup wizard permission denied | `chmod +x setup/setup.sh` |
 | Swagger no muestra endpoints | Verificar `@ApiTags` en el controlador |
 | Build falla por paths | Verificar que el paquete está en `tsconfig.json` paths y `nest-cli.json` |
 
@@ -639,7 +629,6 @@ Se recomienda crear `CHANGELOG.md` para rastrear cambios versionados. Formato:
 | `README.Docker.md` | Documentación completa de Docker |
 | `INNGEST_SETUP.md` | Setup específico de Inngest self-hosted |
 | `nest-cli.json` | Configuración del monorepo |
-| `setup/README.md` | Wizard de selección de packages |
 | `packages/*/README.md` | Documentación individual por paquete |
 | `apps/nominas/PATTERNS.md` | Patrones de diseño para módulos de negocio |
 | `apps/nominas/CONTRIBUTING.md` | Guía para agregar nuevos módulos |

@@ -1,6 +1,6 @@
 # Commands, Scripts & Deployment
 
-> Everyday commands, setup wizard, Docker workflows, and production deployment references.
+> Everyday commands, Docker workflows, and production deployment references.
 
 ---
 
@@ -17,18 +17,6 @@
 | Test Coverage | `npm run test:cov` |
 | Format | `npm run format` |
 | Prod Start | `npm run start:prod` |
-| Setup Wizard | `./setup/setup.sh` (Linux/Mac) · `setup\setup.bat` (Windows) |
-
----
-
-## Setup Wizard
-
-```bash
-./setup/setup.sh              # Linux/Mac
-setup\setup.bat               # Windows
-./setup/setup.sh --list       # Listar paquetes disponibles
-./setup/setup.sh --reset      # Resetear selección
-```
 
 ---
 
