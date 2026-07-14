@@ -38,6 +38,9 @@
 | Format | `npm run format` |
 | Prod Start | `npm run start:prod` |
 
+> **Nota sobre Git Hooks:** Este proyecto no utiliza husky ni hooks de pre-commit/push forzados. Los comandos `lint`, `test` y `format` deben ejecutarse manualmente antes de commit. Ver [#7](#issues-conocidos).
+
+
 ---
 
 
@@ -720,7 +723,7 @@ Ver `openspec/changes/dynamic-schema-pipeline-hardening/proposal.md` para los 16
 | #4 | `auth`, `resend`, `serve-static` sin path en tsconfig | ✅ Fixed | root |
 | #5 | `http-error` duplicado en common y http | ✅ Fixed | `common`, `http` |
 | #6 | Newsletter usa Map en memoria (no persiste) | **BAJA** | `resend` |
-
+| #7 | Husky v9 deprecated stubs eliminados | ✅ Fixed | root |
 ---
 
 ## 13. Documentation Index

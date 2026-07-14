@@ -5943,6 +5943,11 @@ export class UsersService {
 
 Reference: [NestJS Logger](https://docs.nestjs.com/techniques/logger)
 
+
+
+> **Project note (nestJs-boilerplate):** This project does **not** use husky, lint-staged, or commitlint for git hooks. The deprecated husky v9 `.husky/` directory and `core.hookspath` git config have been removed. Linting, testing, and formatting must be run manually before commits (`npm run lint`, `npm run test`, `npm run format`). See `AGENTS.md#issues-conocidos` for details.
+
+
 ---
 
 ## References
