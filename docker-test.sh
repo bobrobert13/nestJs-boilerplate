@@ -73,9 +73,9 @@ MAX_RETRIES=10
 RETRY_COUNT=0
 
 while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-  if curl -f http://localhost:${PORT}/api/usuarios > /dev/null 2>&1; then
+  if curl -f http://localhost:${PORT}/api/health > /dev/null 2>&1; then
     echo "✅ Health check passed!"
-    curl -s http://localhost:${PORT}/api/usuarios | jq .
+    curl -s http://localhost:${PORT}/api/health | jq .
     break
   fi
 

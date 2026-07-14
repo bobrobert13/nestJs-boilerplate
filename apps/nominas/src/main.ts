@@ -1,15 +1,15 @@
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, Reflector } from '@nestjs/core';
+import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 import {
   DatabaseExceptionFilter,
   BootstrapLogger,
   LogCategory,
+  ResponseInterceptor,
+  requestIdMiddleware,
 } from '@common/common';
-
-if (process.env.NODE_ENV !== 'production') {
-  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-}
 
 async function bootstrap() {
   const startTime = Date.now();
@@ -18,10 +18,28 @@ async function bootstrap() {
 
   BootstrapLogger.step('NestFactory created', Date.now() - startTime);
 
-  app.setGlobalPrefix('api');
+  // ── Security ──────────────────────────────────────────────────
+  app.enableCors({ origin: process.env.CORS_ORIGIN || '*' });
+  app.use(helmet());
+
+  // ── Global pipes & filters ────────────────────────────────────
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
   app.useGlobalFilters(new DatabaseExceptionFilter());
 
-  // Swagger configuration
+  // ── Global interceptors & middleware ──────────────────────────
+  app.useGlobalInterceptors(new ResponseInterceptor(app.get(Reflector)));
+  app.use(requestIdMiddleware);
+
+  // ── Global prefix ─────────────────────────────────────────────
+  app.setGlobalPrefix('api');
+
+  // ── Swagger ───────────────────────────────────────────────────
   const swaggerStart = Date.now();
   const config = new DocumentBuilder()
     .setTitle('Boilerplate Service API')
@@ -32,11 +50,15 @@ async function bootstrap() {
     .addBearerAuth()
     .addTag('usuarios')
     .addTag('auth')
+    .addTag('health')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
   BootstrapLogger.routeMap(document as Record<string, any>);
   BootstrapLogger.step('Swagger setup', Date.now() - swaggerStart);
+
+  // ── Graceful shutdown ─────────────────────────────────────────
+  app.enableShutdownHooks();
 
   await app.listen(port);
 
@@ -44,6 +66,10 @@ async function bootstrap() {
   BootstrapLogger.log(
     LogCategory.API,
     `Swagger UI at http://localhost:${port}/api`,
+  );
+  BootstrapLogger.log(
+    LogCategory.API,
+    `Health check at http://localhost:${port}/api/health`,
   );
   BootstrapLogger.banner('Boilerplate Service', Number(port));
 }

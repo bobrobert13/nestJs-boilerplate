@@ -4,9 +4,10 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { DatabaseModule } from '@common/database';
 import { PlaywrightModule } from '@common/playwright';
 import { AuthModule, JwtAuthGuard, RolesGuard } from '@common/auth';
-import { BootstrapLogger } from '@common/common';
+import { BootstrapLogger, ThrottlerGuard } from '@common/common';
 import { UsuariosModule } from './modules/usuarios/usuarios.module';
 import { DynamicSchemaModule } from './modules/dynamic-schema/dynamic-schema.module';
+import { HealthModule } from './modules/health/health.module';
 import { validateEnv } from './config/env.validation';
 import { ScraperModule } from './modules/scraper/scraper.module';
 import { CronModule } from './common/cron/cron.module';
@@ -23,6 +24,7 @@ import { CronModule } from './common/cron/cron.module';
     AuthModule,
     UsuariosModule,
     DynamicSchemaModule,
+    HealthModule,
     CronModule,
     ScraperModule,
   ],
@@ -32,6 +34,8 @@ import { CronModule } from './common/cron/cron.module';
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     /** Global roles guard: enforces @Roles() metadata after JWT is validated. */
     { provide: APP_GUARD, useClass: RolesGuard },
+    /** Global rate limiter: 20 req/60s per IP by default. Override with @Throttle(). */
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
   ],
 })
 export class AppModule implements OnApplicationBootstrap {
