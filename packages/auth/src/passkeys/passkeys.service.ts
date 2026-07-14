@@ -6,8 +6,10 @@ import {
   generateAuthenticationOptions,
   verifyAuthenticationResponse,
 } from '@simplewebauthn/server';
-import { Base64URLString } from '@simplewebauthn/server';
 import { PasskeyCredential, PasskeyVerifyResult } from './interfaces/passkeys.interfaces';
+
+/** ponytail: Base64URLString is a branded `string` type not re-exported by v10 barrel; local alias suffices for demo. */
+type Base64URLString = string;
 
 @Injectable()
 export class PasskeysService implements OnModuleInit {
@@ -33,7 +35,7 @@ export class PasskeysService implements OnModuleInit {
     const options = generateRegistrationOptions({
       rpName: this.rpName,
       rpID: this.rpId,
-      userID: userId,
+      userID: new TextEncoder().encode(userId),
       userName: username,
       timeout: 60000,
       attestationType: 'none',
@@ -61,13 +63,19 @@ export class PasskeysService implements OnModuleInit {
         expectedRPID: this.rpId,
       });
 
+      if (!verification.verified || !verification.registrationInfo) {
+        this.logger.warn(`Registration verification failed for user: ${username}`);
+        return { verified: false };
+      }
+
+      const info = verification.registrationInfo;
       const credential: PasskeyCredential = {
-        id: verification.credentialID,
-        publicKey: Buffer.from(verification.credentialPublicKey).toString('base64'),
-        counter: verification.credential.counter,
-        deviceType: verification.credentialDeviceType || 'unknown',
-        backedUp: verification.credential.backedUp || false,
-        isInsideSecureOrigin: verification.credential.isInsideSecureOrigin || false,
+        id: info.credentialID,
+        publicKey: Buffer.from(info.credentialPublicKey).toString('base64'),
+        counter: info.counter,
+        deviceType: info.credentialDeviceType || 'unknown',
+        backedUp: info.credentialBackedUp,
+        isInsideSecureOrigin: false,
         userId,
         createdAt: new Date(),
       };
@@ -82,21 +90,22 @@ export class PasskeysService implements OnModuleInit {
   }
 
   async generateAuthenticationOptions(userId?: string) {
-    const options = generateAuthenticationOptions({
+    const userCredentials = userId ? this.getCredentialsForUser(userId) : [];
+    const allowCredentials =
+      userCredentials.length > 0
+        ? userCredentials.map((cred) => ({
+            id: cred.id,
+            type: 'public-key' as const,
+          }))
+        : undefined;
+
+    const options = await generateAuthenticationOptions({
       timeout: 60000,
       rpID: this.rpId,
       userVerification: 'preferred',
       challenge: this.generateChallenge(),
-      allowCredentials: userId ? [] : undefined,
+      allowCredentials,
     });
-
-    if (userId) {
-      const userCredentials = this.getCredentialsForUser(userId);
-      options.allowCredentials = userCredentials.map((cred) => ({
-        id: cred.id,
-        type: 'public-key',
-      }));
-    }
 
     this.logger.debug(`Generated authentication options for userId: ${userId || 'any'}`);
     return options;
@@ -120,16 +129,22 @@ export class PasskeysService implements OnModuleInit {
         expectedChallenge: this.getStoredChallenge(userId),
         expectedOrigin: this.rpOrigin,
         expectedRPID: this.rpId,
-        credential: {
-          id: credential.id,
-          publicKey: Buffer.from(credential.publicKey, 'base64'),
+        authenticator: {
+          credentialID: credential.id,
+          credentialPublicKey: new Uint8Array(
+            Buffer.from(credential.publicKey, 'base64'),
+          ),
           counter: credential.counter,
-          transports: undefined,
         },
         requireUserVerification: false,
       });
 
-      credential.counter = verification.credential.counter;
+      if (!verification.verified || !verification.authenticationInfo) {
+        this.logger.warn(`Authentication verification failed for user: ${userId}`);
+        return { valid: false, error: 'Authentication verification failed' };
+      }
+
+      credential.counter = verification.authenticationInfo.newCounter;
       this.credentials.set(credentialId, credential);
 
       this.logger.log(`Passkey authentication successful for user: ${userId}`);

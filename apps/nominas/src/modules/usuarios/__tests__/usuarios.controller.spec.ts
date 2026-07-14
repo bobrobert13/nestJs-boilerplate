@@ -1,5 +1,4 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { HttpStatus } from '@nestjs/common';
 import { UsuariosController } from '../usuarios.controller';
 import { UsuariosService } from '../usuarios.service';
 import { CreateUsuarioDto } from '../dto/create-usuario.dto';
