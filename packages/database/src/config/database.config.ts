@@ -1,14 +1,9 @@
 import { registerAs } from '@nestjs/config';
 
 export default registerAs('database', () => {
-  const mongodbUri =
-    process.env.MONGODB_URI || 'mongodb://localhost:27017/manga_scrapping?replicaSet=rs0';
-
-  if (!process.env.MONGODB_URI) {
-    console.warn(
-      '⚠️ WARNING: MONGODB_URI is not defined in .env. Using default: mongodb://localhost:27017/manga_scrapping',
-    );
-  }
+  // MONGODB_URI is already validated/defaulted by validateEnv() in ConfigModule.
+  // At this point it is guaranteed to be present.
+  const mongodbUri = process.env.MONGODB_URI!;
 
   return {
     uri: mongodbUri,

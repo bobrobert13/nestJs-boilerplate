@@ -3,34 +3,61 @@ import { Logger } from '@nestjs/common';
 const logger = new Logger('EnvValidation');
 
 /**
+ * Thrown when one or more environment variables are invalid.
+ * Extends Error so NestJS ConfigModule can report it cleanly.
+ */
+class EnvValidationError extends Error {
+  constructor(messages: string[]) {
+    const prefix =
+      messages.length === 1
+        ? 'Invalid env var —'
+        : `Invalid env vars (${messages.length}) —`;
+    super(`${prefix}\n  ${messages.join('\n  ')}`);
+    this.name = 'EnvValidationError';
+  }
+}
+
+/**
  * Centralized environment variable validation for ConfigModule.forRoot({ validate }).
  *
- * - **REQUIRED** vars missing → throws, preventing startup.
+ * - **REQUIRED** vars missing → accumulates errors and throws once at the end.
+ * - **MONGODB_URI** — applies a default with replica set if missing (warns).
  * - **Optional** vars missing → logs a warning and applies a documented default.
  *
  * @param config Raw parsed config object from dotenv / ConfigModule.
  * @returns The validated config object with defaults applied.
+ * @throws {EnvValidationError} when any REQUIRED var is missing or invalid.
  */
 export function validateEnv(config: Record<string, any>): Record<string, any> {
   const validated = { ...config };
+  const errors: string[] = [];
 
   // ── App ──────────────────────────────────────────────────────
   validated.PORT = validated.PORT ?? '3000';
+  const port = Number(validated.PORT);
+  if (isNaN(port) || port < 1 || port > 65535) {
+    errors.push(
+      `PORT must be a number between 1–65535 (got "${validated.PORT}")`,
+    );
+  }
 
   // ── MongoDB ──────────────────────────────────────────────────
   if (!validated.MONGODB_URI) {
-    throw new Error(
-      'REQUIRED: MONGODB_URI is not set. Example: mongodb://localhost:27017/boilerplate_db',
-    );
+    const defaultUri =
+      'mongodb://localhost:27017/boilerplate_db?replicaSet=rs0';
+    logger.warn(`MONGODB_URI not set — using default: ${defaultUri}`);
+    validated.MONGODB_URI = defaultUri;
   }
 
-  // ── Auth: JWT (REQUIRED) ─────────────────────────────────────
+  // ── Auth: JWT ─────────────────────────────────────────────────
   if (!validated.JWT_SECRET) {
-    throw new Error(
-      'REQUIRED: JWT_SECRET is not set. Use a value of at least 32 characters.',
+    const devSecret = 'dev-jwt-secret-do-not-use-in-production-32chars-min';
+    logger.warn(
+      `JWT_SECRET not set — using INSECURE dev default. DO NOT use this in production.`,
     );
+    validated.JWT_SECRET = devSecret;
   }
-  if (String(validated.JWT_SECRET).length < 32) {
+  if (validated.JWT_SECRET && String(validated.JWT_SECRET).length < 32) {
     logger.warn(
       'JWT_SECRET is shorter than 32 characters — this is INSECURE for production.',
     );
@@ -100,6 +127,11 @@ export function validateEnv(config: Record<string, any>): Record<string, any> {
 
   // ── Dynamic Schema ───────────────────────────────────────────
   validated.DYNAMIC_SCHEMA_LEGACY = validated.DYNAMIC_SCHEMA_LEGACY ?? 'false';
+
+  // ── Fail fast if any REQUIRED var is missing ─────────────────
+  if (errors.length > 0) {
+    throw new EnvValidationError(errors);
+  }
 
   return validated;
 }

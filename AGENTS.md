@@ -386,10 +386,10 @@ Agrupadas por paquete:
 ✓ PORT=3000
 
 # ── MongoDB ──
-⚠️ MONGODB_URI=mongodb://localhost:27017/boilerplate_db
+✓ MONGODB_URI=mongodb://localhost:27017/boilerplate_db?replicaSet=rs0
 
 # ── Auth: JWT ──
-⚠️ JWT_SECRET=your-super-secret-key-min-32-chars       # min 32 chars
+✓ JWT_SECRET=dev-jwt-secret-do-not-use-in-production-32chars-min  # optional in dev
 ✓ JWT_ACCESS_TOKEN_TTL=900
 ✓ JWT_REFRESH_TOKEN_TTL=604800
 ✓ JWT_ISSUER=api-nominas
