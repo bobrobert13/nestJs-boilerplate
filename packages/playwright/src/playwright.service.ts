@@ -1,5 +1,6 @@
 import { Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { BootstrapLogger, LogCategory } from "@common/common";
 import { chromium, Browser, BrowserContext, Page } from "playwright";
 import { PLAYWRIGHT_OPTIONS } from "./constants/playwright.constants";
 import type { PlaywrightOptions } from "./interfaces/playwright-options.interface";
@@ -50,6 +51,7 @@ export class PlaywrightService implements OnModuleInit, OnModuleDestroy {
       this.logger.log(`Launching Chromium from: ${browserOptions.executablePath || "default"}`);
       this.browser = await chromium.launch(browserOptions);
       this.logger.log("Browser initialized successfully");
+      BootstrapLogger.log(LogCategory.PLAYWRIGHT, 'Chromium initialized', browserOptions.headless ? 'headless' : 'headed');
       const viewport = this.options.viewport ?? { width: 1920, height: 1080 };
       const userAgent = this.options.userAgent ?? "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
       this.context = await this.browser.newContext({ viewport, userAgent, acceptDownloads: false });

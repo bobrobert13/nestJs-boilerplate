@@ -6,6 +6,23 @@
 > Este registro se actualiza automáticamente como parte del checklist de finalización del agente IA.
 > No requiere intervención manual.
 
+## [0.6.0] - 2026-07-14
+
+### Added
+- feat(@common/common): `LogCategory` enum — extensible log domain taxonomy (BOOT, DB, AUTH, PLAYWRIGHT, FEATURE, CONFIG, API)
+- feat(@common/common): `BootstrapLogger` static helper — rich startup banner, step timing, section grouping, feature summary
+- feat(app): Rich bootstrap banner in `main.ts` with phase timing and endpoint summary
+- feat(app): `AppModule.onApplicationBootstrap()` — aggregated feature availability summary (MongoDB, Auth, Playwright, Inngest, Resend, AI Providers, Dynamic Schema)
+- feat(@common/auth): `AuthModule.onModuleInit()` uses `BootstrapLogger.log(LogCategory.AUTH, ...)`
+- feat(@common/database): `DatabaseService` uses `BootstrapLogger.log(LogCategory.DB, ...)` for connect/success/failure
+- feat(@common/playwright): `PlaywrightService` uses `BootstrapLogger.log(LogCategory.PLAYWRIGHT, ...)` for chromium init
+
+### Changed
+- refactor: `LOG_STYLE=plain` env var fallback for log aggregators that dislike Unicode box-drawing
+- docs: `packages/common/README.md` updated with new logging exports
+
+---
+
 ## [0.5.0] - 2026-07-13
 
 ### Added

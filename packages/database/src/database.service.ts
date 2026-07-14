@@ -1,5 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { BootstrapLogger, LogCategory } from '@common/common';
 import mongoose, { ConnectOptions } from 'mongoose';
 
 interface DatabaseConfig {
@@ -66,8 +67,10 @@ export class DatabaseService implements OnModuleInit {
 
     try {
       this.logger.log(`Attempting to connect to MongoDB... (Attempt ${this.retryCount + 1})`);
+      BootstrapLogger.log(LogCategory.DB, `Connecting... attempt ${this.retryCount + 1}`);
       await mongoose.connect(uri, connectOptions);
       this.logger.log('Successfully connected to MongoDB');
+      BootstrapLogger.log(LogCategory.DB, 'Connected', 'boilerplate_db');
       this.retryCount = 0;
       this.setupEventListeners();
     } catch (error) {
@@ -81,6 +84,7 @@ export class DatabaseService implements OnModuleInit {
         setTimeout(() => { void this.connectWithRetry(); }, delay);
       } else {
         this.logger.error('Max MongoDB connection retries reached. Server continues without DB.');
+        BootstrapLogger.log(LogCategory.DB, 'Connection failed', 'max retries reached');
       }
     }
   }

@@ -1,20 +1,28 @@
 import { NestFactory } from '@nestjs/core';
-import { Logger } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
-import { DatabaseExceptionFilter } from '@common/common';
+import {
+  DatabaseExceptionFilter,
+  BootstrapLogger,
+  LogCategory,
+} from '@common/common';
 
 if (process.env.NODE_ENV !== 'production') {
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 }
 
 async function bootstrap() {
+  const startTime = Date.now();
   const port = process.env.PORT ?? 3000;
   const app = await NestFactory.create(AppModule);
+
+  BootstrapLogger.step('NestFactory created', Date.now() - startTime);
+
   app.setGlobalPrefix('api');
   app.useGlobalFilters(new DatabaseExceptionFilter());
 
   // Swagger configuration
+  const swaggerStart = Date.now();
   const config = new DocumentBuilder()
     .setTitle('Boilerplate Service API')
     .setDescription(
@@ -27,16 +35,17 @@ async function bootstrap() {
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
+  BootstrapLogger.routeMap(document as Record<string, any>);
+  BootstrapLogger.step('Swagger setup', Date.now() - swaggerStart);
 
   await app.listen(port);
-  Logger.log(
-    `[Boilerplate Service] Running on http://localhost:${port}`,
-    'Bootstrap',
+
+  BootstrapLogger.log(LogCategory.API, `Listening on http://localhost:${port}`);
+  BootstrapLogger.log(
+    LogCategory.API,
+    `Swagger UI at http://localhost:${port}/api`,
   );
-  Logger.log(
-    `[Boilerplate Service] Swagger UI available at http://localhost:${port}/api`,
-    'Bootstrap',
-  );
+  BootstrapLogger.banner('Boilerplate Service', Number(port));
 }
 
 bootstrap();

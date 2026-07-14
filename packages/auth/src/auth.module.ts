@@ -2,6 +2,7 @@ import { Module, Global, Logger, OnModuleInit } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { BootstrapLogger, LogCategory } from '@common/common';
 import { AuthService } from './services/auth.service';
 import { MagicLinkService } from './services/magic-link.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
@@ -68,5 +69,7 @@ export class AuthModule implements OnModuleInit {
     this.logger.log('   - JWT authentication: enabled');
     this.logger.log('   - Magic Links: available');
     this.logger.log('   - Roles Guard: available');
+
+    BootstrapLogger.log(LogCategory.AUTH, 'JWT · MagicLink · Roles Guard', 'enabled');
   }
 }

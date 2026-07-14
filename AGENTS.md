@@ -679,6 +679,7 @@ Se recomienda crear `CHANGELOG.md` para rastrear cambios versionados. Formato:
 | `fix-unify-http-error` | ✅ Complete | apply | `common`, `http` | — |
 | `fix-cross-reference-docs` | ✅ Complete | apply | all packages | — |
 | `dynamic-schema-pipeline-hardening` | ✅ Complete | archive | `@common/ai`, `@common/documents`, `@common/database`, `dynamic-schema` | `openspec/specs/dynamic-schema/spec.md` (new), delta specs for `ai`/`documents`/`database` (merged) |
+| `improve-startup-logs` | 🔄 In Progress | apply | `@common/common`, `@common/auth`, `@common/database`, `@common/playwright`, `apps/nominas` | `openspec/specs/common/spec.md` (delta) |
 
 ### Auditoría Reciente
 

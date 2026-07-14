@@ -8,6 +8,8 @@ Common utilities for NestJS — base adapters, exception filters, and HTTP error
 
 - **BaseAdapter<T>** — Interface for data mapping adapters (transform external data into domain models)
 - **DatabaseExceptionFilter** — Global MongoDB exception filter with standardized error responses
+- **LogCategory** — Enum for categorizing log messages by domain (BOOT, DB, AUTH, PLAYWRIGHT, FEATURE, CONFIG, API)
+- **BootstrapLogger** — Static helper for rich startup banners, step timing, section grouping, and feature summary
 - **HttpError** — Hierarchical HTTP error classes for precise error handling
 
 ## Installation
