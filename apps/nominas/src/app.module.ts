@@ -59,11 +59,6 @@ export class AppModule implements OnApplicationBootstrap {
         ? `Chromium (headless: ${pw.headless})`
         : 'not configured';
 
-    // Inngest
-    features['Inngest'] = this.configService.get<string>('INNGEST_EVENT_KEY')
-      ? 'configured'
-      : 'event key not set (disabled)';
-
     // Resend
     features['Resend'] = this.configService.get<string>('RESEND_API_KEY')
       ? 'configured'

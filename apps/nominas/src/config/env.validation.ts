@@ -100,19 +100,6 @@ export function validateEnv(config: Record<string, any>): Record<string, any> {
   validated.PLAYWRIGHT_TIMEOUT = validated.PLAYWRIGHT_TIMEOUT ?? '30000';
   validated.PLAYWRIGHT_RETRIES = validated.PLAYWRIGHT_RETRIES ?? '3';
 
-  // ── Inngest (REQUIRED if InngestModule is used) ──────────────
-  if (!validated.INNGEST_EVENT_KEY) {
-    logger.warn(
-      'INNGEST_EVENT_KEY is not set. Inngest features will be unavailable.',
-    );
-  }
-  if (!validated.INNGEST_SIGNING_KEY) {
-    logger.warn(
-      'INNGEST_SIGNING_KEY is not set. Inngest features will be unavailable.',
-    );
-  }
-  validated.INNGEST_BASE_URL =
-    validated.INNGEST_BASE_URL ?? 'https://inngest.treborjs-dev.online/';
 
   // ── Resend ───────────────────────────────────────────────────
   if (!validated.RESEND_API_KEY) {

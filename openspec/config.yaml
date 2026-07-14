@@ -2,7 +2,7 @@
 schema: spec-driven
 
 context: |
-  Tech stack: NestJS 11, TypeScript 5.7, MongoDB 7.0 (ReplicaSet), Mongoose 9, Inngest 4, Playwright 1.59
+  Tech stack: NestJS 11, TypeScript 5.7, MongoDB 7.0 (ReplicaSet), Mongoose 9, Playwright 1.59
   Architecture: Monorepo con packages/@common/*, Repository+Service pattern, Global modules
   Testing: Jest (unit + e2e) — no implementado aún
   Style: ESLint + Prettier, kebab-case files, PascalCase classes, PascalCase+Dtos

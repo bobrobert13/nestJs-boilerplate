@@ -1,0 +1,15 @@
+status: completed
+created: 2026-07-14
+updated: 2026-07-14
+phase: apply
+packages:
+  - agents (AGENTS.md only)
+specs:
+  - agents/spec.md
+tasks:
+  - group_1_phantom_inngest
+  - group_2_phantom_auth
+  - group_3_broken_link
+  - group_4_undocumented_modules
+  - group_5_anchor_formatting
+  - group_6_status_clarification

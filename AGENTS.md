@@ -38,7 +38,7 @@
 | Format | `npm run format` |
 | Prod Start | `npm run start:prod` |
 
-> **Nota sobre Git Hooks:** Este proyecto no utiliza husky ni hooks de pre-commit/push forzados. Los comandos `lint`, `test` y `format` deben ejecutarse manualmente antes de commit. Ver [#7](#issues-conocidos).
+> **Nota sobre Git Hooks:** Este proyecto no utiliza husky ni hooks de pre-commit/push forzados. Los comandos `lint`, `test` y `format` deben ejecutarse manualmente antes de commit. Ver [#12](#12-project-status-dashboard).
 
 
 ---
@@ -128,11 +128,13 @@ openspec/
 ├── specs/                   ← Source of truth (specs principales)
 │   ├── auth/spec.md
 │   ├── ai/spec.md
+│   ├── common/spec.md
 │   ├── database/spec.md
-│   ├── email/spec.md
+│   ├── documentation/spec.md
 │   ├── documents/spec.md
+│   ├── dynamic-schema/spec.md
+│   ├── email/spec.md
 │   ├── http/spec.md
-│   ├── inngest/spec.md
 │   ├── playwright/spec.md
 │   └── serve-static/spec.md
 ├── changes/                 ← Cambios activos
@@ -208,7 +210,6 @@ Si un agente IA necesita entender cómo funciona un módulo, DEBE leer primero:
 | [@common/database](packages/database/README.md) | ✅ | ⚠️ | — | ❌ | partial |
 | [@common/documents](packages/documents/README.md) | ✅ | ⚠️ | — | ❌ | partial |
 | [@common/http](packages/http/README.md) | ✅ | ⚠️ | — | ❌ | partial |
-| [@common/inngest](packages/inngest/README.md) | ✅ | ⚠️ | ✅ | ✅ | **complete** |
 | [@common/playwright](packages/playwright/README.md) | ✅ | ⚠️ | — | ❌ | partial |
 | [@common/resend](packages/resend/README.md) | ✅* | ❌ | — | ❌ | partial |
 | [@common/serve-static](packages/serve-static/README.md) | ✅* | ❌ | — | ❌ | partial |
@@ -228,7 +229,6 @@ graph LR
     subgraph "Layer 2 — Business"
         AUTH["@common/auth"] --> DB
         RESEND["@common/resend"]
-        INNGEST["@common/inngest"]
     end
     subgraph "Layer 3 — Integration"
         AI["@common/ai"]
@@ -277,11 +277,6 @@ graph LR
 - **Incluye:** HTTP client (axios), download service con sharp para optimización de imágenes
 - **Falta:** JSDoc completo, tests, unificar http-error con common
 
-#### `@common/inngest` — Task Queue ⭐ (mejor documentado)
-- **Ubicación:** `packages/inngest/`
-- **Endpoints:** `/api/inngest`, `/api/inngest-events/hola-inngest`
-- **Tiene:** Tests unitarios + integración, Swagger decorators, README bilingüe
-- **Falta:** JSDoc completo en métodos
 
 #### `@common/playwright` — Browser Automation
 - **Ubicación:** `packages/playwright/`
@@ -299,6 +294,15 @@ graph LR
 - **Incluye:** `ServeStaticService.render()`, layouts, partials, TailwindCSS CDN, caché 60s
 - **Falta:** JSDoc, tests, ejemplos de templates
 
+#### `scraper` — Web Scraper (app module)
+- **Ubicación:** `apps/nominas/src/modules/scraper/`
+- **Incluye:** ScraperController, ScraperService, ScraperRepository, estrategias de scraping, sites configurables
+- **README:** `apps/nominas/src/modules/scraper/README.md`
+
+#### `health` — Health Check (app module)
+- **Ubicación:** `apps/nominas/src/modules/health/`
+- **Incluye:** HealthController, HealthModule
+
 ---
 
 ## 5. Convenciones de Código
@@ -310,7 +314,7 @@ graph LR
 import { Module, Injectable } from '@nestjs/common';
 
 // 2. External packages
-import { Inngest } from 'inngest';
+import { chromium } from 'playwright';
 
 // 3. Shared packages
 import { DatabaseModule } from '@common/database';
@@ -338,7 +342,7 @@ import { CreateUsuarioDto } from './dto';
 export class UsuariosService {
   constructor(
     private readonly repository: UsuariosRepository,
-    private readonly inngest: InngestService,
+    private readonly httpService: HttpService,
   ) {}
 }
 ```
@@ -430,11 +434,6 @@ Agrupadas por paquete:
 ✓ PLAYWRIGHT_RETRIES=3
 ✓ PLAYWRIGHT_BROWSERS_PATH=
 
-# ── Inngest ──
-⚠️ INNGEST_EVENT_KEY=your_event_key                      # required if using Inngest
-⚠️ INNGEST_SIGNING_KEY=your_signing_key                  # required if using Inngest
-✓ INNGEST_BASE_URL=https://inngest.treborjs-dev.online/
-
 # ── Resend ──
 ⚠️ RESEND_API_KEY=                                        # required if using email
 ✓ RESEND_FROM_EMAIL=onboarding@resend.dev
@@ -458,7 +457,6 @@ Agrupadas por paquete:
 {
   "@common/common": ["packages/common/src/index.ts"],
   "@common/database": ["packages/database/src/index.ts"],
-  "@common/inngest": ["packages/inngest/src/index.ts"],
   "@common/playwright": ["packages/playwright/src/index.ts"],
   "@common/http": ["packages/http/src/index.ts"],
   "@common/ai": ["packages/ai/src/index.ts"],
@@ -611,8 +609,6 @@ docs(@common/<name>): qué se documentó
 
 ---
 
-
-
 ## 10. Troubleshooting
 
 | Problema | Solución |
@@ -637,7 +633,6 @@ docs(@common/<name>): qué se documentó
 | `apps/nominas/PATTERNS.md` | Patrones de diseño para módulos de negocio |
 | `apps/nominas/CONTRIBUTING.md` | Guía para agregar nuevos módulos |
 | `apps/nominas/src/modules/*/README.md` | Docs de módulos de la app |
-| `apps/nominas/src/modules/auth/src/two-factor/README.md` | Detalle de implementación 2FA |
 | `docs/JSDOC-MIGRATION-PLAN.md` | Plan para Fase 3 (JSDoc asistida) |
 | `openspec/config.yaml` | Configuración SDD del proyecto |
 | `openspec/specs/*/spec.md` | Especificaciones por dominio |
@@ -685,7 +680,6 @@ Ver `openspec/changes/dynamic-schema-pipeline-hardening/proposal.md` para los 16
 | `@common/database` | ✅ | ✅ (expandido) | ⚠️ | partial |
 | `@common/documents` | ✅ | ✅ (expandido) | ⚠️ | partial |
 | `@common/http` | ✅ | ✅ (expandido) | ⚠️ | partial |
-| `@common/inngest` | ✅ | ✅ (expandido) | ⚠️ | **complete** |
 | `@common/playwright` | ✅ | ✅ (expandido) | ⚠️ | partial |
 | `@common/resend` | ✅ | ✅ | ⚠️ | partial |
 | `@common/serve-static` | ✅ | ✅ (expandido) | ⚠️ | partial |
@@ -721,11 +715,12 @@ Cada spec de dominio referencia su documentación asociada:
 | Email | `openspec/specs/email/spec.md` | `packages/resend/README.md` | `packages/resend/src/` |
 | Documents | `openspec/specs/documents/spec.md` | `packages/documents/README.md` | `packages/documents/src/` |
 | HTTP | `openspec/specs/http/spec.md` | `packages/http/README.md` | `packages/http/src/` |
-| Inngest | `openspec/specs/inngest/spec.md` | `packages/inngest/README.md` | `packages/inngest/src/` |
 | Playwright | `openspec/specs/playwright/spec.md` | `packages/playwright/README.md` | `packages/playwright/src/` |
 | Serve Static | `openspec/specs/serve-static/spec.md` | `packages/serve-static/README.md` | `packages/serve-static/src/` |
 | Dynamic Schema | `openspec/specs/dynamic-schema/spec.md` | `apps/nominas/src/modules/dynamic-schema/README.md` | `apps/nominas/src/modules/dynamic-schema/` |
-| Auth (apps) | — | `apps/nominas/src/modules/auth/README.md` | `apps/nominas/src/modules/auth/` |
+| scraper | — | `apps/nominas/src/modules/scraper/README.md` | `apps/nominas/src/modules/scraper/` |
+| health | — | — | `apps/nominas/src/modules/health/` |
+| usuarios | — | `apps/nominas/src/modules/usuarios/README.md` | `apps/nominas/src/modules/usuarios/` |
 
 ### Cómo Buscar Documentación
 
@@ -758,7 +753,6 @@ rg "status: critical" packages/*/README.md
 |----------|---------------|
 | NestJS 11 | https://docs.nestjs.com/ |
 | Mongoose 9 | https://mongoosejs.com/docs/ |
-| Inngest 4 | https://www.inngest.com/docs |
 | Playwright | https://playwright.dev/docs/ |
 | Resend | https://resend.com/docs |
 | Swagger NestJS | https://docs.nestjs.com/openapi/introduction |
