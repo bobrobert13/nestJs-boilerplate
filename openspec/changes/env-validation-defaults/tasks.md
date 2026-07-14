@@ -1,0 +1,27 @@
+# Tasks: Env Validation & Defaults
+
+- [x] proposal.md
+- [x] specs/env-config/spec.md
+- [x] design.md
+- [x] tasks.md
+- [x] **apply: Create `apps/nominas/src/config/env.validation.ts`**
+  - `validateEnv()` function with required/optional checks
+  - All env vars from AGENTS.md section 6
+- [x] **apply: Modify `apps/nominas/src/app.module.ts`**
+  - Add `validate: validateEnv` to `ConfigModule.forRoot()`
+- [x] **apply: Create `packages/playwright/src/config/playwright.config.ts`**
+  - `registerAs('playwright', ...)` with defaults
+- [x] **apply: Modify `packages/playwright/src/playwright.module.ts`**
+  - Import `ConfigModule.forFeature(playwrightConfig)`
+  - Use factory to resolve `PLAYWRIGHT_OPTIONS` from config
+- [x] **apply: Modify `packages/playwright/src/playwright.service.ts`**
+  - Use namespaced `playwright.*` config instead of raw env
+- [x] **apply: Create `.env.example`**
+  - Full template with all vars, required/optional comments
+- [x] **apply: Update `AGENTS.md` section 6**
+  - Add required/optional markers to each env var
+  - Add AI provider API keys
+- [x] **apply: Update `CHANGELOG.md`**
+- [x] verify: `npm run build` passes (pre-existing errors in passkeys.service.ts only)
+- [x] verify: `npm run lint` passes (pre-existing warnings/errors in other files only)
+- [ ] archive

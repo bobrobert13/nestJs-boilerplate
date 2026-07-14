@@ -114,11 +114,12 @@ export class PlaywrightService implements OnModuleInit, OnModuleDestroy {
 
   /**
    * Resolves the absolute path to chrome-headless-shell.
-   * Uses PLAYWRIGHT_BROWSERS_PATH env var if set.
+   * Reads from the namespaced 'playwright.browsersPath' config.
    * @internal
    */
   private getChromiumPath(): string | undefined {
-    const browsersPath = this.configService.get<string>('PLAYWRIGHT_BROWSERS_PATH');
+    const pwConfig = this.configService.get<{ browsersPath?: string }>('playwright');
+    const browsersPath = pwConfig?.browsersPath;
     if (browsersPath) {
       const { execSync } = require('child_process');
       try {

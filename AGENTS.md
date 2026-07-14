@@ -374,61 +374,79 @@ apps/nominas/src/modules/mi-modulo/
 Agrupadas por paquete:
 
 ```env
+# ═══════════════════════════════════════════════════════════════
+# Environment Variables Reference
+# Legend:  ⚠️ REQUIRED  |  ✓ optional (default shown)
+# ═══════════════════════════════════════════════════════════════
+
 # ── App ──
-PORT=3000
-MONGODB_URI=mongodb://localhost:27017/boilerplate_db
+✓ PORT=3000
+
+# ── MongoDB ──
+⚠️ MONGODB_URI=mongodb://localhost:27017/boilerplate_db
 
 # ── Auth: JWT ──
-JWT_SECRET=your-super-secret-key-min-32-chars
-JWT_ACCESS_TOKEN_TTL=900
-JWT_REFRESH_TOKEN_TTL=604800
-JWT_ISSUER=api-nominas
-JWT_AUDIENCE=api-nominas
+⚠️ JWT_SECRET=your-super-secret-key-min-32-chars       # min 32 chars
+✓ JWT_ACCESS_TOKEN_TTL=900
+✓ JWT_REFRESH_TOKEN_TTL=604800
+✓ JWT_ISSUER=api-nominas
+✓ JWT_AUDIENCE=api-nominas
 
 # ── Auth: Magic Link ──
-MAGIC_LINK_ENABLED=true
-MAGIC_LINK_TOKEN_TTL=300
+✓ MAGIC_LINK_ENABLED=true
+✓ MAGIC_LINK_TOKEN_TTL=300
 
-# ── Auth: OAuth (Optional) ──
-OAUTH_GOOGLE_CLIENT_ID=
-OAUTH_GOOGLE_CLIENT_SECRET=
-OAUTH_GITHUB_CLIENT_ID=
-OAUTH_GITHUB_CLIENT_SECRET=
+# ── Auth: OAuth (optional) ──
+✓ OAUTH_GOOGLE_CLIENT_ID=
+✓ OAUTH_GOOGLE_CLIENT_SECRET=
+✓ OAUTH_GITHUB_CLIENT_ID=
+✓ OAUTH_GITHUB_CLIENT_SECRET=
 
 # ── Auth: Argon2 ──
-ARGON2_TYPE=2
-ARGON2_MEMORY_COST=65536
-ARGON2_TIME_COST=3
-ARGON2_PARALLELISM=4
+✓ ARGON2_TYPE=2
+✓ ARGON2_MEMORY_COST=65536
+✓ ARGON2_TIME_COST=3
+✓ ARGON2_PARALLELISM=4
 
 # ── Auth: 2FA ──
-TWO_FACTOR_ISSUER=MyApp
-TWO_FACTOR_ALGORITHM=SHA1
-TWO_FACTOR_DIGITS=6
-TWO_FACTOR_PERIOD=30
-TWO_FACTOR_BACKUP_CODES_COUNT=10
-TWO_FACTOR_BACKUP_CODES_LENGTH=10
+✓ TWO_FACTOR_ISSUER=MyApp
+✓ TWO_FACTOR_ALGORITHM=SHA1
+✓ TWO_FACTOR_DIGITS=6
+✓ TWO_FACTOR_PERIOD=30
+✓ TWO_FACTOR_BACKUP_CODES_COUNT=10
+✓ TWO_FACTOR_BACKUP_CODES_LENGTH=10
 
 # ── Auth: Passkeys ──
-PASSKEYS_RP_ID=localhost
-PASSKEYS_RP_NAME=MyApp
-PASSKEYS_RP_ORIGIN=http://localhost:3000
+✓ PASSKEYS_RP_ID=localhost
+✓ PASSKEYS_RP_NAME=MyApp
+✓ PASSKEYS_RP_ORIGIN=http://localhost:3000
 
 # ── Playwright ──
-PLAYWRIGHT_HEADLESS=true
-PLAYWRIGHT_TIMEOUT=30000
-PLAYWRIGHT_RETRIES=3
+✓ PLAYWRIGHT_HEADLESS=true
+✓ PLAYWRIGHT_TIMEOUT=30000
+✓ PLAYWRIGHT_RETRIES=3
+✓ PLAYWRIGHT_BROWSERS_PATH=
 
 # ── Inngest ──
-INNGEST_EVENT_KEY=your_event_key
-INNGEST_SIGNING_KEY=your_signing_key
-INNGEST_BASE_URL=https://inngest.treborjs-dev.online/
+⚠️ INNGEST_EVENT_KEY=your_event_key                      # required if using Inngest
+⚠️ INNGEST_SIGNING_KEY=your_signing_key                  # required if using Inngest
+✓ INNGEST_BASE_URL=https://inngest.treborjs-dev.online/
 
 # ── Resend ──
-RESEND_API_KEY=
-RESEND_FROM_EMAIL=onboarding@resend.dev
-RESEND_FROM_NAME=My App
-RESEND_REPLY_TO=
+⚠️ RESEND_API_KEY=                                        # required if using email
+✓ RESEND_FROM_EMAIL=onboarding@resend.dev
+✓ RESEND_FROM_NAME=My App
+✓ RESEND_REPLY_TO=
+
+# ── AI Providers (optional — provider chosen at runtime) ──
+✓ OPENAI_API_KEY=
+✓ ANTHROPIC_API_KEY=
+✓ GEMINI_API_KEY=
+✓ MOONSHOT_API_KEY=
+✓ MINIMAX_API_KEY=
+
+# ── Dynamic Schema ──
+✓ DYNAMIC_SCHEMA_LEGACY=false
 ```
 
 ### tsconfig Paths (paquetes registrados)

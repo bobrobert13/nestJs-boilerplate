@@ -7,12 +7,14 @@ import { DatabaseExceptionFilter } from '@common/common';
 import { AuthModule, JwtAuthGuard, RolesGuard } from '@common/auth';
 import { UsuariosModule } from './modules/usuarios/usuarios.module';
 import { DynamicSchemaModule } from './modules/dynamic-schema/dynamic-schema.module';
+import { validateEnv } from './config/env.validation';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
+      validate: validateEnv,
     }),
     DatabaseModule,
     PlaywrightModule,

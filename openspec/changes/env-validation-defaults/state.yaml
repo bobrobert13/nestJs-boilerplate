@@ -1,0 +1,11 @@
+phase: verify
+created: 2026-07-13
+completed_phases:
+  - proposal
+  - specs
+  - design
+  - tasks
+  - apply
+  - verify
+current: verify
+next: archive

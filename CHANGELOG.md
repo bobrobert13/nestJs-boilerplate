@@ -6,16 +6,22 @@
 > Este registro se actualiza automáticamente como parte del checklist de finalización del agente IA.
 > No requiere intervención manual.
 
-## [0.4.0] - 2026-07-13
+## [0.5.0] - 2026-07-13
+
+### Added
+- feat(config): `apps/nominas/src/config/env.validation.ts` — validación centralizada de env vars al arranque
+- feat(config): `.env.example` — template de referencia con todas las variables y marcas required/optional
+- feat(@common/playwright): `packages/playwright/src/config/playwright.config.ts` — namespace `registerAs('playwright')` con defaults
 
 ### Changed
-- docs(docker): `README.Docker.md` reescrito — estructura 10 packages, env vars completas, entrypoint, troubleshooting expandido
-- docs(docker): `docs/ARCHITECTURE.md` diagrama Docker con servicios externos (Resend, AI providers)
-- docs(docker): `AGENTS.md` §7 endpoints/checklist actualizados (Inngest removido, AI providers agregado)
-- chore: `openspec/changes/docker-documentation-update/` creado
+- feat(app.module): `ConfigModule.forRoot()` ahora usa `validate: validateEnv` — falla temprano si faltan `JWT_SECRET` o `MONGODB_URI`
+- feat(@common/playwright): `PlaywrightModule` usa `ConfigModule.forFeature(playwrightConfig)` — lectura namespaced de env vars
+- feat(@common/playwright): `PlaywrightService.getChromiumPath()` lee desde namespace `playwright.browsersPath`
+- docs(AGENTS.md): §6 env vars ahora con leyenda ⚠️ REQUIRED / ✓ optional + defaults + AI providers
+- chore: `openspec/changes/env-validation-defaults/` — proposal, specs, design, tasks
 
 ### Removed
-- docs: Inngest endpoint removido de AGENTS.md endpoints table y checklist
+- chore: Playwright ya no lee `PLAYWRIGHT_BROWSERS_PATH` directo de `configService.get<string>()` — ahora via namespace
 
 ---
 
