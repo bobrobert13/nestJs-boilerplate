@@ -5,11 +5,13 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { BootstrapLogger, LogCategory } from '@common/common';
 import { AuthService } from './services/auth.service';
 import { MagicLinkService } from './services/magic-link.service';
+import { MongoRefreshTokenStore } from './services/mongo-refresh-token-store.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { AuthController } from './strategies/auth.controller';
+import { REFRESH_TOKEN_STORE } from './interfaces/auth.interfaces';
 import authConfig from './config/auth.config';
 
 interface AuthConfig {
@@ -47,10 +49,12 @@ interface AuthConfig {
   providers: [
     AuthService,
     MagicLinkService,
+    MongoRefreshTokenStore,
     JwtStrategy,
     LocalStrategy,
     JwtAuthGuard,
     RolesGuard,
+    { provide: REFRESH_TOKEN_STORE, useExisting: MongoRefreshTokenStore },
   ],
   exports: [
     AuthService,

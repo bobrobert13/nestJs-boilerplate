@@ -41,3 +41,6 @@ export interface IUserService {
 
 /** Injection token for the optional IUserService provider. */
 export const USER_SERVICE = Symbol('USER_SERVICE');
+
+export type { IRefreshTokenStore } from './refresh-token-store.interface';
+export { REFRESH_TOKEN_STORE } from './refresh-token-store.interface';

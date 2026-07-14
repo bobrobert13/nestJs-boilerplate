@@ -100,7 +100,6 @@ export function validateEnv(config: Record<string, any>): Record<string, any> {
   validated.PLAYWRIGHT_TIMEOUT = validated.PLAYWRIGHT_TIMEOUT ?? '30000';
   validated.PLAYWRIGHT_RETRIES = validated.PLAYWRIGHT_RETRIES ?? '3';
 
-
   // ── Resend ───────────────────────────────────────────────────
   if (!validated.RESEND_API_KEY) {
     logger.warn('RESEND_API_KEY is not set. Email sending will be disabled.');
