@@ -14,9 +14,21 @@ export class Usuario {
   @Prop({ required: true })
   apellido: string;
 
-  @ApiProperty({ example: 'john.doe@example.com', description: 'Email address' })
+  @ApiProperty({
+    example: 'john.doe@example.com',
+    description: 'Email address',
+  })
   @Prop({ required: true, unique: true })
   email: string;
+
+  /** Argon2id hash of the user password. Never exposed in API responses. */
+  @Prop({ required: true })
+  password: string;
+
+  /** Roles for RBAC. Default: ['user']. Admin users get ['user', 'admin']. */
+  @ApiProperty({ example: ['user'], description: 'User roles for RBAC' })
+  @Prop({ type: [String], default: ['user'] })
+  roles: string[];
 
   @ApiProperty({ example: '+1234567890', description: 'Phone number' })
   @Prop({ required: false })

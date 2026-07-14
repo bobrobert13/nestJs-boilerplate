@@ -91,7 +91,10 @@ describe('UsuariosController', () => {
       const result = await controller.update(mockUsuario.id, updateDto);
 
       expect(result.nombre).toBe('Jane');
-      expect(mockService.update).toHaveBeenCalledWith(mockUsuario.id, updateDto);
+      expect(mockService.update).toHaveBeenCalledWith(
+        mockUsuario.id,
+        updateDto,
+      );
     });
   });
 

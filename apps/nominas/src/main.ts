@@ -21,7 +21,9 @@ async function bootstrap() {
       'API documentation for the NestJS boilerplate with MongoDB and Playwright',
     )
     .setVersion('1.0')
+    .addBearerAuth()
     .addTag('usuarios')
+    .addTag('auth')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);

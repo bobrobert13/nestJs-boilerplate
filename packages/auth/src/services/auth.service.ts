@@ -1,9 +1,10 @@
-import { Injectable, Logger, UnauthorizedException, ConflictException } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException, ConflictException, Inject, Optional } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { randomBytes } from 'crypto';
 import argon2 from 'argon2';
-import { JwtPayload, TokenResponse, AuthenticatedUser } from '../interfaces/auth.interfaces';
+import type { IUserService } from '../interfaces/auth.interfaces';
+import { JwtPayload, TokenResponse, AuthenticatedUser, USER_SERVICE } from '../interfaces/auth.interfaces';
 
 interface AuthConfig {
   jwt: {
@@ -29,11 +30,37 @@ export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    @Optional() @Inject(USER_SERVICE) private readonly userService?: IUserService,
   ) {}
 
+  /**
+   * Validate a user by email + password.
+   *
+   * If an {@link IUserService} provider is wired, it delegates to
+   * `userService.findByEmail()` + argon2 comparison.  Otherwise it
+   * falls back to the built-in demo stub (`demo@example.com` / `demo123`).
+   */
   async validateUser(email: string, password: string): Promise<AuthenticatedUser | null> {
     this.logger.log(`Validating user: ${email}`);
-    
+
+    // Real path — consumer provided an IUserService
+    if (this.userService) {
+      const user = await this.userService.findByEmail(email);
+      if (!user) {
+        this.logger.warn(`User not found: ${email}`);
+        return null;
+      }
+
+      const valid = await this.comparePassword(password, user.password);
+      if (!valid) {
+        this.logger.warn(`Invalid password for user: ${email}`);
+        return null;
+      }
+
+      return { id: user.id, email: user.email, roles: user.roles };
+    }
+
+    // Fallback — demo stub
     if (email === 'demo@example.com' && password === 'demo123') {
       return {
         id: 'demo-user-id',

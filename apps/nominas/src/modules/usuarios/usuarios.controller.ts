@@ -9,51 +9,73 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
+import { Public, Roles } from '@common/auth';
 import { UsuariosService } from './usuarios.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
 
 @ApiTags('usuarios')
+@ApiBearerAuth()
 @Controller('usuarios')
 export class UsuariosController {
   constructor(private readonly usuariosService: UsuariosService) {}
 
+  /** Public — anyone can register. */
+  @Public()
   @Post()
-  @ApiOperation({ summary: 'Create a new usuario' })
+  @ApiOperation({ summary: 'Create a new usuario (public registration)' })
   @ApiResponse({ status: 201, description: 'Usuario created successfully' })
   @ApiResponse({ status: 409, description: 'Usuario already exists' })
   create(@Body() createDto: CreateUsuarioDto) {
     return this.usuariosService.create(createDto);
   }
 
+  /** Admin-only CRUD operations. */
+  @Roles('admin')
   @Get()
-  @ApiOperation({ summary: 'Get all usuarios' })
+  @ApiOperation({ summary: 'Get all usuarios (admin)' })
   @ApiResponse({ status: 200, description: 'List of usuarios' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden — requires admin role' })
   findAll() {
     return this.usuariosService.findAll();
   }
 
+  @Roles('admin')
   @Get(':id')
-  @ApiOperation({ summary: 'Get a usuario by ID' })
+  @ApiOperation({ summary: 'Get a usuario by ID (admin)' })
   @ApiResponse({ status: 200, description: 'Usuario found' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden — requires admin role' })
   @ApiResponse({ status: 404, description: 'Usuario not found' })
   findOne(@Param('id') id: string) {
     return this.usuariosService.findOne(id);
   }
 
+  @Roles('admin')
   @Patch(':id')
-  @ApiOperation({ summary: 'Update a usuario' })
+  @ApiOperation({ summary: 'Update a usuario (admin)' })
   @ApiResponse({ status: 200, description: 'Usuario updated' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden — requires admin role' })
   @ApiResponse({ status: 404, description: 'Usuario not found' })
   update(@Param('id') id: string, @Body() updateDto: UpdateUsuarioDto) {
     return this.usuariosService.update(id, updateDto);
   }
 
+  @Roles('admin')
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Delete a usuario' })
+  @ApiOperation({ summary: 'Delete a usuario (admin)' })
   @ApiResponse({ status: 204, description: 'Usuario deleted' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden — requires admin role' })
   @ApiResponse({ status: 404, description: 'Usuario not found' })
   remove(@Param('id') id: string) {
     return this.usuariosService.remove(id);

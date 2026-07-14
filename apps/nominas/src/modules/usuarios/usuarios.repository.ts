@@ -20,6 +20,7 @@ export class UsuariosRepository {
 
   constructor(
     @InjectModel(Usuario.name)
+    /* eslint-disable-next-line no-unused-vars -- used via this.model in methods */
     private readonly model: Model<UsuarioDocument>,
   ) {}
 
@@ -46,6 +47,16 @@ export class UsuariosRepository {
   async findByEmail(email: string): Promise<UsuarioPublic | null> {
     const usuario = await this.model.findOne({ email }).exec();
     return usuario ? this.toPublic(usuario) : null;
+  }
+
+  /**
+   * Same as {@link findByEmail} but returns the full document including the
+   * password hash.  Only intended for auth-layer consumption (login).
+   */
+  async findByEmailWithPassword(
+    email: string,
+  ): Promise<UsuarioDocument | null> {
+    return this.model.findOne({ email }).exec();
   }
 
   async update(id: string, updateDto: any): Promise<UsuarioPublic> {
