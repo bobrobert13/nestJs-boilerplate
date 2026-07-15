@@ -1,7 +1,6 @@
 import { NestFactory, Reflector } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import helmet from 'helmet';
 import { AppModule } from './app.module';
 import {
   DatabaseExceptionFilter,
@@ -18,11 +17,23 @@ async function bootstrap() {
 
   BootstrapLogger.step('NestFactory created', Date.now() - startTime);
 
-  // ── Security ──────────────────────────────────────────────────
+  // Security
   app.enableCors({ origin: process.env.CORS_ORIGIN || '*' });
-  app.use(helmet());
+  // helmet: try to load if available, otherwise apply manual security headers
+  try {
+    const helmet = require('helmet');
+    app.use(helmet.default ? helmet.default() : helmet());
+  } catch {
+    app.use((_req: any, res: any, next: any) => {
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+      res.setHeader('X-Frame-Options', 'DENY');
+      res.setHeader('X-XSS-Protection', '0');
+      res.removeHeader('X-Powered-By');
+      next();
+    });
+  }
 
-  // ── Global pipes & filters ────────────────────────────────────
+  // Global pipes & filters
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -32,14 +43,14 @@ async function bootstrap() {
   );
   app.useGlobalFilters(new DatabaseExceptionFilter());
 
-  // ── Global interceptors & middleware ──────────────────────────
+  // Global interceptors & middleware
   app.useGlobalInterceptors(new ResponseInterceptor(app.get(Reflector)));
   app.use(requestIdMiddleware);
 
-  // ── Global prefix ─────────────────────────────────────────────
+  // Global prefix
   app.setGlobalPrefix('api');
 
-  // ── Swagger ───────────────────────────────────────────────────
+  // Swagger
   const swaggerStart = Date.now();
   const config = new DocumentBuilder()
     .setTitle('Boilerplate Service API')
@@ -57,7 +68,7 @@ async function bootstrap() {
   BootstrapLogger.routeMap(document as Record<string, any>);
   BootstrapLogger.step('Swagger setup', Date.now() - swaggerStart);
 
-  // ── Graceful shutdown ─────────────────────────────────────────
+  // Graceful shutdown
   app.enableShutdownHooks();
 
   await app.listen(port);

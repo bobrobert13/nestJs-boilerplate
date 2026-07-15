@@ -52,7 +52,7 @@ export class ThrottlerGuard implements CanActivate {
     const ttl = throttleOptions?.ttl ?? 60;
 
     const request = context.switchToHttp().getRequest();
-    const key = request.ip ?? request.connection?.remoteAddress ?? 'unknown';
+    const key = request.ip ?? request.socket?.remoteAddress ?? 'unknown';
     const now = Date.now();
 
     const entry = hits.get(key);

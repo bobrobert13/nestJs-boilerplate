@@ -3,6 +3,7 @@ import { ConfigService } from "@nestjs/config";
 import { BootstrapLogger, LogCategory } from "@common/common";
 import { chromium, Browser, BrowserContext, Page } from "playwright";
 import { PLAYWRIGHT_OPTIONS } from "./constants/playwright.constants";
+import { execSync } from 'child_process';
 import type { PlaywrightOptions } from "./interfaces/playwright-options.interface";
 
 /**
@@ -117,18 +118,28 @@ export class PlaywrightService implements OnModuleInit, OnModuleDestroy {
   /**
    * Resolves the absolute path to chrome-headless-shell.
    * Reads from the namespaced 'playwright.browsersPath' config.
+   * On Windows, relies on Playwright's built-in browser discovery.
    * @internal
    */
   private getChromiumPath(): string | undefined {
     const pwConfig = this.configService.get<{ browsersPath?: string }>('playwright');
     const browsersPath = pwConfig?.browsersPath;
     if (browsersPath) {
-      const { execSync } = require('child_process');
-      try {
-        const result = execSync('find ' + browsersPath + ' -name chrome-headless-shell -type f 2>/dev/null | head -1', { encoding: 'utf8' }).trim();
-        if (result) { this.logger.log('Found Chromium at: ' + result); return result; }
-      } catch (error) {
-        this.logger.warn('Could not find chromium executable, using default', (error as Error).stack);
+      if (process.platform !== 'win32') {
+        try {
+          const result = execSync(
+            'find ' + browsersPath + ' -name chrome-headless-shell -type f 2>/dev/null | head -1',
+            { encoding: 'utf8' },
+          ).trim();
+          if (result) {
+            this.logger.log('Found Chromium at: ' + result);
+            return result;
+          }
+        } catch (error) {
+          this.logger.warn('Could not find chromium executable, using default', (error as Error).stack);
+        }
+      } else {
+        this.logger.debug('Windows detected - relying on Playwright built-in browser discovery');
       }
     }
     return undefined;

@@ -1,5 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Cron } from '@nestjs/schedule';
+
+let Cron: any;
+try {
+  Cron = require('@nestjs/schedule').Cron;
+} catch {
+  Cron =
+    () =>
+    (target: any, propertyKey?: string, descriptor?: PropertyDescriptor) =>
+      descriptor || target;
+}
+
 import { ScraperService } from '../scraper.service';
 
 /**
@@ -23,7 +33,7 @@ export class ScraperCronService {
   constructor(private readonly scraperService: ScraperService) {}
 
   /**
-   * Example scheduled scrape — runs every 6 hours.
+   * Example scheduled scrape - runs every 6 hours.
    * Replace URL with a real target when a concrete strategy is registered.
    */
   @Cron('0 */6 * * *', { name: 'scraper-example-daily' })

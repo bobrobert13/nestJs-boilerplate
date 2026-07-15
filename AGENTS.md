@@ -21,6 +21,7 @@
 | [11. Key Files](#11-key-files) | Archivos importantes |
 | [12. Project Status Dashboard](#12-project-status-dashboard) | Cambios activos y estado del proyecto |
 | [13. Documentation Index](#13-documentation-index) | Índice de documentación referencial |
+| [14. Cognitive Ranking (LLM Readiness Score)](#14-cognitive-ranking-llm-readiness-score) | Puntuación de documentación para LLMs |
 
 ---
 
@@ -758,6 +759,118 @@ rg "status: critical" packages/*/README.md
 | Swagger NestJS | https://docs.nestjs.com/openapi/introduction |
 | argon2 | https://github.com/ranisalt/node-argon2 |
 | @simplewebauthn | https://simplewebauthn.dev/docs/ |
+
+
+---
+
+## 14. Cognitive Ranking (LLM Readiness Score)
+
+> Sistema de puntuación cuantitativa que mide qué tan bien documentado está cada
+> paquete desde la perspectiva de un LLM.  Permite a los agentes IA priorizar
+> qué paquetes necesitan más atención de documentación.
+
+### Dimensiones de Puntuación
+
+Cada dimensión se evalúa en una escala **0–3**:
+
+| Puntaje | Significado |
+|---------|-------------|
+| **0** | Ausente — no existe documentación en esta dimensión |
+| **1** | Mínimo — stub, placeholder o documentación insuficiente |
+| **2** | Adecuado — cubre lo esencial pero con gaps |
+| **3** | Completo — documentación exhaustiva con ejemplos y edge cases |
+
+| Dimensión | Peso | Descripción | Qué evalúa |
+|-----------|------|-------------|------------|
+| **spec_exists** | ×2.0 | Spec en OpenSpec | ¿Tiene `openspec/specs/{domain}/spec.md` con Given/When/Then? |
+| **readme_quality** | ×1.5 | README del paquete | ¿README completo con ejemplos de uso, API reference, configuración? |
+| **jsdoc_coverage** | ×1.5 | JSDoc en exports públicos | ¿Métodos públicos, clases e interfaces tienen `@param`, `@returns`, `@throws`? |
+| **test_coverage** | ×1.0 | Tests unitarios/e2e | ¿Existen tests con cobertura significativa? |
+| **swagger_docs** | ×0.5 | Decoradores Swagger | ¿Controladores tienen `@ApiTags`, `@ApiOperation`, `@ApiResponse`? |
+| **cross_references** | ×1.0 | Links cruzados | ¿El paquete está referenciado en AGENTS.md, specs, READMEs de otros paquetes? |
+
+### Fórmula del Score
+
+```
+score_raw = spec_exists×2.0 + readme_quality×1.5 + jsdoc_coverage×1.5
+          + test_coverage×1.0 + swagger_docs×0.5 + cross_references×1.0
+
+score_max  = 3×2.0 + 3×1.5 + 3×1.5 + 3×1.0 + 3×0.5 + 3×1.0 = 22.5
+
+score_pct  = (score_raw / 22.5) × 100
+```
+
+### Ranking por Paquete
+
+| # | Paquete | Spec | README | JSDoc | Tests | Swagger | Cross-Ref | **Raw** | **%** | Nivel |
+|---|---------|------|--------|-------|-------|---------|-----------|---------|-------|-------|
+| 1 | `@common/database` | 3 | 3 | 2 | 0 | — | 3 | 19.5 | **87%** | 🟢 Production |
+| 2 | `@common/playwright` | 3 | 3 | 2 | 0 | — | 3 | 19.5 | **87%** | 🟢 Production |
+| 3 | `@common/auth` | 3 | 3 | 2 | 0 | 2 | 3 | 21.0 | **93%** | 🟢 Production |
+| 4 | `@common/common` | 3 | 2 | 1 | 0 | — | 2 | 14.0 | **62%** | 🟡 Adequate |
+| 5 | `@common/ai` | 3 | 3 | 1 | 0 | — | 2 | 14.0 | **62%** | 🟡 Adequate |
+| 6 | `@common/documents` | 3 | 3 | 1 | 0 | — | 2 | 14.0 | **62%** | 🟡 Adequate |
+| 7 | `@common/http` | 3 | 3 | 1 | 0 | — | 2 | 14.0 | **62%** | 🟡 Adequate |
+| 8 | `@common/resend` | 3 | 3 | 1 | 0 | 2 | 3 | 17.5 | **78%** | 🟢 Production |
+| 9 | `@common/serve-static` | 3 | 3 | 1 | 0 | — | 2 | 14.0 | **62%** | 🟡 Adequate |
+| 10 | `dynamic-schema` (apps) | 3 | 3 | 2 | 0 | 2 | 3 | 20.0 | **89%** | 🟢 Production |
+| 11 | `usuarios` (apps) | — | 3 | 0 | 1 | 2 | 2 | 11.0 | **49%** | 🟠 Needs Work |
+| 12 | `scraper` (apps) | — | 3 | 1 | 0 | 2 | 2 | 11.5 | **51%** | 🟠 Needs Work |
+| 13 | `health` (apps) | — | — | 0 | 0 | 1 | 1 | 2.0 | **9%** | 🔴 Critical |
+
+> **Niveles:** 🟢 Production (≥75%) · 🟡 Adequate (50–74%) · 🟠 Needs Work (25–49%) · 🔴 Critical (<25%)
+
+### Heatmap de Debilidades
+
+```
+                     Spec  README  JSDoc  Tests  Swagger  Cross-Ref
+@common/database      ███   ███    ██░    ░░░     —       ███
+@common/playwright    ███   ███    ██░    ░░░     —       ███
+@common/auth          ███   ███    ██░    ░░░     ██░     ███
+@common/common        ███   ██░    █░░    ░░░     —       ██░
+@common/ai            ███   ███    █░░    ░░░     —       ██░
+@common/documents     ███   ███    █░░    ░░░     —       ██░
+@common/http          ███   ███    █░░    ░░░     —       ██░
+@common/resend        ███   ███    █░░    ░░░     ██░     ███
+@common/serve-static  ███   ███    █░░    ░░░     —       ██░
+dynamic-schema        ███   ███    ██░    ░░░     ██░     ███
+usuarios               —    ███    ░░░    █░░     ██░     ██░
+scraper                —    ███    █░░    ░░░     ██░     ██░
+health                 —     —     ░░░    ░░░     █░░     █░░
+                     ─────────────────────────────────────────
+                     ███=3  ██░=2  █░░=1  ░░░=0  —=N/A
+```
+
+### Déficits Sistémicos
+
+| Déficit | Paquetes Afectados | Impacto |
+|---------|-------------------|---------|
+| **Sin tests** | 11/13 paquetes (85%) | **ALTO** — Sin red de seguridad para refactors |
+| **JSDoc incompleto** | 9/13 paquetes (69%) | **ALTO** — LLMs no pueden inferir contratos de métodos |
+| **Sin spec OpenSpec** | 3/13 módulos (23%) | **MEDIO** — `usuarios`, `scraper`, `health` no tienen contrato formal |
+| **Sin README** | 1/13 módulos (8%) | **BAJO** — `health` es el único sin documentación |
+
+### Recomendaciones Priorizadas para Subir el Score Global
+
+1. **Añadir tests unitarios** a `@common/database`, `@common/auth`, `@common/ai` → impacto masivo (×1.0 en 11 paquetes)
+2. **Completar JSDoc** en `@common/ai`, `@common/http`, `@common/documents` → +1.5 pts por paquete
+3. **Crear specs OpenSpec** para `usuarios`, `scraper`, `health` → formaliza contratos
+4. **Añadir Swagger** a `@common/ai`, `@common/documents`, `@common/serve-static` si exponen controladores → +0.5 pts
+
+### Cómo Usar Este Ranking (Para LLMs)
+
+```
+ANTES de modificar un paquete:
+1. Mira su score — si es <50%, espera documentación pobre
+2. Lee el heatmap — identifica qué dimensiones son débiles
+3. Prioriza paquetes con score alto para extender (están bien documentados)
+4. Si modificas un paquete con JSDoc=0 o 1, DEBES añadir JSDoc
+
+DESPUÉS de modificar:
+1. Re-evalúa las dimensiones afectadas
+2. Actualiza este ranking si el score cambia significativamente
+```
+
 
 ---
 

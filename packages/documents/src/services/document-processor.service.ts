@@ -38,17 +38,12 @@ export class DocumentProcessorService {
       };
     } catch (error) {
       if (error instanceof Error) {
-        try {
-          const parsedError = JSON.parse(error.message);
-          throw error;
-        } catch {
-          throw new Error(
-            JSON.stringify({
-              code: DOCUMENT_ERROR_CODES.DOCUMENT_PARSE_ERROR,
-              message: error.message,
-            }),
-          );
-        }
+        throw new Error(
+          JSON.stringify({
+            code: DOCUMENT_ERROR_CODES.DOCUMENT_PARSE_ERROR,
+            message: error.message,
+          }),
+        );
       }
       throw error;
     }

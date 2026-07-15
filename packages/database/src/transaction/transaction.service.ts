@@ -66,7 +66,6 @@ export class TransactionService {
         const shouldRetry = retry && attempt < maxRetries && this.isTransientError(error);
 
         if (shouldRetry) {
-          session.endSession();
           const delay = Math.min(100 * Math.pow(2, attempt), 1000);
           this.logger.log(`Retrying transaction in ${delay}ms...`);
           await this.sleep(delay);

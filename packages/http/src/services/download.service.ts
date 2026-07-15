@@ -82,7 +82,9 @@ export class DownloadService {
         const finalPath = path.join(savePath, finalName);
 
         await sharpInstance.toFile(finalPath);
-        fs.unlinkSync(tempPath);
+        if (fs.existsSync(tempPath)) {
+          fs.unlinkSync(tempPath);
+        }
 
         const stats = fs.statSync(finalPath);
         return { filepath: finalPath, size: stats.size, filename: finalName };
