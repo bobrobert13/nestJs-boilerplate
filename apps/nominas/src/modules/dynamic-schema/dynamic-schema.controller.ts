@@ -15,6 +15,7 @@ import {
   ApiOperation,
   ApiResponse,
   ApiConsumes,
+  ApiParam,
 } from '@nestjs/swagger';
 import { DynamicSchemaService } from './services/dynamic-schema.service';
 import { SchemaRegistryService } from './services/schema-registry.service';
@@ -33,67 +34,59 @@ import { GeneratedSchema } from '@common/ai';
 @ApiTags('dynamic-schema')
 @Controller('dynamic-schema')
 export class DynamicSchemaController {
-  /**
-   * Injected dependencies.
-   */
   constructor(
     private readonly _dynamicSchemaService: DynamicSchemaService,
     private readonly _registry: SchemaRegistryService,
   ) {}
 
   @Post('extract')
-  @ApiOperation({ summary: 'Extract text content from a document (PDF/DOCX)' })
+  @ApiOperation({
+    summary: 'Extract text content from a document (PDF/DOCX)',
+    description:
+      'Accepts a base64-encoded document and returns extracted plain-text content. Supports PDF and DOCX formats.',
+  })
   @ApiResponse({
     status: 200,
     description: 'Document content extracted successfully',
   })
   @ApiResponse({ status: 400, description: 'Invalid document or format' })
   @HttpCode(HttpStatus.OK)
-  /**
-   * extractDocument method.
-   */
   async extractDocument(@Body() dto: ExtractDocumentDto) {
     const buffer = Buffer.from(dto.document, 'base64');
     const result = await this._dynamicSchemaService.extractDocument(
       buffer,
       dto.format,
     );
-
-    /**
-     * if method.
-     */
     if (!result.success) {
       throw new BadRequestException(result.error);
     }
-
     return result;
   }
 
   @Post('generate-from-text')
-  @ApiOperation({ summary: 'Generate schema from text content' })
+  @ApiOperation({
+    summary: 'Generate a Mongoose schema from plain-text description',
+    description:
+      'Takes arbitrary text (e.g. a document description or field list) and uses AI to infer a structured Mongoose schema definition.',
+  })
   @ApiResponse({
     status: 200,
     description: 'Schema generated successfully',
   })
-  @ApiResponse({ status: 400, description: 'Failed to generate schema' })
+  @ApiResponse({
+    status: 400,
+    description: 'Failed to generate schema from text',
+  })
   @HttpCode(HttpStatus.OK)
-  /**
-   * generateSchemaFromText method.
-   */
   async generateSchemaFromText(@Body() dto: GenerateSchemaFromTextDto) {
     const result = await this._dynamicSchemaService.generateSchemaFromText(
       dto.text,
       dto.provider,
       dto.temperature,
     );
-
-    /**
-     * if method.
-     */
     if (!result.success) {
       throw new BadRequestException(result.error);
     }
-
     return {
       schema: result.generatedSchema,
       collectionName: result.collectionName,
@@ -101,30 +94,29 @@ export class DynamicSchemaController {
   }
 
   @Post('generate-from-image')
-  @ApiOperation({ summary: 'Generate schema from image data' })
+  @ApiOperation({
+    summary: 'Generate a Mongoose schema from image data',
+    description:
+      'Accepts base64-encoded image data and uses vision-capable AI providers to extract structured schema definitions from visual layouts (forms, tables, diagrams).',
+  })
   @ApiResponse({
     status: 200,
-    description: 'Schema generated successfully',
+    description: 'Schema generated successfully from image',
   })
-  @ApiResponse({ status: 400, description: 'Failed to generate schema' })
+  @ApiResponse({
+    status: 400,
+    description: 'Failed to generate schema from image',
+  })
   @HttpCode(HttpStatus.OK)
-  /**
-   * generateSchemaFromImage method.
-   */
   async generateSchemaFromImage(@Body() dto: GenerateSchemaFromImageDto) {
     const result = await this._dynamicSchemaService.generateSchemaFromImage(
       dto.imageData,
       dto.provider,
       dto.temperature,
     );
-
-    /**
-     * if method.
-     */
     if (!result.success) {
       throw new BadRequestException(result.error);
     }
-
     return {
       schema: result.generatedSchema,
       collectionName: result.collectionName,
@@ -132,29 +124,25 @@ export class DynamicSchemaController {
   }
 
   @Post('compile')
-  @ApiOperation({ summary: 'Compile a schema and register it' })
+  @ApiOperation({
+    summary: 'Compile a GeneratedSchema and register the Mongoose model',
+    description:
+      'Validates the AI-generated schema structure, compiles it into a Mongoose model, and registers it in the schema registry for dynamic CRUD operations.',
+  })
   @ApiResponse({
     status: 200,
-    description: 'Schema compiled successfully',
+    description: 'Schema compiled and registered successfully',
   })
-  @ApiResponse({ status: 400, description: 'Failed to compile schema' })
+  @ApiResponse({ status: 400, description: 'Schema compilation failed' })
   @HttpCode(HttpStatus.OK)
-  /**
-   * compileSchema method.
-   */
   async compileSchema(@Body() dto: CompileSchemaDto) {
     const result = await this._dynamicSchemaService.compileSchema(
       dto.schema as GeneratedSchema,
       dto.collectionName,
     );
-
-    /**
-     * if method.
-     */
     if (!result.success) {
       throw new BadRequestException(result.error);
     }
-
     return {
       collectionName: result.collectionName,
       success: true,
@@ -163,18 +151,22 @@ export class DynamicSchemaController {
 
   @Post('pipeline')
   @ApiOperation({
-    summary: 'Run full pipeline: extract document → generate schema → compile',
+    summary:
+      'Run the full pipeline: extract document, generate schema, and compile',
+    description:
+      'End-to-end pipeline that extracts text from a base64-encoded document (PDF/DOCX), feeds it to AI for schema generation, compiles the result, and registers the Mongoose model.',
   })
   @ApiConsumes('application/json')
   @ApiResponse({
     status: 200,
-    description: 'Pipeline completed successfully',
+    description:
+      'Pipeline completed: document extracted, schema generated, and model registered',
   })
-  @ApiResponse({ status: 400, description: 'Pipeline failed' })
+  @ApiResponse({
+    status: 400,
+    description: 'Pipeline failed at one or more stages',
+  })
   @HttpCode(HttpStatus.OK)
-  /**
-   * fullPipeline method.
-   */
   async fullPipeline(
     @Body()
     dto: ExtractDocumentDto & { provider?: string; temperature?: number },
@@ -186,14 +178,9 @@ export class DynamicSchemaController {
       dto.provider,
       dto.temperature,
     );
-
-    /**
-     * if method.
-     */
     if (!result.success) {
       throw new BadRequestException(result.error);
     }
-
     return {
       documentContent: result.documentContent,
       schema: result.generatedSchema,
@@ -201,36 +188,41 @@ export class DynamicSchemaController {
     };
   }
 
-  // ───────── Lifecycle endpoints (added in dynamic-schema-pipeline-hardening) ─────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€ Lifecycle endpoints â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   @Get('schemas')
-  @ApiOperation({ summary: 'List all registered dynamic schemas' })
+  @ApiOperation({
+    summary: 'List all registered dynamic schemas',
+    description:
+      'Returns metadata for every schema currently registered in the dynamic schema registry, including collection names and field hashes.',
+  })
   @ApiResponse({
     status: 200,
-    description: 'Returns metadata of all registered schemas',
+    description: 'Array of registered schema metadata entries',
   })
   @HttpCode(HttpStatus.OK)
-  /**
-   * listSchemas method.
-   */
   async listSchemas() {
     const schemas = await this._registry.list();
     return { schemas };
   }
 
   @Delete('schemas/:collectionName')
-  @ApiOperation({ summary: 'Unregister a dynamic schema' })
-  @ApiResponse({ status: 200, description: 'Schema unregistered' })
-  @ApiResponse({ status: 404, description: 'Schema not found' })
+  @ApiOperation({
+    summary: 'Unregister a dynamic schema by collection name',
+    description:
+      'Removes a previously registered dynamic schema from the registry. Does not drop the underlying MongoDB collection.',
+  })
+  @ApiParam({
+    name: 'collectionName',
+    type: String,
+    description: 'Collection name of the registered schema to unregister',
+    example: 'my_collection',
+  })
+  @ApiResponse({ status: 200, description: 'Schema unregistered successfully' })
+  @ApiResponse({ status: 404, description: 'Schema not found in registry' })
   @HttpCode(HttpStatus.OK)
-  /**
-   * unregisterSchema method.
-   */
   async unregisterSchema(@Param('collectionName') collectionName: string) {
     const result = await this._registry.unregister(collectionName);
-    /**
-     * if method.
-     */
     if (!result.ok) {
       throw new NotFoundException(result.error);
     }
@@ -239,24 +231,22 @@ export class DynamicSchemaController {
 
   @Post('compile/dry-run')
   @ApiOperation({
-    summary:
-      'Validate a GeneratedSchema without registering the Mongoose model',
+    summary: 'Validate a GeneratedSchema without registering it',
+    description:
+      'Dry-run schema compilation: checks the generated schema for structural validity and normalizes it, but does not register a Mongoose model.',
   })
-  @ApiResponse({ status: 200, description: 'Validation result' })
-  @ApiResponse({ status: 400, description: 'Validation errors' })
+  @ApiResponse({
+    status: 200,
+    description: 'Schema is valid; normalized schema returned',
+  })
+  @ApiResponse({ status: 400, description: 'Schema validation errors' })
   @HttpCode(HttpStatus.OK)
-  /**
-   * compileDryRun method.
-   */
   async compileDryRun(@Body() dto: CompileDryRunDto) {
     const result = await this._dynamicSchemaService.compileSchema(
       dto.schema as GeneratedSchema,
       dto.collectionName,
       true,
     );
-    /**
-     * if method.
-     */
     if (!result.success) {
       throw new BadRequestException(result.error);
     }
@@ -268,24 +258,25 @@ export class DynamicSchemaController {
   }
 
   @Post('compile-from-json-schema')
-  @ApiOperation({ summary: 'Compile from JSON Schema draft-07 document' })
-  @ApiResponse({ status: 200, description: 'Compiled and registered' })
+  @ApiOperation({
+    summary: 'Compile from a JSON Schema draft-07 document',
+    description:
+      'Accepts a standard JSON Schema (draft-07) definition and converts it into a compiled Mongoose model registered in the dynamic schema registry.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'JSON Schema compiled and model registered',
+  })
   @ApiResponse({
     status: 400,
     description: 'JSON Schema invalid or compilation error',
   })
   @HttpCode(HttpStatus.OK)
-  /**
-   * compileFromJsonSchema method.
-   */
   async compileFromJsonSchema(@Body() dto: CompileFromJsonSchemaDto) {
     const result = await this._dynamicSchemaService.compileFromJsonSchema({
       jsonSchema: dto.jsonSchema,
       collectionName: dto.collectionName,
     });
-    /**
-     * if method.
-     */
     if (!result.success) {
       throw new BadRequestException(result.error);
     }
@@ -298,23 +289,24 @@ export class DynamicSchemaController {
   }
 
   @Post('compile-from-dsl')
-  @ApiOperation({ summary: 'Compile from declarative DSL string' })
-  @ApiResponse({ status: 200, description: 'Compiled and registered' })
+  @ApiOperation({
+    summary: 'Compile from a declarative DSL string',
+    description:
+      'Parses a lightweight DSL string describing field definitions and compiles it into a registered Mongoose model.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'DSL compiled and model registered',
+  })
   @ApiResponse({
     status: 400,
     description: 'DSL parse error or compilation error',
   })
   @HttpCode(HttpStatus.OK)
-  /**
-   * compileFromDsl method.
-   */
   async compileFromDsl(@Body() dto: CompileFromDslDto) {
     const result = await this._dynamicSchemaService.compileFromDsl({
       dsl: dto.dsl,
     });
-    /**
-     * if method.
-     */
     if (!result.success) {
       throw new BadRequestException(result.error);
     }
@@ -328,15 +320,23 @@ export class DynamicSchemaController {
 
   @Post('infer-from-collection/:collectionName')
   @ApiOperation({
-    summary: 'Infer schema from existing Mongo collection by sampling docs',
+    summary: 'Infer a schema from an existing MongoDB collection',
+    description:
+      'Samples documents from the specified collection and uses AI to infer a Mongoose schema definition, which is then compiled and registered.',
   })
-  @ApiResponse({ status: 200, description: 'Schema inferred and registered' })
-  @ApiResponse({ status: 404, description: 'Collection not found' })
+  @ApiParam({
+    name: 'collectionName',
+    type: String,
+    description: 'Name of the existing MongoDB collection to infer schema from',
+    example: 'users',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Schema inferred from collection and registered',
+  })
+  @ApiResponse({ status: 404, description: 'Collection not found in database' })
   @ApiResponse({ status: 400, description: 'Inference or compilation error' })
   @HttpCode(HttpStatus.OK)
-  /**
-   * inferFromCollection method.
-   */
   async inferFromCollection(
     @Param('collectionName') collectionName: string,
     @Body() dto: InferFromCollectionDto,
@@ -345,16 +345,10 @@ export class DynamicSchemaController {
       collectionName,
       sampleSize: dto.sampleSize,
     });
-    /**
-     * if method.
-     */
     if (!result.success) {
       const status = (result.error ?? '').startsWith('COLLECTION_NOT_FOUND')
         ? HttpStatus.NOT_FOUND
         : HttpStatus.BAD_REQUEST;
-      /**
-       * if method.
-       */
       if (status === HttpStatus.NOT_FOUND) {
         throw new NotFoundException(result.error);
       }

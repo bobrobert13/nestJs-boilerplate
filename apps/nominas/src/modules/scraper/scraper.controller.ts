@@ -7,13 +7,21 @@ import {
   Query,
   NotFoundException,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiQuery,
+  ApiBearerAuth,
+  ApiParam,
+} from '@nestjs/swagger';
 import { Roles } from '@common/auth';
 import { ScraperService } from './scraper.service';
 import { CreateScrapeJobDto } from './dto/create-scrape-job.dto';
 import { ScrapeResultDto } from './dto/scrape-result.dto';
 
 @ApiTags('scraper')
+@ApiBearerAuth()
 @Controller('scraper')
 @Roles('admin')
 export class ScraperController {
@@ -28,9 +36,29 @@ export class ScraperController {
    * Requires admin role.
    */
   @Post('scrape')
-  @ApiOperation({ summary: 'Scrape a URL using a registered strategy' })
-  @ApiResponse({ status: 201, description: 'Scrape job completed.' })
-  @ApiResponse({ status: 404, description: 'No matching strategy found.' })
+  @ApiOperation({
+    summary: 'Scrape a URL using a registered strategy',
+    description:
+      'Triggers a one-off scrape job. Strategy auto-detected from hostname unless strategyName is provided. Requires admin role.',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Scrape job completed successfully.',
+    type: ScrapeResultDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid URL or missing required fields.',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized â€” missing JWT.' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden â€” requires admin role.',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'No matching strategy found for URL.',
+  })
   async scrape(@Body() dto: CreateScrapeJobDto): Promise<ScrapeResultDto> {
     const doc = await this.scraperService.scrape(dto.url, dto.strategyName);
     return this.toDto(doc);
@@ -38,15 +66,51 @@ export class ScraperController {
 
   /** List registered strategies. */
   @Get('strategies')
-  @ApiOperation({ summary: 'List all registered scraping strategies' })
+  @ApiOperation({
+    summary: 'List all registered scraping strategies',
+    description: 'Returns available strategy names for scraping.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Strategy names returned.',
+    schema: {
+      type: 'array',
+      items: { type: 'string', example: 'default' },
+    },
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized â€” missing JWT.' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden â€” requires admin role.',
+  })
   listStrategies(): string[] {
     return this.scraperService.listStrategies();
   }
 
   /** Return recent results. */
   @Get('results')
-  @ApiOperation({ summary: 'List recent scrape results' })
-  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiOperation({
+    summary: 'List recent scrape results',
+    description:
+      'Returns recent scrape results ordered by creation date descending.',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Maximum results to return (default: 20)',
+    example: 10,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Recent scrape results.',
+    type: [ScrapeResultDto],
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized â€” missing JWT.' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden â€” requires admin role.',
+  })
   async findRecent(@Query('limit') limit?: string): Promise<ScrapeResultDto[]> {
     const docs = await this.scraperService.getRecent(Number(limit) || 20);
     return docs.map((d) => this.toDto(d));
@@ -54,8 +118,27 @@ export class ScraperController {
 
   /** Return a single result. */
   @Get('results/:id')
-  @ApiOperation({ summary: 'Get a single scrape result by ID' })
-  @ApiResponse({ status: 404, description: 'Result not found.' })
+  @ApiOperation({
+    summary: 'Get a single scrape result by ID',
+    description: 'Returns a specific scrape result by its MongoDB ObjectId.',
+  })
+  @ApiParam({
+    name: 'id',
+    type: String,
+    description: 'MongoDB ObjectId of the scrape result',
+    example: '64f1a2b3c4d5e6f7a8b9c0d1',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Scrape result found.',
+    type: ScrapeResultDto,
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized â€” missing JWT.' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden â€” requires admin role.',
+  })
+  @ApiResponse({ status: 404, description: 'Scrape result not found.' })
   async findOne(@Param('id') id: string): Promise<ScrapeResultDto> {
     const doc = await this.scraperService.getResult(id);
     if (!doc) {
@@ -64,7 +147,7 @@ export class ScraperController {
     return this.toDto(doc);
   }
 
-  // ── Private ────────────────────────────────────────────────
+  // â”€â”€ Private â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   private toDto(doc: any): ScrapeResultDto {
     return {

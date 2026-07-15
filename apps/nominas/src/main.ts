@@ -62,6 +62,11 @@ async function bootstrap() {
     .addTag('usuarios')
     .addTag('auth')
     .addTag('health')
+    .addTag('scraper')
+    .addTag('dynamic-schema')
+    .addTag('newsletter')
+    .addTag('passkeys')
+    .addTag('2fa')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
