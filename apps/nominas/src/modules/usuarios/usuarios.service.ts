@@ -48,6 +48,24 @@ export class UsuariosService implements IUserService {
     };
   }
 
+  /**
+   * IUserService contract � used by AuthService.register for persistence.
+   * Receives an already-hashed password from AuthService.
+   */
+  async createUser(email: string, hashedPassword: string, name?: string) {
+    const created = await this.repository.create({
+      nombre: name ?? email.split('@')[0],
+      apellido: '',
+      email,
+      password: hashedPassword,
+    });
+    return {
+      id: (created as any).id ?? (created as any)._id?.toString(),
+      email: created.email,
+      roles: (created as any).roles ?? ['user'],
+    };
+  }
+
   async create(createDto: CreateUsuarioDto): Promise<UsuarioPublic> {
     this.logger.log('Creating new usuario');
 

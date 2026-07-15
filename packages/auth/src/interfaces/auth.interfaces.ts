@@ -28,7 +28,7 @@ export interface RefreshTokenData {
 /**
  * Contract that a consumer (e.g. UsuariosService) must implement to
  * replace the demo stub in AuthService.  Return `null` when the user
- * is not found â€” AuthService will fall back to the stub automatically.
+ * is not found — AuthService will fall back to the stub automatically.
  */
 export interface IUserService {
   findByEmail(email: string): Promise<{
@@ -37,6 +37,21 @@ export interface IUserService {
     password: string;
     roles: string[];
   } | null>;
+
+  /**
+   * Create a new user with an already-hashed password.
+   * Returns the created user's public profile (id, email, roles).
+   * Used by {@link AuthService.register} to delegate persistence.
+   */
+  createUser(
+    email: string,
+    hashedPassword: string,
+    name?: string,
+  ): Promise<{
+    id: string;
+    email: string;
+    roles: string[];
+  }>;
 }
 
 /** Injection token for the optional IUserService provider. */

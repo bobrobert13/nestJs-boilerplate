@@ -1,4 +1,4 @@
-import { Global, Module } from '@nestjs/common';
+import { Global, Module, Logger, OnModuleInit } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 
 /**
@@ -10,4 +10,13 @@ import { ScheduleModule } from '@nestjs/schedule';
 @Module({
   imports: [ScheduleModule.forRoot()],
 })
-export class CronModule {}
+export class CronModule implements OnModuleInit {
+  private readonly logger = new Logger(CronModule.name);
+
+  /** Logs cron availability on bootstrap. */
+  onModuleInit() {
+    this.logger.log(
+      '? CronModule initialized � @Cron/@Interval/@Timeout available',
+    );
+  }
+}

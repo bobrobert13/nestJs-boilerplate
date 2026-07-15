@@ -22,11 +22,12 @@ interface AuthConfig {
   };
 }
 
+
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
   /** ponytail: fallback store when no IRefreshTokenStore is registered. */
-  private readonly memoryStore: Map<string, { userId: string; expiresAt: Date }> = new Map();
+  private readonly memoryStore: Map<string, { userId: string; email: string; roles: string[]; expiresAt: Date }> = new Map();
 
   constructor(
     private readonly jwtService: JwtService,
@@ -81,6 +82,18 @@ export class AuthService {
       throw new ConflictException('User already exists');
     }
 
+    // If an IUserService is wired (e.g. UsuariosService), delegate to it
+    // so the user is persisted in MongoDB. Otherwise fall back to the demo stub.
+    if (this.userService) {
+      const hashedPassword = await this.hashPassword(password);
+      const user = await this.userService.createUser(email, hashedPassword, name);
+      return { id: user.id, email: user.email, roles: user.roles };
+    }
+
+    // Fallback — demo stub (no persistence)
+    const hashedPassword = await this.hashPassword(password);
+    this.logger.debug(`Password hashed for ${email}`);
+
     return {
       id: `user-${Date.now()}`,
       email,
@@ -98,7 +111,7 @@ export class AuthService {
     };
 
     const accessToken = this.jwtService.sign(payload);
-    const refreshToken = await this.createRefreshToken(user.id);
+    const refreshToken = await this.createRefreshToken(user);
 
     return {
       accessToken,
@@ -122,10 +135,12 @@ export class AuthService {
     // Invalidate old token before issuing a new one (rotation)
     await this.deleteToken(refreshToken);
 
+    // Use the email and roles stored in the refresh token rather
+    // than hard-coding demo values.
     const user: AuthenticatedUser = {
       id: tokenData.userId,
-      email: 'demo@example.com',
-      roles: ['user'],
+      email: tokenData.email,
+      roles: tokenData.roles,
     };
 
     return this.login(user);
@@ -166,27 +181,29 @@ export class AuthService {
     }
   }
 
-  private async createRefreshToken(userId: string): Promise<string> {
+
+
+  private async createRefreshToken(user: AuthenticatedUser): Promise<string> {
     const token = randomBytes(32).toString('hex');
     const config = this.configService.get<AuthConfig>('auth');
     const ttl = config?.jwt?.refreshTokenTtl || 604800;
     const expiresAt = new Date(Date.now() + ttl * 1000);
 
-    await this.saveToken(token, userId, expiresAt);
+    await this.saveToken(token, user.id, user.email, user.roles, expiresAt);
     return token;
   }
 
   /** Save token via the injected store or fall back to the in-memory Map. */
-  private async saveToken(token: string, userId: string, expiresAt: Date): Promise<void> {
+  private async saveToken(token: string, userId: string, email: string, roles: string[], expiresAt: Date): Promise<void> {
     if (this.tokenStore) {
-      await this.tokenStore.save(token, userId, expiresAt);
+      await this.tokenStore.save(token, userId, email, roles, expiresAt);
     } else {
-      this.memoryStore.set(token, { userId, expiresAt });
+      this.memoryStore.set(token, { userId, email, roles, expiresAt });
     }
   }
 
   /** Load token via the injected store or fall back to the in-memory Map. */
-  private async loadToken(token: string): Promise<{ userId: string; expiresAt: Date } | null> {
+  private async loadToken(token: string): Promise<{ userId: string; email: string; roles: string[]; expiresAt: Date } | null> {
     if (this.tokenStore) {
       return this.tokenStore.find(token);
     }
