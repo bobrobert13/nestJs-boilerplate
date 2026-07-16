@@ -27,12 +27,17 @@ export class UsuariosController {
   // eslint-disable-next-line no-unused-vars -- NestJS DI parameter property, used via this.usuariosService
   constructor(private readonly usuariosService: UsuariosService) {}
 
-  /** Public — anyone can register. */
+  /** Public — anyone can register. PR5 / M3: response shape is the same
+   *  whether or not the email already exists (no enumeration). */
   @Public()
   @Post()
-  @ApiOperation({ summary: 'Create a new usuario (public registration)' })
-  @ApiResponse({ status: 201, description: 'Usuario created successfully' })
-  @ApiResponse({ status: 409, description: 'Usuario already exists' })
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Create a new usuario (public registration)',
+    description:
+      'Returns the same HTTP 201 response shape regardless of email existence to prevent email enumeration.',
+  })
+  @ApiResponse({ status: 201, description: 'Usuario registration result' })
   create(@Body() createDto: CreateUsuarioDto) {
     return this.usuariosService.create(createDto);
   }

@@ -2,6 +2,8 @@ import axios, { AxiosInstance } from 'axios';
 import * as fs from 'fs';
 import * as path from 'path';
 import sharp from 'sharp';
+import { BadRequestException } from '@nestjs/common';
+import { SsrfGuard } from '@common/common';
 import { createHttpError, HttpError } from '../http-error';
 import { DownloadOptions, ImageOptimizationOptions } from '../interfaces/http-options.interface';
 
@@ -11,24 +13,49 @@ interface DownloadResult {
   filename: string;
 }
 
+/** PR5 / M8 — 50 MB hard cap on axios responses. */
+const MAX_CONTENT_LENGTH = 50 * 1024 * 1024;
+
+/**
+ * PR5 / M7 — safe filename join. Strips directory components and verifies
+ * the resolved path stays under `savePath`.
+ */
+function safeJoin(savePath: string, filename: string): string {
+  const base = path.basename(filename); // strips directory components
+  const resolved = path.resolve(savePath, base);
+  const root = path.resolve(savePath);
+  if (resolved !== root && !resolved.startsWith(root + path.sep)) {
+    throw new BadRequestException('Invalid filename');
+  }
+  return resolved;
+}
+
 export class DownloadService {
   constructor(
     private readonly client: AxiosInstance,
     private readonly baseFolder?: string,
+    private readonly ssrfGuard?: SsrfGuard,
   ) {}
 
   async file(url: string, options: DownloadOptions = {}): Promise<DownloadResult> {
+    // PR5 / H5 — guard against SSRF before any network request.
+    if (this.ssrfGuard) {
+      await this.ssrfGuard.assertSafeUrl(url);
+    }
+
     const { folder = '', filename, headers } = options;
     const savePath = this.resolvePath(folder);
     const name = filename ?? this.extractFilename(url);
+    const filepath = safeJoin(savePath, name);
 
-    this.ensureDir(savePath);
-    const filepath = path.join(savePath, name);
+    this.ensureDir(path.dirname(filepath));
 
     try {
       const response = await this.client.get(url, {
         responseType: 'stream',
         headers,
+        // PR5 / M8 — cap response size; axios throws on overflow.
+        maxContentLength: MAX_CONTENT_LENGTH,
       });
 
       const writer = fs.createWriteStream(filepath);

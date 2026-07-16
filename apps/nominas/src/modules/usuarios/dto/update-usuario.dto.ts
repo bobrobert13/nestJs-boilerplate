@@ -3,6 +3,7 @@ import {
   IsArray,
   IsBoolean,
   IsEmail,
+  IsIn,
   IsOptional,
   IsString,
   MaxLength,
@@ -42,16 +43,18 @@ export class UpdateUsuarioDto {
   @MinLength(8)
   password?: string;
 
-  /** Update roles. Overwrites the entire array. */
+  /**
+   * PR5 / H1 / REQ-usuarios-1 — restrict to ['user', 'admin'] only.
+   */
   @ApiProperty({
     example: ['user', 'admin'],
-    description: 'User roles for RBAC',
+    description: 'User roles (must be from the allow-list)',
     required: false,
   })
   @IsArray()
-  @IsString({ each: true })
+  @IsIn(['user', 'admin'], { each: true })
   @IsOptional()
-  roles?: string[];
+  roles?: ('user' | 'admin')[];
 
   @ApiProperty({
     example: '+1234567890',

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { PlaywrightModule } from '@common/playwright';
+import { SsrfGuard } from '@common/common';
 import { CronModule } from '../../common/cron/cron.module';
 
 import { ScraperController } from './scraper.controller';
@@ -29,6 +30,7 @@ import { SCRAPER_STRATEGY } from './interfaces/scraper-strategy.interface';
     ScraperRepository,
     ScraperService,
     ScraperCronService,
+    SsrfGuard,
     /** Register concrete strategies as multi-providers under the same token. */
     {
       provide: SCRAPER_STRATEGY,
@@ -36,6 +38,6 @@ import { SCRAPER_STRATEGY } from './interfaces/scraper-strategy.interface';
       multi: true,
     } as any,
   ],
-  exports: [ScraperService],
+  exports: [ScraperService, SsrfGuard],
 })
 export class ScraperModule {}

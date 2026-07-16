@@ -1,4 +1,5 @@
-import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, Logger, NotFoundException, Optional } from '@nestjs/common';
+import { SsrfGuard } from '@common/common';
 import {
   IScraperStrategy,
   SCRAPER_STRATEGY,
@@ -19,16 +20,13 @@ import { ScrapeResultDocument } from './schemas/scrape-result.schema';
 export class ScraperService {
   private readonly logger = new Logger(ScraperService.name);
 
-  /**
-   * @param strategies All registered scraping strategies (multi-provider).
-   * @param repository Persistence layer for scrape results.
-   */
   constructor(
     @Inject(SCRAPER_STRATEGY)
     /* eslint-disable-next-line no-unused-vars -- NestJS DI, used via this.strategies */
     private readonly strategies: IScraperStrategy[],
     /* eslint-disable-next-line no-unused-vars -- NestJS DI, used via this.repository */
     private readonly repository: ScraperRepository,
+    @Optional() private readonly ssrfGuard?: SsrfGuard,
   ) {}
 
   /**
@@ -47,6 +45,11 @@ export class ScraperService {
     url: string,
     strategyName?: string,
   ): Promise<ScrapeResultDocument> {
+    // PR5 / H5 — refuse SSRF destinations BEFORE strategy lookup.
+    if (this.ssrfGuard) {
+      await this.ssrfGuard.assertSafeUrl(url);
+    }
+
     const strategy = strategyName
       ? this.findByName(strategyName)
       : this.findByUrl(url);

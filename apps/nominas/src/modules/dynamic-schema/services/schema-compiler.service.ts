@@ -1,9 +1,52 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/mongoose';
 import { Connection, Schema } from 'mongoose';
 import { GeneratedSchema, SchemaFieldDefinition } from '@common/ai';
 import { validateCollectionName } from '../validators/collection-name.validator';
 import { validateFields } from '../validators/schema-field.validator';
+
+/**
+ * PR5 / H7 / REQ-dynamic-schema-2 — keys that MUST NOT reach the Mongoose
+ * definition. They are silently dropped to defeat prototype-pollution
+ * payloads (e.g. `field.validate.__proto__.isAdmin = true`).
+ */
+const DENIED_VALIDATE_KEYS = new Set([
+  '__proto__',
+  'constructor',
+  'prototype',
+]);
+
+/**
+ * PR5 / H7 / REQ-dynamic-schema-3 — comma-separated allow-list of refs
+ * that may appear in `field.ref`. Default is empty (deny-all).
+ */
+const ALLOWED_REFS: string[] = (process.env.ALLOWED_REFS ?? '')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+/** PR5 / H7 — strip denied keys from a `field.validate` map. */
+function sanitizeValidate(
+  raw: Record<string, unknown> | undefined,
+): Record<string, unknown> {
+  if (!raw) return {};
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(raw)) {
+    if (DENIED_VALIDATE_KEYS.has(k)) continue;
+    out[k] = v;
+  }
+  return out;
+}
+
+/** PR5 / H7 — throw unless `ref` is in ALLOWED_REFS. */
+function assertRefAllowed(ref: string | undefined): void {
+  if (!ref) return;
+  if (!ALLOWED_REFS.includes(ref)) {
+    throw new BadRequestException(
+      `ref '${ref}' is not in ALLOWED_REFS`,
+    );
+  }
+}
 
 export interface CompileOptions {
   dryRun?: boolean;
@@ -108,6 +151,11 @@ export class SchemaCompilerService {
 
     let mongooseSchema: Schema;
     try {
+      // PR5 / H7 — validate every `ref` against the allow-list before
+      // we touch the Mongoose definition.
+      for (const f of normalized.fields) {
+        assertRefAllowed(f.ref);
+      }
       mongooseSchema = this.buildMongooseSchema(normalized);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error';
@@ -211,7 +259,7 @@ export class SchemaCompilerService {
     /**
      * if method.
      */
-    if (field.validate) Object.assign(def, field.validate);
+    if (field.validate) Object.assign(def, sanitizeValidate(field.validate));
     /**
      * if method.
      */

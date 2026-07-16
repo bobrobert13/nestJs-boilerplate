@@ -9,6 +9,7 @@ import {
   HttpStatus,
   BadRequestException,
   NotFoundException,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -16,7 +17,9 @@ import {
   ApiResponse,
   ApiConsumes,
   ApiParam,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
+import { JwtAuthGuard, Roles, RolesGuard } from '@common/auth';
 import { DynamicSchemaService } from './services/dynamic-schema.service';
 import { SchemaRegistryService } from './services/schema-registry.service';
 import {
@@ -31,8 +34,15 @@ import {
 } from './dto/generate-schema.dto';
 import { GeneratedSchema } from '@common/ai';
 
+/**
+ * PR5 / H2 / REQ-dynamic-schema-1 — class-level admin gate.
+ * Non-admin callers receive HTTP 403 before any controller method runs.
+ */
 @ApiTags('dynamic-schema')
+@ApiBearerAuth()
 @Controller('dynamic-schema')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('admin')
 export class DynamicSchemaController {
   constructor(
     private readonly _dynamicSchemaService: DynamicSchemaService,

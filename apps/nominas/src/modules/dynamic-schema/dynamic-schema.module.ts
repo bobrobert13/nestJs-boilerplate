@@ -17,6 +17,7 @@ import {
 } from './schemas/dynamic-schema.schema';
 import { AiModule } from '@common/ai';
 import { DocumentsModule } from '@common/documents';
+import { SsrfGuard } from '@common/common';
 
 @Module({
   imports: [
@@ -38,7 +39,8 @@ import { DocumentsModule } from '@common/documents';
     JsonSchemaSourceAdapter,
     DslSourceAdapter,
     MongoInferenceSourceAdapter,
+    SsrfGuard,
   ],
-  exports: [DynamicSchemaService, SchemaRegistryService, SchemaCompilerService],
+  exports: [DynamicSchemaService, SchemaRegistryService, SchemaCompilerService, SsrfGuard],
 })
 export class DynamicSchemaModule {}

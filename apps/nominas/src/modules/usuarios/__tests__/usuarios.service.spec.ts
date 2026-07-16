@@ -106,7 +106,7 @@ describe('UsuariosService', () => {
       });
     });
 
-    it('should throw ConflictException if email already exists', async () => {
+    it('returns the same public shape for an existing email (M3 / no enumeration)', async () => {
       const createDto: CreateUsuarioDto = {
         nombre: 'John',
         apellido: 'Doe',
@@ -115,9 +115,8 @@ describe('UsuariosService', () => {
       };
       mockRepository.findByEmail.mockResolvedValue(mockUsuario);
 
-      await expect(service.create(createDto)).rejects.toThrow(
-        ConflictException,
-      );
+      const result = await service.create(createDto);
+      expect(result).toEqual(mockUsuario);
       expect(mockRepository.create).not.toHaveBeenCalled();
     });
   });

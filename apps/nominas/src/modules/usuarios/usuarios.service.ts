@@ -11,6 +11,7 @@ interface UsuarioPublic {
   email: string;
   telefono?: string;
   activo: boolean;
+  roles?: string[];
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -71,9 +72,18 @@ export class UsuariosService implements IUserService {
 
     const existing = await this.repository.findByEmail(createDto.email);
     if (existing) {
-      throw new ConflictException(
-        `Usuario with email ${createDto.email} already exists`,
-      );
+      // PR5 / M3 / REQ-usuarios-3 — return the same public shape and
+      // status as a fresh registration. Email enumeration is prevented.
+      return {
+        id: existing.id,
+        nombre: existing.nombre,
+        apellido: existing.apellido,
+        email: existing.email,
+        telefono: existing.telefono,
+        activo: existing.activo,
+        createdAt: existing.createdAt,
+        updatedAt: existing.updatedAt,
+      };
     }
 
     const hashedPassword = await this.authService.hashPassword(
@@ -115,5 +125,24 @@ export class UsuariosService implements IUserService {
   async remove(id: string): Promise<void> {
     this.logger.log(`Removing usuario: ${id}`);
     await this.repository.remove(id);
+  }
+
+  /**
+   * PR5 / H1 — read the user's roles by id. Used by the audited role
+   * update endpoint to capture the "before" state.
+   */
+  async getRoles(id: string): Promise<{ roles: string[] }> {
+    const u = await this.repository.findOne(id);
+    return { roles: (u as any).roles ?? [] };
+  }
+
+  /**
+   * PR5 / H1 — atomic role update; validates the allow-list at the DTO
+   * layer. Returns the new roles so the caller can audit "after".
+   */
+  async setRoles(id: string, roles: string[]): Promise<{ roles: string[] }> {
+    this.logger.log(`Setting roles for usuario ${id}`);
+    const updated = await this.repository.update(id, { roles } as any);
+    return { roles: (updated as any).roles ?? roles };
   }
 }

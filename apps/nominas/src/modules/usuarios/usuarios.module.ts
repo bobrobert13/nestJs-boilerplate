@@ -5,13 +5,14 @@ import { Usuario, UsuarioSchema } from './schemas/usuario.schema';
 import { UsuariosRepository } from './usuarios.repository';
 import { UsuariosService } from './usuarios.service';
 import { UsuariosController } from './usuarios.controller';
+import { UsuariosRolesController } from './controllers/usuarios-roles.controller';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Usuario.name, schema: UsuarioSchema }]),
     AuthModule,
   ],
-  controllers: [UsuariosController],
+  controllers: [UsuariosController, UsuariosRolesController],
   providers: [
     UsuariosRepository,
     UsuariosService,
