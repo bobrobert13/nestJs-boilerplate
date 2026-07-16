@@ -19,6 +19,10 @@ import {
   TwoFactorBackupCode,
   TwoFactorBackupCodeSchema,
 } from './schemas/two-factor-backup-code.schema';
+import {
+  TwoFactorSecret,
+  TwoFactorSecretSchema,
+} from './schemas/two-factor-secret.schema';
 
 interface AuthConfig {
   jwt: {
@@ -40,6 +44,7 @@ interface AuthConfig {
     MongooseModule.forFeature([
       { name: RefreshToken.name, schema: RefreshTokenSchema },
       { name: TwoFactorBackupCode.name, schema: TwoFactorBackupCodeSchema },
+      { name: TwoFactorSecret.name, schema: TwoFactorSecretSchema },
     ]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({

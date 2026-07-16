@@ -7,6 +7,7 @@ import {
   verifyAuthenticationResponse,
 } from '@simplewebauthn/server';
 import { PasskeyCredential, PasskeyVerifyResult } from './interfaces/passkeys.interfaces';
+import { PasskeyChallengeStore } from './passkey-challenge.store';
 
 /** ponytail: Base64URLString is a branded `string` type not re-exported by v10 barrel; local alias suffices for demo. */
 type Base64URLString = string;
@@ -19,7 +20,10 @@ export class PasskeysService implements OnModuleInit {
   private rpName: string = 'MyApp';
   private rpOrigin: string = 'http://localhost:3000';
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly challengeStore: PasskeyChallengeStore,
+  ) {}
 
   onModuleInit() {
     const config = this.configService.get<{ passkeys: any }>('auth');
@@ -32,7 +36,7 @@ export class PasskeysService implements OnModuleInit {
   }
 
   async generateRegistrationOptions(userId: string, username: string) {
-    const options = generateRegistrationOptions({
+    const options = await generateRegistrationOptions({
       rpName: this.rpName,
       rpID: this.rpId,
       userID: new TextEncoder().encode(userId),
@@ -46,7 +50,11 @@ export class PasskeysService implements OnModuleInit {
       },
     });
 
-    this.logger.debug(`Generated registration options for user: ${username}`);
+    // PR3 / C1 / REQ-auth-crypto-2 — store the generated challenge so
+    // verification can retrieve the SAME value instead of minting a fresh one.
+    this.challengeStore.put(userId, options.challenge);
+
+    this.logger.debug(`Generated registration options for userId=${userId}`);
     return options;
   }
 
@@ -56,9 +64,18 @@ export class PasskeysService implements OnModuleInit {
     response: any,
   ): Promise<{ verified: boolean; credentialId?: string }> {
     try {
+      // PR3 / C1 — pull the same challenge stored at options time.
+      const expectedChallenge = this.challengeStore.take(userId);
+      if (!expectedChallenge) {
+        this.logger.warn(
+          `No stored challenge for userId=${userId}; cannot verify`,
+        );
+        return { verified: false };
+      }
+
       const verification = await verifyRegistrationResponse({
         response,
-        expectedChallenge: this.getStoredChallenge(userId),
+        expectedChallenge,
         expectedOrigin: this.rpOrigin,
         expectedRPID: this.rpId,
       });
@@ -107,6 +124,11 @@ export class PasskeysService implements OnModuleInit {
       allowCredentials,
     });
 
+    // PR3 / C1 — store the auth challenge for verification.
+    if (userId) {
+      this.challengeStore.put(userId, options.challenge);
+    }
+
     this.logger.debug(`Generated authentication options for userId: ${userId || 'any'}`);
     return options;
   }
@@ -124,9 +146,15 @@ export class PasskeysService implements OnModuleInit {
         return { valid: false, error: 'Credential not found' };
       }
 
+      // PR3 / C1 — pull the same challenge stored at options time.
+      const expectedChallenge = this.challengeStore.take(userId);
+      if (!expectedChallenge) {
+        return { valid: false, error: 'Challenge expired or missing' };
+      }
+
       const verification = await verifyAuthenticationResponse({
         response,
-        expectedChallenge: this.getStoredChallenge(userId),
+        expectedChallenge,
         expectedOrigin: this.rpOrigin,
         expectedRPID: this.rpId,
         authenticator: {

@@ -15,6 +15,39 @@ import {
   TwoFactorBackupCode as TwoFactorBackupCodeModel,
   TwoFactorBackupCodeDocument,
 } from '../schemas/two-factor-backup-code.schema';
+import {
+  TwoFactorSecret,
+  TwoFactorSecretDocument,
+} from '../schemas/two-factor-secret.schema';
+
+/** PR3 / C4 / REQ-auth-crypto-1 — exactly 20 cryptographically random bytes. */
+const TOTP_SECRET_BYTES = 20;
+
+/** Base32 RFC4648 alphabet (no padding). */
+const BASE32_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+
+/**
+ * Base32-encode a binary buffer using RFC4648, no padding.
+ * TOTP secrets MUST be base32-encoded; we inline this so the package
+ * does not need an extra dependency.
+ */
+function toBase32(buf: Buffer): string {
+  let bits = 0;
+  let value = 0;
+  let out = '';
+  for (let i = 0; i < buf.length; i++) {
+    value = (value << 8) | buf[i];
+    bits += 8;
+    while (bits >= 5) {
+      out += BASE32_ALPHABET[(value >>> (bits - 5)) & 0x1f];
+      bits -= 5;
+    }
+  }
+  if (bits > 0) {
+    out += BASE32_ALPHABET[(value << (5 - bits)) & 0x1f];
+  }
+  return out;
+}
 
 @Injectable()
 export class TwoFactorService implements OnModuleInit {
@@ -24,6 +57,11 @@ export class TwoFactorService implements OnModuleInit {
    * persistence goes through MongoDB and this map is unused.
    */
   private readonly backupCodes: Map<string, TwoFactorBackupCode[]> = new Map();
+  /**
+   * PR3 / C4 — in-memory fallback for the TOTP secret. When the Mongoose
+   * `TwoFactorSecret` model is injected, secrets are persisted per-user.
+   */
+  private readonly secrets: Map<string, string> = new Map();
   private issuer: string = 'MyApp';
   private algorithm: 'SHA1' | 'SHA256' | 'SHA512' = 'SHA1';
   private digits: 6 | 8 = 6;
@@ -36,6 +74,9 @@ export class TwoFactorService implements OnModuleInit {
     @Optional()
     @InjectModel(TwoFactorBackupCodeModel.name)
     private readonly backupCodeModel?: Model<TwoFactorBackupCodeDocument>,
+    @Optional()
+    @InjectModel(TwoFactorSecret.name)
+    private readonly secretModel?: Model<TwoFactorSecretDocument>,
   ) {}
 
   onModuleInit() {
@@ -56,12 +97,26 @@ export class TwoFactorService implements OnModuleInit {
   }
 
   async generateSecret(userId: string): Promise<TwoFactorSetupResult> {
-    const secret = authenticator.generateSecret();
+    // PR3 / C4 / REQ-auth-crypto-1 — 20 random bytes base32-encoded.
+    // Explicit random source: do NOT depend on otplib's internal generator.
+    const buf = randomBytes(TOTP_SECRET_BYTES);
+    const secret = toBase32(buf);
+
+    if (this.secretModel) {
+      await this.secretModel.updateOne(
+        { userId },
+        { $set: { secret } },
+        { upsert: true },
+      );
+    } else {
+      this.secrets.set(userId, secret);
+    }
+
     const otpauthUrl = authenticator.keyuri(userId, this.issuer, secret);
     const qrCode = await this.provideQrCode(otpauthUrl);
     const backupCodes = this.generateBackupCodes(userId);
 
-    this.logger.log(`2FA secret generated for user: ${userId}`);
+    this.logger.log(`2FA secret generated for userId=${userId}`);
 
     return {
       secret,
@@ -206,7 +261,30 @@ export class TwoFactorService implements OnModuleInit {
   }
 
   private getUserSecret(userId: string): string {
-    return `secret_for_${userId}`;
+    // PR3 / C4 — read from the persisted secret. Synchronous path is
+    // impossible; callers that need the secret use the async `getPersistedSecret`.
+    return this.secrets.get(userId) ?? '';
+  }
+
+  /**
+   * PR3 / C4 — read the persisted TOTP secret for a user. Returns null
+   * when the user has not enrolled (REQ-auth-crypto edge case).
+   */
+  async getPersistedSecret(userId: string): Promise<string | null> {
+    if (this.secretModel) {
+      const doc = await this.secretModel.findOne({ userId }).select('+secret').lean();
+      return doc?.secret ?? null;
+    }
+    return this.secrets.get(userId) ?? null;
+  }
+
+  /**
+   * PR3 / C4 — verify a TOTP code against the persisted random secret.
+   */
+  async verifyTotp(userId: string, code: string): Promise<boolean> {
+    const secret = await this.getPersistedSecret(userId);
+    if (!secret) return false;
+    return authenticator.verify({ token: code, secret });
   }
 
   getTimeRemaining(): number {

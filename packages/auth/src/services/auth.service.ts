@@ -44,19 +44,20 @@ export class AuthService {
    * falls back to the built-in demo stub (`demo@example.com` / `demo123`).
    */
   async validateUser(email: string, password: string): Promise<AuthenticatedUser | null> {
-    this.logger.log(`Validating user: ${email}`);
+    // PR3 / M4 — log userId-or-redacted, never the email.
+    this.logger.log(`Validating user: redacted`);
 
     // Real path — consumer provided an IUserService
     if (this.userService) {
       const user = await this.userService.findByEmail(email);
       if (!user) {
-        this.logger.warn(`User not found: ${email}`);
+        this.logger.warn(`User not found: redacted`);
         return null;
       }
 
       const valid = await this.comparePassword(password, user.password);
       if (!valid) {
-        this.logger.warn(`Invalid password for user: ${email}`);
+        this.logger.warn(`Invalid password for userId=${user.id}`);
         return null;
       }
 
