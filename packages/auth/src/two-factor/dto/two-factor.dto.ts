@@ -28,6 +28,12 @@ export class VerifyBackupCodeDto {
   backupCode: string;
 }
 
+/**
+ * C2: the body MUST NOT carry a `userId` field. Identity is derived from the
+ * JWT in the Authorization header (`req.user.id`).
+ */
+export type VerifyBackupCodeRequest = VerifyBackupCodeDto;
+
 export class GenerateBackupCodesDto {
   @ApiPropertyOptional({
     example: '123456',

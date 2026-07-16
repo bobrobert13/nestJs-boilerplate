@@ -25,7 +25,7 @@ export class ResendService {
       this.logger.warn('Resend API key not configured. Email sending will be disabled.');
     }
 
-    this.client = new Resend({ apiKey: config?.apiKey || '' });
+    this.client = new Resend(config?.apiKey || '');
     this.fromEmail = config?.fromEmail || 'onboarding@resend.dev';
     this.fromName = config?.fromName || 'My App';
     this.replyTo = config?.replyTo;
@@ -50,7 +50,7 @@ export class ResendService {
     try {
       this.logger.debug(`Sending email to: ${Array.isArray(to) ? to.join(', ') : to}`);
 
-      const result = await this.client.emails.send(payload);
+      const result = await this.client.emails.send(payload as any);
 
       this.logger.log(`Email sent successfully: ${result.data?.id}`);
 
@@ -77,6 +77,23 @@ export class ResendService {
       to,
       subject: template,
       html,
+    });
+  }
+
+  /**
+   * Out-of-band delivery for a magic-link token.
+   *
+   * The token NEVER reaches the caller of the auth API — it is only sent
+   * here to the user's email inbox (C3/REQ-auth-2).
+   */
+  async sendMagicLink(to: string, token: string, ttlSeconds: number): Promise<SendEmailResult> {
+    const link = `${process.env.MAGIC_LINK_BASE_URL ?? 'http://localhost:3000'}/auth/magic-link/verify?token=${encodeURIComponent(token)}`;
+    const html = `<p>Your magic link is valid for ${Math.floor(ttlSeconds / 60)} minutes.</p><p><a href="${link}">Sign in</a></p>`;
+    return this.sendEmail({
+      to,
+      subject: 'Your magic link',
+      html,
+      text: `Open ${link} to sign in (valid for ${Math.floor(ttlSeconds / 60)} minutes).`,
     });
   }
 

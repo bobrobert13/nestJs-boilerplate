@@ -2,6 +2,9 @@ import { Logger } from '@nestjs/common';
 
 const logger = new Logger('EnvValidation');
 
+const DEV_JWT_SECRET_FALLBACK = '__dev_only_jwt_secret_replace_in_prod__';
+const MIN_JWT_SECRET_LENGTH = 32;
+
 /**
  * Thrown when one or more environment variables are invalid.
  * Extends Error so NestJS ConfigModule can report it cleanly.
@@ -51,15 +54,37 @@ export function validateEnv(config: Record<string, any>): Record<string, any> {
 
   // ── Auth: JWT ─────────────────────────────────────────────────
   if (!validated.JWT_SECRET) {
-    const devSecret = 'dev-jwt-secret-do-not-use-in-production-32chars-min';
+    const devSecret = DEV_JWT_SECRET_FALLBACK;
     logger.warn(
       `JWT_SECRET not set — using INSECURE dev default. DO NOT use this in production.`,
     );
     validated.JWT_SECRET = devSecret;
   }
-  if (validated.JWT_SECRET && String(validated.JWT_SECRET).length < 32) {
-    logger.warn(
-      'JWT_SECRET is shorter than 32 characters — this is INSECURE for production.',
+  if (
+    validated.JWT_SECRET &&
+    String(validated.JWT_SECRET).length < MIN_JWT_SECRET_LENGTH
+  ) {
+    if (process.env.NODE_ENV === 'production') {
+      errors.push(
+        `JWT_SECRET must be at least ${MIN_JWT_SECRET_LENGTH} characters in production (C5/REQ-auth-5).`,
+      );
+    } else {
+      logger.warn(
+        'JWT_SECRET is shorter than 32 characters — this is INSECURE for production.',
+      );
+    }
+  }
+  if (
+    process.env.NODE_ENV === 'production' &&
+    validated.JWT_SECRET === DEV_JWT_SECRET_FALLBACK
+  ) {
+    errors.push(
+      'JWT_SECRET must not equal the development default in production (C5/REQ-auth-5).',
+    );
+  }
+  if (process.env.LEGACY_AUTH_MODE === 'true') {
+    console.warn(
+      'DEPRECATED: LEGACY_AUTH_MODE=true. Demo credentials accepted. Remove before next minor release.',
     );
   }
   validated.JWT_ACCESS_TOKEN_TTL = validated.JWT_ACCESS_TOKEN_TTL ?? '900';

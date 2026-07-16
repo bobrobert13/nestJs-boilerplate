@@ -8,6 +8,9 @@ export interface AuthConfig {
     issuer: string;
     audience: string;
   };
+  legacy: {
+    enabled: boolean;
+  };
   magicLink: {
     enabled: boolean;
     tokenTtl: number;
@@ -48,50 +51,86 @@ export interface AuthConfig {
   };
 }
 
-export default registerAs('auth', () => ({
-  jwt: {
-    secret: process.env.JWT_SECRET || 'dev-secret-change-in-production',
-    accessTokenTtl: parseInt(process.env.JWT_ACCESS_TOKEN_TTL || '900', 10),
-    refreshTokenTtl: parseInt(process.env.JWT_REFRESH_TOKEN_TTL || '604800', 10),
-    issuer: process.env.JWT_ISSUER || 'api-nominas',
-    audience: process.env.JWT_AUDIENCE || 'api-nominas',
-  },
-  magicLink: {
-    enabled: process.env.MAGIC_LINK_ENABLED === 'true',
-    tokenTtl: parseInt(process.env.MAGIC_LINK_TOKEN_TTL || '300', 10),
-  },
-  oauth: {
-    google: {
-      clientId: process.env.OAUTH_GOOGLE_CLIENT_ID || '',
-      clientSecret: process.env.OAUTH_GOOGLE_CLIENT_SECRET || '',
-      callbackUrl: process.env.OAUTH_GOOGLE_CALLBACK_URL || 'http://localhost:3000/auth/google/callback',
+/**
+ * DEV_JWT_SECRET_FALLBACK is the value used when JWT_SECRET is unset in non-production
+ * environments. Production MUST set a real secret via JWT_SECRET (C5/REQ-auth-4).
+ */
+export const DEV_JWT_SECRET_FALLBACK =
+  '__dev_only_jwt_secret_replace_in_prod__';
+
+export default registerAs('auth', () => {
+  const envSecret = process.env.JWT_SECRET ?? '';
+  const isProd = process.env.NODE_ENV === 'production';
+
+  if (isProd && (!envSecret || envSecret === DEV_JWT_SECRET_FALLBACK)) {
+    // C5 / REQ-auth-4 — refuse to start with the dev fallback in production.
+    throw new Error(
+      'JWT_SECRET must be set to a non-default value in production (C5).',
+    );
+  }
+
+  const secret = envSecret || DEV_JWT_SECRET_FALLBACK;
+
+  return {
+    jwt: {
+      secret,
+      accessTokenTtl: parseInt(process.env.JWT_ACCESS_TOKEN_TTL || '900', 10),
+      refreshTokenTtl: parseInt(
+        process.env.JWT_REFRESH_TOKEN_TTL || '604800',
+        10,
+      ),
+      issuer: process.env.JWT_ISSUER || 'api-nominas',
+      audience: process.env.JWT_AUDIENCE || 'api-nominas',
     },
-    github: {
-      clientId: process.env.OAUTH_GITHUB_CLIENT_ID || '',
-      clientSecret: process.env.OAUTH_GITHUB_CLIENT_SECRET || '',
-      callbackUrl: process.env.OAUTH_GITHUB_CALLBACK_URL || 'http://localhost:3000/auth/github/callback',
+    legacy: {
+      enabled: process.env.LEGACY_AUTH_MODE === 'true',
     },
-  },
-  argon2: {
-    type: parseInt(process.env.ARGON2_TYPE || '2', 10),
-    memoryCost: parseInt(process.env.ARGON2_MEMORY_COST || '65536', 10),
-    timeCost: parseInt(process.env.ARGON2_TIME_COST || '3', 10),
-    parallelism: parseInt(process.env.ARGON2_PARALLELISM || '4', 10),
-  },
-  twoFactor: {
-    issuer: process.env.TWO_FACTOR_ISSUER || 'MyApp',
-    algorithm: (process.env.TWO_FACTOR_ALGORITHM as 'SHA1' | 'SHA256' | 'SHA512') || 'SHA1',
-    digits: parseInt(process.env.TWO_FACTOR_DIGITS || '6', 10) as 6 | 8,
-    period: parseInt(process.env.TWO_FACTOR_PERIOD || '30', 10),
-    step: parseInt(process.env.TWO_FACTOR_STEP || '30', 10),
-    backupCodes: {
-      count: parseInt(process.env.TWO_FACTOR_BACKUP_CODES_COUNT || '10', 10),
-      length: parseInt(process.env.TWO_FACTOR_BACKUP_CODES_LENGTH || '10', 10),
+    magicLink: {
+      enabled: process.env.MAGIC_LINK_ENABLED === 'true',
+      tokenTtl: parseInt(process.env.MAGIC_LINK_TOKEN_TTL || '300', 10),
     },
-  },
-  passkeys: {
-    rpId: process.env.PASSKEYS_RP_ID || 'localhost',
-    rpName: process.env.PASSKEYS_RP_NAME || 'MyApp',
-    rpOrigin: process.env.PASSKEYS_RP_ORIGIN || 'http://localhost:3000',
-  },
-}));
+    oauth: {
+      google: {
+        clientId: process.env.OAUTH_GOOGLE_CLIENT_ID || '',
+        clientSecret: process.env.OAUTH_GOOGLE_CLIENT_SECRET || '',
+        callbackUrl:
+          process.env.OAUTH_GOOGLE_CALLBACK_URL ||
+          'http://localhost:3000/auth/google/callback',
+      },
+      github: {
+        clientId: process.env.OAUTH_GITHUB_CLIENT_ID || '',
+        clientSecret: process.env.OAUTH_GITHUB_CLIENT_SECRET || '',
+        callbackUrl:
+          process.env.OAUTH_GITHUB_CALLBACK_URL ||
+          'http://localhost:3000/auth/github/callback',
+      },
+    },
+    argon2: {
+      type: parseInt(process.env.ARGON2_TYPE || '2', 10),
+      memoryCost: parseInt(process.env.ARGON2_MEMORY_COST || '65536', 10),
+      timeCost: parseInt(process.env.ARGON2_TIME_COST || '3', 10),
+      parallelism: parseInt(process.env.ARGON2_PARALLELISM || '4', 10),
+    },
+    twoFactor: {
+      issuer: process.env.TWO_FACTOR_ISSUER || 'MyApp',
+      algorithm:
+        (process.env.TWO_FACTOR_ALGORITHM as 'SHA1' | 'SHA256' | 'SHA512') ||
+        'SHA1',
+      digits: parseInt(process.env.TWO_FACTOR_DIGITS || '6', 10) as 6 | 8,
+      period: parseInt(process.env.TWO_FACTOR_PERIOD || '30', 10),
+      step: parseInt(process.env.TWO_FACTOR_STEP || '30', 10),
+      backupCodes: {
+        count: parseInt(process.env.TWO_FACTOR_BACKUP_CODES_COUNT || '10', 10),
+        length: parseInt(
+          process.env.TWO_FACTOR_BACKUP_CODES_LENGTH || '10',
+          10,
+        ),
+      },
+    },
+    passkeys: {
+      rpId: process.env.PASSKEYS_RP_ID || 'localhost',
+      rpName: process.env.PASSKEYS_RP_NAME || 'MyApp',
+      rpOrigin: process.env.PASSKEYS_RP_ORIGIN || 'http://localhost:3000',
+    },
+  };
+});

@@ -1,7 +1,18 @@
-import { Controller, Post, Body, UseGuards, Request, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  UseGuards,
+  Request,
+  HttpCode,
+  HttpStatus,
+  ServiceUnavailableException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from '../services/auth.service';
 import { MagicLinkService } from '../services/magic-link.service';
+import { ResendService } from '@common/resend';
 import { Public } from '../decorators/public.decorator';
 import { Roles } from '../decorators/roles.decorator';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
@@ -20,6 +31,7 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly magicLinkService: MagicLinkService,
+    private readonly resendService: ResendService,
   ) {}
 
   @Public()
@@ -43,11 +55,9 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
   async login(@Body() dto: LoginDto) {
     const user = await this.authService.validateUser(dto.email, dto.password);
+    // M6 / REQ-auth-1 — invalid credentials MUST return HTTP 401.
     if (!user) {
-      return {
-        success: false,
-        message: 'Invalid credentials',
-      };
+      throw new UnauthorizedException('Invalid credentials');
     }
     const tokens = await this.authService.login(user);
     return {
@@ -72,23 +82,39 @@ export class AuthController {
   @Public()
   @Post('magic-link/request')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Request a magic link for passwordless login' })
-  @ApiResponse({ status: 200, description: 'Magic link sent' })
+  @ApiOperation({
+    summary: 'Request a magic link for passwordless login',
+    description:
+      'Generates a one-time token and delivers it to the user via Resend. The token is never returned in the response (C3/REQ-auth-2).',
+  })
+  @ApiResponse({ status: 200, description: 'Magic link sent (out-of-band)' })
+  @ApiResponse({ status: 503, description: 'Magic-link delivery is unavailable' })
   async requestMagicLink(@Body() dto: MagicLinkRequestDto) {
     if (!this.magicLinkService.isEnabled()) {
-      return {
-        success: false,
-        message: 'Magic link authentication is disabled',
-      };
+      throw new ServiceUnavailableException(
+        'Magic link authentication is disabled',
+      );
     }
 
     const token = await this.magicLinkService.generateMagicLink(dto.email);
-    
+    const config = this.magicLinkService.getConfig();
+    const ttl = config?.tokenTtl ?? 300;
+
+    try {
+      await this.resendService.sendMagicLink(dto.email, token, ttl);
+    } catch {
+      // Roll back the stored token so it cannot be replayed.
+      await this.magicLinkService.invalidateToken(token);
+      throw new ServiceUnavailableException(
+        'Magic-link delivery is currently unavailable',
+      );
+    }
+
+    // C3 — token MUST NOT appear in body or headers.
     return {
       success: true,
       data: {
-        token,
-        message: 'Magic link sent (check console for demo token)',
+        message: 'If the email exists, a magic link has been sent.',
       },
     };
   }

@@ -6,11 +6,11 @@ import {
   Request,
   HttpCode,
   HttpStatus,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { TwoFactorService } from './two-factor.service';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
-import { Public } from '../decorators/public.decorator';
 import {
   EnableTwoFactorDto,
   VerifyTwoFactorDto,
@@ -82,18 +82,36 @@ export class TwoFactorController {
     };
   }
 
-  @Public()
+  /**
+   * C2 / REQ-auth-3: this endpoint MUST require a valid JWT and derive the
+   * userId from `req.user.id`. Body-supplied `userId` is ignored — the DTO
+   * does not declare one. Anonymous requests are rejected with HTTP 401.
+   */
+  @UseGuards(JwtAuthGuard)
   @Post('verify-backup')
   @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Verify a 2FA backup code' })
   @ApiResponse({ status: 200, description: 'Backup code verification result' })
-  async verifyBackup(@Body() dto: VerifyBackupCodeDto & { userId: string }) {
-    const isValid = await this.twoFactorService.verifyBackupCodeWithUser(dto.userId, dto.backupCode);
+  @ApiResponse({ status: 401, description: 'Unauthorized — JWT required or backup code invalid' })
+  async verifyBackup(@Request() req: any, @Body() dto: VerifyBackupCodeDto) {
+    const userId = req?.user?.id;
+    if (!userId) {
+      throw new UnauthorizedException('Identity required');
+    }
+    const isValid = await this.twoFactorService.verifyBackupCodeWithUser(
+      userId,
+      dto.backupCode,
+    );
+
+    if (!isValid) {
+      throw new UnauthorizedException('Invalid backup code');
+    }
 
     return {
-      success: isValid,
+      success: true,
       data: {
-        verified: isValid,
+        verified: true,
       },
     };
   }

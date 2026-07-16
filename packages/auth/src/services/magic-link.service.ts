@@ -78,4 +78,21 @@ export class MagicLinkService implements OnModuleInit {
     const config = this.configService.get<{ magicLink: MagicLinkConfig }>('auth');
     return config?.magicLink?.enabled || false;
   }
+
+  /**
+   * Return the magic-link config block. Used by callers that need the TTL
+   * without exposing the entire auth config.
+   */
+  getConfig(): MagicLinkConfig | null {
+    const config = this.configService.get<{ magicLink: MagicLinkConfig }>('auth');
+    return config?.magicLink ?? null;
+  }
+
+  /**
+   * Remove a previously-issued token. Used when delivery fails so a failed
+   * Resend call cannot leak a valid token via the email channel.
+   */
+  async invalidateToken(token: string): Promise<void> {
+    this.tokens.delete(token);
+  }
 }

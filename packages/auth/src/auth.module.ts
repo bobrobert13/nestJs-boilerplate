@@ -12,7 +12,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { AuthController } from './strategies/auth.controller';
 import { REFRESH_TOKEN_STORE } from './interfaces/auth.interfaces';
-import authConfig from './config/auth.config';
+import authConfig, { DEV_JWT_SECRET_FALLBACK } from './config/auth.config';
 
 interface AuthConfig {
   jwt: {
@@ -21,6 +21,9 @@ interface AuthConfig {
     refreshTokenTtl: number;
     issuer: string;
     audience: string;
+  };
+  legacy: {
+    enabled: boolean;
   };
 }
 
@@ -34,8 +37,18 @@ interface AuthConfig {
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
         const config = configService.get<AuthConfig>('auth');
+        const secret = config?.jwt?.secret;
+
+        // C5 / REQ-auth-4 — fail-fast on missing secret at module wiring.
+        if (!secret || secret === DEV_JWT_SECRET_FALLBACK) {
+          throw new Error(
+            'AuthModule: JWT secret missing or equal to dev fallback. ' +
+              'Set JWT_SECRET to a strong value before starting the application.',
+          );
+        }
+
         return {
-          secret: config?.jwt?.secret || 'dev-secret',
+          secret,
           signOptions: {
             expiresIn: config?.jwt?.accessTokenTtl || 900,
             issuer: config?.jwt?.issuer,
