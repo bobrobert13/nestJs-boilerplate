@@ -28,10 +28,9 @@ async function main(): Promise<void> {
     const m = model(name, schema);
     try {
       await m.createIndexes();
-      // eslint-disable-next-line no-console
+
       console.log(`[sync-indexes] created indexes for ${name}`);
     } catch (err) {
-      // eslint-disable-next-line no-console
       console.error(`[sync-indexes] ${name} failed:`, err);
       throw err;
     }
@@ -41,7 +40,6 @@ async function main(): Promise<void> {
 }
 
 main().catch((err) => {
-  // eslint-disable-next-line no-console
   console.error('[sync-indexes] fatal:', err);
   process.exit(1);
 });

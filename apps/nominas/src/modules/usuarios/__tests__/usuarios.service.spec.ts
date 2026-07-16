@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ConflictException, NotFoundException } from '@nestjs/common';
-import { AuthService } from '@common/auth';
+import { NotFoundException } from '@nestjs/common';
 import { UsuariosService } from '../usuarios.service';
 import { UsuariosRepository } from '../usuarios.repository';
 import { CreateUsuarioDto } from '../dto/create-usuario.dto';
+import { AuthService } from '@common/auth';
 
 describe('UsuariosService', () => {
   let service: UsuariosService;

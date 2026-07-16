@@ -10,11 +10,7 @@ import { validateFields } from '../validators/schema-field.validator';
  * definition. They are silently dropped to defeat prototype-pollution
  * payloads (e.g. `field.validate.__proto__.isAdmin = true`).
  */
-const DENIED_VALIDATE_KEYS = new Set([
-  '__proto__',
-  'constructor',
-  'prototype',
-]);
+const DENIED_VALIDATE_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
 
 /**
  * PR5 / H7 / REQ-dynamic-schema-3 — comma-separated allow-list of refs
@@ -42,9 +38,7 @@ function sanitizeValidate(
 function assertRefAllowed(ref: string | undefined): void {
   if (!ref) return;
   if (!ALLOWED_REFS.includes(ref)) {
-    throw new BadRequestException(
-      `ref '${ref}' is not in ALLOWED_REFS`,
-    );
+    throw new BadRequestException(`ref '${ref}' is not in ALLOWED_REFS`);
   }
 }
 

@@ -41,6 +41,11 @@ import { SsrfGuard } from '@common/common';
     MongoInferenceSourceAdapter,
     SsrfGuard,
   ],
-  exports: [DynamicSchemaService, SchemaRegistryService, SchemaCompilerService, SsrfGuard],
+  exports: [
+    DynamicSchemaService,
+    SchemaRegistryService,
+    SchemaCompilerService,
+    SsrfGuard,
+  ],
 })
 export class DynamicSchemaModule {}

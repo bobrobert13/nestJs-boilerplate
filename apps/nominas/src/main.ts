@@ -60,7 +60,10 @@ async function bootstrap() {
       'CORS_ORIGIN must be set to an explicit origin list in production (C6).',
     );
   }
-  const origins = corsOrigin.split(',').map((o) => o.trim()).filter(Boolean);
+  const origins = corsOrigin
+    .split(',')
+    .map((o) => o.trim())
+    .filter(Boolean);
   app.enableCors({
     origin: origins.length ? origins : false,
     credentials: false,

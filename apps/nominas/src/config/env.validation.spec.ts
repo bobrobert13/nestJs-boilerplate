@@ -26,7 +26,10 @@ describe('EnvValidation (C5/REQ-auth-5)', () => {
   it('accepts NODE_ENV=production + JWT_SECRET with at least 32 non-default characters', () => {
     process.env.NODE_ENV = 'production';
     const ok = 'a'.repeat(40);
-    const out = validateEnv({ JWT_SECRET: ok, CORS_ORIGIN: 'https://app.example.com' });
+    const out = validateEnv({
+      JWT_SECRET: ok,
+      CORS_ORIGIN: 'https://app.example.com',
+    });
     expect(out.JWT_SECRET).toBe(ok);
   });
 
@@ -46,7 +49,9 @@ describe('EnvValidation — CORS_ORIGIN (C6)', () => {
   it('throws on NODE_ENV=production + missing CORS_ORIGIN', () => {
     process.env.NODE_ENV = 'production';
     process.env.JWT_SECRET = 'a'.repeat(40);
-    expect(() => validateEnv({ JWT_SECRET: 'a'.repeat(40) })).toThrow(/CORS_ORIGIN/);
+    expect(() => validateEnv({ JWT_SECRET: 'a'.repeat(40) })).toThrow(
+      /CORS_ORIGIN/,
+    );
   });
 
   it('throws on NODE_ENV=production + empty CORS_ORIGIN', () => {

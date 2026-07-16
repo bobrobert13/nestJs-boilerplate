@@ -9,7 +9,12 @@ import {
   ForbiddenException,
   Logger,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { JwtAuthGuard, Roles, RolesGuard } from '@common/auth';
 import { UsuariosService } from '../usuarios.service';
 import { UpdateRolesDto } from '../dto/update-roles.dto';
@@ -37,7 +42,7 @@ interface AuditEntry {
 export class UsuariosRolesController {
   private readonly logger = new Logger(UsuariosRolesController.name);
 
-  constructor(private readonly usuariosService: UsuariosService) {}
+  constructor(private readonly _usuariosService: UsuariosService) {}
 
   @Put(':id/roles')
   @Roles('admin')
@@ -58,8 +63,8 @@ export class UsuariosRolesController {
     if (!actor?.roles?.includes('admin')) {
       throw new ForbiddenException('Admin role required');
     }
-    const before = await this.usuariosService.getRoles(id);
-    const after = await this.usuariosService.setRoles(id, dto.roles);
+    const before = await this._usuariosService.getRoles(id);
+    const after = await this._usuariosService.setRoles(id, dto.roles);
 
     const entry: AuditEntry = {
       actorId: actor.id,

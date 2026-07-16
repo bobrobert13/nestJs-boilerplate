@@ -1,4 +1,10 @@
-import { Inject, Injectable, Logger, NotFoundException, Optional } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  Logger,
+  NotFoundException,
+  Optional,
+} from '@nestjs/common';
 import { SsrfGuard } from '@common/common';
 import {
   IScraperStrategy,
@@ -26,8 +32,13 @@ export class ScraperService {
     private readonly strategies: IScraperStrategy[],
     /* eslint-disable-next-line no-unused-vars -- NestJS DI, used via this.repository */
     private readonly repository: ScraperRepository,
-    @Optional() private readonly ssrfGuard?: SsrfGuard,
+    @Optional()
+    private readonly _ssrfGuard?: SsrfGuard,
   ) {}
+
+  private get ssrfGuard(): SsrfGuard | undefined {
+    return this._ssrfGuard;
+  }
 
   /**
    * Execute a scrape for the given URL.

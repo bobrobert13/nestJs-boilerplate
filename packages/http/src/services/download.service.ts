@@ -34,8 +34,13 @@ export class DownloadService {
   constructor(
     private readonly client: AxiosInstance,
     private readonly baseFolder?: string,
-    private readonly ssrfGuard?: SsrfGuard,
+    /* eslint-disable-next-line no-unused-vars -- used via this.ssrfGuard */
+    private readonly _ssrfGuard?: SsrfGuard,
   ) {}
+
+  private get ssrfGuard(): SsrfGuard | undefined {
+    return this._ssrfGuard;
+  }
 
   async file(url: string, options: DownloadOptions = {}): Promise<DownloadResult> {
     // PR5 / H5 — guard against SSRF before any network request.
