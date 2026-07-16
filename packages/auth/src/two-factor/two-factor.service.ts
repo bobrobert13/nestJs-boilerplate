@@ -1,5 +1,7 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 import { authenticator } from 'otplib';
 import { randomBytes, createHash } from 'crypto';
 import { toDataURL } from 'qrcode';
@@ -9,10 +11,18 @@ import {
   TwoFactorBackupCode,
   TwoFactorConfig,
 } from './interfaces/two-factor.interfaces';
+import {
+  TwoFactorBackupCode as TwoFactorBackupCodeModel,
+  TwoFactorBackupCodeDocument,
+} from '../schemas/two-factor-backup-code.schema';
 
 @Injectable()
 export class TwoFactorService implements OnModuleInit {
   private readonly logger = new Logger(TwoFactorService.name);
+  /**
+   * In-memory fallback. When a Mongoose model is injected (PR2 / M11),
+   * persistence goes through MongoDB and this map is unused.
+   */
   private readonly backupCodes: Map<string, TwoFactorBackupCode[]> = new Map();
   private issuer: string = 'MyApp';
   private algorithm: 'SHA1' | 'SHA256' | 'SHA512' = 'SHA1';
@@ -21,7 +31,12 @@ export class TwoFactorService implements OnModuleInit {
   private backupCodesCount: number = 10;
   private backupCodesLength: number = 10;
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    @Optional()
+    @InjectModel(TwoFactorBackupCodeModel.name)
+    private readonly backupCodeModel?: Model<TwoFactorBackupCodeDocument>,
+  ) {}
 
   onModuleInit() {
     this.loadConfig();
@@ -116,17 +131,39 @@ export class TwoFactorService implements OnModuleInit {
   }
 
   async verifyBackupCodeWithUser(userId: string, backupCode: string): Promise<boolean> {
+    // PR2 / M11 partial — durable path: find a matching unused code and
+    // atomically mark it as used. A second verification of the same code
+    // finds `isUsed: true` and returns false.
+    if (this.backupCodeModel) {
+      const docs = await this.backupCodeModel
+        .find({ userId, isUsed: false })
+        .lean();
+      for (const doc of docs) {
+        if (this.verifyBackupCode(backupCode, doc.hashedCode)) {
+          const updated = await this.backupCodeModel.updateOne(
+            { _id: doc._id, isUsed: false },
+            { $set: { isUsed: true, usedAt: new Date() } },
+          );
+          if ((updated.modifiedCount ?? 0) > 0) {
+            this.logger.log(`Backup code used for user: ${userId}`);
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+
+    // In-memory fallback.
     const userBackupCodes = this.backupCodes.get(userId) || [];
-
-    const found = userBackupCodes.find(bc => !bc.isUsed && this.verifyBackupCode(backupCode, bc.hashedCode));
-
+    const found = userBackupCodes.find(
+      (bc) => !bc.isUsed && this.verifyBackupCode(backupCode, bc.hashedCode),
+    );
     if (found) {
       found.isUsed = true;
       found.usedAt = new Date();
       this.logger.log(`Backup code used for user: ${userId}`);
       return true;
     }
-
     return false;
   }
 

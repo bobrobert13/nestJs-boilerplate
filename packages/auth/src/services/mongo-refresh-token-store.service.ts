@@ -1,28 +1,32 @@
 import { Injectable, Logger } from '@nestjs/common';
-import type { IRefreshTokenStore } from '../interfaces/auth.interfaces';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { randomBytes } from 'node:crypto';
+import type {
+  IRefreshTokenStore,
+  RefreshTokenRecord,
+} from '../interfaces/auth.interfaces';
+import {
+  RefreshToken,
+  RefreshTokenDocument,
+} from '../schemas/refresh-token.schema';
 
 /**
- * In-memory refresh-token store.
+ * PR2 / H3 / REQ-auth-persistence-1..3 — durable Mongoose-backed refresh-token store.
  *
- * **TODO: persist to MongoDB**
- * Replace this in-memory `Map` with a proper MongoDB-backed
- * implementation that survives restarts and works across multiple
- * instances.  The store must implement {@link IRefreshTokenStore}.
- *
- * The in-memory fallback is fine for local development but **will**
- * lose all active refresh tokens on restart and is not suitable for
- * multi‑instance deployments.
- *
- * @see IRefreshTokenStore
+ * Tokens are stored as SHA-256 hashes; raw tokens are NEVER persisted.
+ * Rotation writes `replacedBy` + `revokedAt` on the predecessor and persists
+ * the successor in the same family. Reuse detection marks `revokedAt` on
+ * every chain member via `revokeFamily`.
  */
 @Injectable()
 export class MongoRefreshTokenStore implements IRefreshTokenStore {
   private readonly logger = new Logger(MongoRefreshTokenStore.name);
-  // TODO: replace with a Mongoose model — see saved comment above.
-  private readonly store: Map<
-    string,
-    { userId: string; email: string; roles: string[]; expiresAt: Date }
-  > = new Map();
+
+  constructor(
+    @InjectModel(RefreshToken.name)
+    private readonly model: Model<RefreshTokenDocument>,
+  ) {}
 
   async save(
     token: string,
@@ -30,19 +34,95 @@ export class MongoRefreshTokenStore implements IRefreshTokenStore {
     email: string,
     roles: string[],
     expiresAt: Date,
-  ): Promise<void> {
-    this.store.set(token, { userId, email, roles, expiresAt });
-    this.logger.debug(`Token saved for user ${userId} (${email})`);
+    meta?: { ip?: string; userAgent?: string },
+  ): Promise<{ familyId: string }> {
+    const hash = RefreshToken.hash(token);
+    const familyId = randomBytes(16).toString('hex');
+    await this.model.create({
+      token: hash,
+      userId,
+      email,
+      roles,
+      familyId,
+      expiresAt,
+      createdByIp: meta?.ip ?? '',
+      userAgent: meta?.userAgent,
+    });
+    this.logger.debug(`RefreshToken saved for userId=${userId}`);
+    return { familyId };
   }
 
-  async find(
-    token: string,
-  ): Promise<{ userId: string; email: string; roles: string[]; expiresAt: Date } | null> {
-    return this.store.get(token) ?? null;
+  async find(token: string): Promise<RefreshTokenRecord | null> {
+    const hash = RefreshToken.hash(token);
+    const row = await this.model.findOne({ token: hash }).lean();
+    if (!row) return null;
+    return {
+      userId: String(row.userId),
+      email: (row as any).email ?? '',
+      roles: (row as any).roles ?? [],
+      expiresAt: row.expiresAt,
+    };
   }
 
   async delete(token: string): Promise<void> {
-    this.store.delete(token);
-    this.logger.debug('Token deleted');
+    const hash = RefreshToken.hash(token);
+    await this.model.deleteOne({ token: hash });
+    this.logger.debug('RefreshToken deleted');
+  }
+
+  /**
+   * Atomically rotate a refresh token. Returns the metadata that the
+   * successor token carries (userId/email/roles) so the caller can issue
+   * a new JWT pair without re-querying.
+   */
+  async rotate(
+    oldToken: string,
+    newToken: string,
+    expiresAt: Date,
+  ): Promise<RefreshTokenRecord | null> {
+    const oldHash = RefreshToken.hash(oldToken);
+    const newHash = RefreshToken.hash(newToken);
+
+    const predecessor = await this.model.findOne({ token: oldHash });
+    if (!predecessor || predecessor.revokedAt) {
+      return null;
+    }
+
+    predecessor.replacedBy = newHash;
+    predecessor.revokedAt = new Date();
+    await predecessor.save();
+
+    await this.model.create({
+      token: newHash,
+      userId: predecessor.userId,
+      email: (predecessor as any).email ?? '',
+      roles: (predecessor as any).roles ?? [],
+      familyId: predecessor.familyId,
+      expiresAt,
+      createdByIp: predecessor.createdByIp,
+      userAgent: predecessor.userAgent,
+    });
+
+    return {
+      userId: String(predecessor.userId),
+      email: (predecessor as any).email ?? '',
+      roles: (predecessor as any).roles ?? [],
+      expiresAt,
+    };
+  }
+
+  /**
+   * Mark every non-revoked row in the family of `rawToken` as revoked.
+   * Used when a token is reused after rotation.
+   */
+  async revokeFamily(rawToken: string): Promise<number> {
+    const hash = RefreshToken.hash(rawToken);
+    const row = await this.model.findOne({ token: hash });
+    if (!row) return 0;
+    const result = await this.model.updateMany(
+      { familyId: row.familyId, revokedAt: null },
+      { $set: { revokedAt: new Date() } },
+    );
+    return result.modifiedCount ?? 0;
   }
 }

@@ -2,6 +2,7 @@ import { Module, Global, Logger, OnModuleInit } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { MongooseModule } from '@nestjs/mongoose';
 import { BootstrapLogger, LogCategory } from '@common/common';
 import { AuthService } from './services/auth.service';
 import { MagicLinkService } from './services/magic-link.service';
@@ -13,6 +14,11 @@ import { RolesGuard } from './guards/roles.guard';
 import { AuthController } from './strategies/auth.controller';
 import { REFRESH_TOKEN_STORE } from './interfaces/auth.interfaces';
 import authConfig, { DEV_JWT_SECRET_FALLBACK } from './config/auth.config';
+import { RefreshToken, RefreshTokenSchema } from './schemas/refresh-token.schema';
+import {
+  TwoFactorBackupCode,
+  TwoFactorBackupCodeSchema,
+} from './schemas/two-factor-backup-code.schema';
 
 interface AuthConfig {
   jwt: {
@@ -31,6 +37,10 @@ interface AuthConfig {
 @Module({
   imports: [
     ConfigModule.forFeature(authConfig),
+    MongooseModule.forFeature([
+      { name: RefreshToken.name, schema: RefreshTokenSchema },
+      { name: TwoFactorBackupCode.name, schema: TwoFactorBackupCodeSchema },
+    ]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],

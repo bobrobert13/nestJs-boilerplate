@@ -14,6 +14,16 @@
 export const REFRESH_TOKEN_STORE = Symbol('REFRESH_TOKEN_STORE');
 
 /**
+ * Metadata persisted alongside each refresh token.
+ */
+export interface RefreshTokenRecord {
+  userId: string;
+  email: string;
+  roles: string[];
+  expiresAt: Date;
+}
+
+/**
  * Contract for storing and retrieving refresh-token metadata.
  *
  * The default in-memory implementation persists data only within a
@@ -23,11 +33,12 @@ export const REFRESH_TOKEN_STORE = Symbol('REFRESH_TOKEN_STORE');
 export interface IRefreshTokenStore {
   /**
    * Persist a refresh token with its associated user and expiry.
-   * @param token   Opaque hex token string.
+   * @param token   Opaque hex token string (will be hashed before storage).
    * @param userId  The authenticated user's identifier.
    * @param email   The user's email address (needed for token rotation).
    * @param roles   The user's role list.
    * @param expiresAt  Absolute expiry date.
+   * @param meta    Optional creation metadata (IP, user agent).
    */
   save(
     token: string,
@@ -35,18 +46,38 @@ export interface IRefreshTokenStore {
     email: string,
     roles: string[],
     expiresAt: Date,
-  ): Promise<void>;
+    meta?: { ip?: string; userAgent?: string },
+  ): Promise<{ familyId: string }>;
 
   /**
-   * Look up a refresh token.
+   * Look up a refresh token (raw, will be hashed internally).
    * @returns The stored metadata, or `null` when the token is unknown.
    */
   find(
     token: string,
-  ): Promise<{ userId: string; email: string; roles: string[]; expiresAt: Date } | null>;
+  ): Promise<RefreshTokenRecord | null>;
 
   /**
    * Remove a refresh token (used for logout or rotation).
    */
   delete(token: string): Promise<void>;
+
+  /**
+   * PR2 / H3: atomically rotate a refresh token. Marks the old token as
+   * replaced + revoked, persists the successor, and links them via
+   * `replacedBy` / `familyId`. Returns null if the old token is missing
+   * or already revoked (caller must respond with 401).
+   */
+  rotate(
+    oldToken: string,
+    newToken: string,
+    expiresAt: Date,
+  ): Promise<RefreshTokenRecord | null>;
+
+  /**
+   * PR2 / H3: revoke the entire family of the supplied token. Used when a
+   * rotated token is reused (token theft detection). Returns the number
+   * of rows touched (chain members).
+   */
+  revokeFamily(rawToken: string): Promise<number>;
 }

@@ -121,33 +121,85 @@ export class AuthService {
   }
 
   async refreshTokens(refreshToken: string): Promise<TokenResponse> {
-    const tokenData = await this.loadToken(refreshToken);
+    // PR2 / H3 — use the Mongoose-backed rotation path when the store
+    // exposes `rotate`; otherwise fall back to the in-memory rotation.
+    if (this.tokenStore && typeof (this.tokenStore as any).rotate === 'function') {
+      const config = this.configService.get<AuthConfig>('auth');
+      const ttl = config?.jwt?.refreshTokenTtl || 604800;
+      const expiresAt = new Date(Date.now() + ttl * 1000);
+      const newRaw = randomBytes(48).toString('base64url');
 
+      // PR2 / H3 — reuse detection. If the presented token already has
+      // `revokedAt` set, treat it as theft: revoke the whole family and
+      // respond 401.
+      const existing = await this.tokenStore.find(refreshToken);
+      if (!existing) {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
+      if (existing.expiresAt.getTime() < Date.now()) {
+        await this.tokenStore.delete(refreshToken);
+        throw new UnauthorizedException('Refresh token expired');
+      }
+
+      const rotated = await (this.tokenStore as any).rotate(
+        refreshToken,
+        newRaw,
+        expiresAt,
+      );
+      if (!rotated) {
+        // The predecessor is already revoked → reuse attempt.
+        if (typeof (this.tokenStore as any).revokeFamily === 'function') {
+          await (this.tokenStore as any).revokeFamily(refreshToken);
+        }
+        throw new UnauthorizedException('Refresh token reuse detected');
+      }
+
+      const user: AuthenticatedUser = {
+        id: rotated.userId,
+        email: rotated.email,
+        roles: rotated.roles,
+      };
+      const accessToken = this.jwtService.sign({
+        sub: user.id,
+        email: user.email,
+        roles: user.roles,
+      } as JwtPayload);
+      return {
+        accessToken,
+        refreshToken: newRaw,
+        expiresIn: 900,
+      };
+    }
+
+    // Legacy in-memory rotation (kept for tests / fallback).
+    const tokenData = await this.loadToken(refreshToken);
     if (!tokenData) {
       throw new UnauthorizedException('Invalid refresh token');
     }
-
     if (new Date() > tokenData.expiresAt) {
       await this.deleteToken(refreshToken);
       throw new UnauthorizedException('Refresh token expired');
     }
-
-    // Invalidate old token before issuing a new one (rotation)
     await this.deleteToken(refreshToken);
-
-    // Use the email and roles stored in the refresh token rather
-    // than hard-coding demo values.
     const user: AuthenticatedUser = {
       id: tokenData.userId,
       email: tokenData.email,
       roles: tokenData.roles,
     };
-
     return this.login(user);
   }
 
   async logout(refreshToken: string): Promise<void> {
-    await this.deleteToken(refreshToken);
+    // PR2 / H3 — revoke the entire family so descendant tokens can't be
+    // replayed.
+    if (
+      this.tokenStore &&
+      typeof (this.tokenStore as any).revokeFamily === 'function'
+    ) {
+      await (this.tokenStore as any).revokeFamily(refreshToken);
+    } else {
+      await this.deleteToken(refreshToken);
+    }
     this.logger.log('User logged out');
   }
 
