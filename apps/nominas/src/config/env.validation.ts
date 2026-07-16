@@ -139,6 +139,39 @@ export function validateEnv(config: Record<string, any>): Record<string, any> {
   // ── Dynamic Schema ───────────────────────────────────────────
   validated.DYNAMIC_SCHEMA_LEGACY = validated.DYNAMIC_SCHEMA_LEGACY ?? 'false';
 
+  // ── CORS (PR4 / C6) ─────────────────────────────────────────
+  if (process.env.NODE_ENV === 'production') {
+    const corsOrigin = (validated.CORS_ORIGIN as string) ?? '';
+    if (!corsOrigin || corsOrigin === '*') {
+      errors.push(
+        'CORS_ORIGIN must be set to an explicit origin list in production (C6/REQ-gateway-hardening-1).',
+      );
+    }
+  }
+  validated.CORS_ORIGIN = validated.CORS_ORIGIN ?? '';
+
+  // ── TRUST_PROXY_HOPS (PR4 / H4) ─────────────────────────────
+  if (validated.TRUST_PROXY_HOPS !== undefined) {
+    const hops = Number(validated.TRUST_PROXY_HOPS);
+    if (!Number.isFinite(hops) || hops < 0) {
+      errors.push('TRUST_PROXY_HOPS must be a non-negative number.');
+    }
+  }
+  validated.TRUST_PROXY_HOPS = validated.TRUST_PROXY_HOPS ?? '1';
+
+  // ── SSRF allow-list (PR5 / H5, declared here for visibility) ─
+  validated.SSRF_ALLOWED_CIDRS = validated.SSRF_ALLOWED_CIDRS ?? '';
+
+  // ── ALLOWED_REFS (PR5 / H7, declared here for visibility) ────
+  validated.ALLOWED_REFS = validated.ALLOWED_REFS ?? '';
+
+  // ── PASSKEY_CHALLENGE_TTL_MS (PR3 / C1, declared here) ──────
+  validated.PASSKEY_CHALLENGE_TTL_MS =
+    validated.PASSKEY_CHALLENGE_TTL_MS ?? '600000';
+
+  // ── PLAYWRIGHT_NO_SANDBOX (PR4 / H4 sandbox opt-in) ─────────
+  validated.PLAYWRIGHT_NO_SANDBOX = validated.PLAYWRIGHT_NO_SANDBOX ?? 'false';
+
   // ── Fail fast if any REQUIRED var is missing ─────────────────
   if (errors.length > 0) {
     throw new EnvValidationError(errors);

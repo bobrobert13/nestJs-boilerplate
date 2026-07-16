@@ -1,6 +1,7 @@
 import { NestFactory, Reflector } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 import {
   DatabaseExceptionFilter,
@@ -17,21 +18,59 @@ async function bootstrap() {
 
   BootstrapLogger.step('NestFactory created', Date.now() - startTime);
 
-  // Security
-  app.enableCors({ origin: process.env.CORS_ORIGIN || '*' });
-  // helmet: try to load if available, otherwise apply manual security headers
-  try {
-    const helmet = require('helmet');
-    app.use(helmet.default ? helmet.default() : helmet());
-  } catch {
-    app.use((_req: any, res: any, next: any) => {
-      res.setHeader('X-Content-Type-Options', 'nosniff');
-      res.setHeader('X-Frame-Options', 'DENY');
-      res.setHeader('X-XSS-Protection', '0');
-      res.removeHeader('X-Powered-By');
-      next();
-    });
+  // PR4 / H4 — trust proxy from env (default 1 hop). Must run BEFORE
+  // Helmet/CORS so req.ip is the client behind the proxy.
+  const trustProxyHops = Number(process.env.TRUST_PROXY_HOPS ?? 1);
+  const httpAdapter = app.getHttpAdapter();
+  const expressInstance = (httpAdapter as any).getInstance?.() ?? httpAdapter;
+  if (typeof (expressInstance as any).set === 'function') {
+    (expressInstance as any).set('trust proxy', trustProxyHops);
   }
+
+  // PR4 / C7 / REQ-gateway-hardening-3 — Helmet unconditional, no fallback.
+  // CSP default-deny, HSTS 1 year, Referrer-Policy no-referrer.
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'", "'unsafe-inline'"], // swagger-ui requires inline
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          imgSrc: ["'self'", 'data:'],
+          connectSrc: ["'self'"],
+          objectSrc: ["'none'"],
+          frameAncestors: ["'none'"],
+        },
+      },
+      hsts: { maxAge: 31_536_000, includeSubDomains: true, preload: true },
+      referrerPolicy: { policy: 'no-referrer' },
+      crossOriginEmbedderPolicy: { policy: 'require-corp' },
+      crossOriginOpenerPolicy: { policy: 'same-origin' },
+      crossOriginResourcePolicy: { policy: 'same-site' },
+    }),
+  );
+
+  // PR4 / C6 / REQ-gateway-hardening-1 — explicit CORS origin.
+  const corsOrigin = process.env.CORS_ORIGIN ?? '';
+  if (
+    process.env.NODE_ENV === 'production' &&
+    (corsOrigin === '' || corsOrigin === '*')
+  ) {
+    throw new Error(
+      'CORS_ORIGIN must be set to an explicit origin list in production (C6).',
+    );
+  }
+  const origins = corsOrigin.split(',').map((o) => o.trim()).filter(Boolean);
+  app.enableCors({
+    origin: origins.length ? origins : false,
+    credentials: false,
+  });
+
+  // PR4 — final-gate startup line.
+  BootstrapLogger.log(
+    LogCategory.SECURITY,
+    `✅ Helmet: enabled · CSP: strict · CORS: explicit · trust-proxy: ${trustProxyHops}`,
+  );
 
   // Global pipes & filters
   app.useGlobalPipes(

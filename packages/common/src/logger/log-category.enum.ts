@@ -20,4 +20,6 @@ export enum LogCategory {
   CONFIG = 'Config',
   /** HTTP API endpoints and Swagger */
   API = 'API',
+  /** PR4 / C7 — security headers, CORS, trust-proxy */
+  SECURITY = 'Security',
 }

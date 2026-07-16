@@ -52,7 +52,9 @@ export class ThrottlerGuard implements CanActivate {
     const ttl = throttleOptions?.ttl ?? 60;
 
     const request = context.switchToHttp().getRequest();
-    const key = request.ip ?? request.socket?.remoteAddress ?? 'unknown';
+    // PR4 / H4 / REQ-gateway-hardening-4 — authenticated requests
+    // prefer userId over IP for the throttle key.
+    const key = this.getTracker(request);
     const now = Date.now();
 
     const entry = hits.get(key);
@@ -73,6 +75,17 @@ export class ThrottlerGuard implements CanActivate {
     }
 
     return true;
+  }
+
+  /**
+   * PR4 / H4 — return `user:<id>` when authenticated, `ip:<addr>` otherwise.
+   * Falls back to the socket's remote address when req.ip is unavailable.
+   */
+  protected getTracker(req: Record<string, any>): string {
+    const userId = req?.user?.id;
+    if (userId) return `user:${userId}`;
+    const ip = req?.ip ?? req?.socket?.remoteAddress ?? 'unknown';
+    return `ip:${ip}`;
   }
 }
 

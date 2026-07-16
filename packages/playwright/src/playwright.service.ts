@@ -47,7 +47,7 @@ export class PlaywrightService implements OnModuleInit, OnModuleDestroy {
       const browserOptions = {
         headless: this.options.headless ?? true,
         executablePath: this.getChromiumPath(),
-        args: ["--no-sandbox","--disable-setuid-sandbox","--disable-dev-shm-usage","--disable-accelerated-2d-canvas"],
+        args: this.buildLaunchArgs(),
       };
       this.logger.log(`Launching Chromium from: ${browserOptions.executablePath || "default"}`);
       this.browser = await chromium.launch(browserOptions);
@@ -114,6 +114,26 @@ export class PlaywrightService implements OnModuleInit, OnModuleDestroy {
 
   /** Ensures a page is open. @internal */
   private async ensurePageExists(): Promise<void> { if (!this.page) { throw new Error('No page exists. Call createPage() or navigate() first.'); } }
+
+  /**
+   * Builds the chromium launch-args list. PR4 / H4 — `--no-sandbox` is
+   * included ONLY when `PLAYWRIGHT_NO_SANDBOX=true` is explicitly set
+   * (REB-gateway-hardening-5). A WARN is logged when the flag is set.
+   */
+  buildLaunchArgs(): string[] {
+    const noSandbox = process.env.PLAYWRIGHT_NO_SANDBOX === 'true';
+    const args: string[] = [
+      '--disable-dev-shm-usage',
+      '--disable-accelerated-2d-canvas',
+    ];
+    if (noSandbox) {
+      this.logger.warn(
+        'PLAYWRIGHT_NO_SANDBOX=true — Chromium launched without sandbox. Dev only.',
+      );
+      args.unshift('--no-sandbox', '--disable-setuid-sandbox');
+    }
+    return args;
+  }
 
   /**
    * Resolves the absolute path to chrome-headless-shell.
