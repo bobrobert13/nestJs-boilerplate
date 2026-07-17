@@ -33,9 +33,7 @@ interface DatabaseConfig {
  * @see {@link TransactionService} for transactional operations.
  */
 @Injectable()
-export class DatabaseService
-  implements OnModuleInit, OnApplicationShutdown
-{
+export class DatabaseService implements OnModuleInit, OnApplicationShutdown {
   private readonly logger = new Logger(DatabaseService.name);
   private retryCount = 0;
 

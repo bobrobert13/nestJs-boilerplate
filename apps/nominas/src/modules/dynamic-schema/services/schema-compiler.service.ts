@@ -154,10 +154,7 @@ export class SchemaCompilerService {
           ' already registered with different fields — re-registering',
       );
       this.logger.log(
-        'compileAndRegister: fieldsHash ' +
-          existingHash +
-          ' -> ' +
-          fieldsHash,
+        'compileAndRegister: fieldsHash ' + existingHash + ' -> ' + fieldsHash,
       );
       if (!options.dryRun) {
         this.unregister(collectionName);
