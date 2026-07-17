@@ -54,14 +54,31 @@ export class UsuariosRepository {
   }
 
   /**
-   * Same as {@link findByEmail} but returns the full document including the
-   * password hash.  Only intended for auth-layer consumption (login).
+   * L3 / hardening-medium-low — return only the safe credential-projection
+   * fields. The repository NEVER returns the raw Mongoose document so the
+   * `password` argon2 hash cannot leak across the service boundary.
+   *
+   * Repositories of this name exist precisely so callers can distinguish
+   * "needs the hash for login" from "just needs the public shape".
    */
-  /** findByEmailWithPassword (see class JSDoc for context). */
-  async findByEmailWithPassword(
-    email: string,
-  ): Promise<UsuarioDocument | null> {
-    return this.model.findOne({ email }).exec();
+  /** findByEmailWithSecrets (see class JSDoc for context). */
+  async findByEmailWithSecrets(email: string): Promise<{
+    id: string;
+    email: string;
+    passwordHash: string;
+    roles: string[];
+    activo: boolean;
+  } | null> {
+    const doc = await this.model.findOne({ email }).exec();
+    if (!doc) return null;
+    const d = doc as any;
+    return {
+      id: d._id.toString(),
+      email: d.email,
+      passwordHash: d.password,
+      roles: d.roles ?? [],
+      activo: d.activo ?? true,
+    };
   }
 
   /** update (see class JSDoc for context). */

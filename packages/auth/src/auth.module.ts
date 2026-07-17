@@ -26,6 +26,10 @@ import {
   TwoFactorSecret,
   TwoFactorSecretSchema,
 } from './schemas/two-factor-secret.schema';
+import {
+  MagicLinkToken,
+  MagicLinkTokenSchema,
+} from './schemas/magic-link-token.schema';
 
 interface AuthConfig {
   jwt: {
@@ -48,6 +52,7 @@ interface AuthConfig {
       { name: RefreshToken.name, schema: RefreshTokenSchema },
       { name: TwoFactorBackupCode.name, schema: TwoFactorBackupCodeSchema },
       { name: TwoFactorSecret.name, schema: TwoFactorSecretSchema },
+      { name: MagicLinkToken.name, schema: MagicLinkTokenSchema },
     ]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({

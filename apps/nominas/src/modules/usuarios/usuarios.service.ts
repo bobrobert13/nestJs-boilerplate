@@ -35,17 +35,18 @@ export class UsuariosService implements IUserService {
 
   /**
    * IUserService contract — used by AuthService for login.
-   * Returns the full user document (including password hash) or null.
+   * Receives a repository projection that already hides sensitive fields
+   * beyond the password hash (L3 / hardening-medium-low).
    */
   /** findByEmail (see class JSDoc for context). */
   async findByEmail(email: string) {
-    const doc = await this.repository.findByEmailWithPassword(email);
+    const doc = await this.repository.findByEmailWithSecrets(email);
     /** if (see class JSDoc for context). */
     if (!doc) return null;
     return {
-      id: (doc as any)._id.toString(),
+      id: doc.id,
       email: doc.email,
-      password: doc.password,
+      password: doc.passwordHash,
       roles: doc.roles,
     };
   }

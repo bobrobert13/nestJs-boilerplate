@@ -28,6 +28,7 @@ describe('EnvValidation (C5/REQ-auth-5)', () => {
     const ok = 'a'.repeat(40);
     const out = validateEnv({
       JWT_SECRET: ok,
+      MONGODB_URI: 'mongodb://localhost:27017/test',
       CORS_ORIGIN: 'https://app.example.com',
     });
     expect(out.JWT_SECRET).toBe(ok);
@@ -49,16 +50,23 @@ describe('EnvValidation — CORS_ORIGIN (C6)', () => {
   it('throws on NODE_ENV=production + missing CORS_ORIGIN', () => {
     process.env.NODE_ENV = 'production';
     process.env.JWT_SECRET = 'a'.repeat(40);
-    expect(() => validateEnv({ JWT_SECRET: 'a'.repeat(40) })).toThrow(
-      /CORS_ORIGIN/,
-    );
+    expect(() =>
+      validateEnv({
+        JWT_SECRET: 'a'.repeat(40),
+        MONGODB_URI: 'mongodb://localhost:27017/test',
+      }),
+    ).toThrow(/CORS_ORIGIN/);
   });
 
   it('throws on NODE_ENV=production + empty CORS_ORIGIN', () => {
     process.env.NODE_ENV = 'production';
     process.env.JWT_SECRET = 'a'.repeat(40);
     expect(() =>
-      validateEnv({ JWT_SECRET: 'a'.repeat(40), CORS_ORIGIN: '' }),
+      validateEnv({
+        JWT_SECRET: 'a'.repeat(40),
+        MONGODB_URI: 'mongodb://localhost:27017/test',
+        CORS_ORIGIN: '',
+      }),
     ).toThrow(/CORS_ORIGIN/);
   });
 
@@ -66,7 +74,11 @@ describe('EnvValidation — CORS_ORIGIN (C6)', () => {
     process.env.NODE_ENV = 'production';
     process.env.JWT_SECRET = 'a'.repeat(40);
     expect(() =>
-      validateEnv({ JWT_SECRET: 'a'.repeat(40), CORS_ORIGIN: '*' }),
+      validateEnv({
+        JWT_SECRET: 'a'.repeat(40),
+        MONGODB_URI: 'mongodb://localhost:27017/test',
+        CORS_ORIGIN: '*',
+      }),
     ).toThrow(/CORS_ORIGIN/);
   });
 
@@ -74,8 +86,34 @@ describe('EnvValidation — CORS_ORIGIN (C6)', () => {
     process.env.NODE_ENV = 'production';
     const out = validateEnv({
       JWT_SECRET: 'a'.repeat(40),
+      MONGODB_URI: 'mongodb://localhost:27017/test',
       CORS_ORIGIN: 'https://app.example.com',
     });
     expect(out.CORS_ORIGIN).toBe('https://app.example.com');
+  });
+});
+
+describe('EnvValidation — L1 (MONGODB_URI in production)', () => {
+  const originalEnv = { ...process.env };
+
+  afterEach(() => {
+    process.env = { ...originalEnv };
+  });
+
+  it('throws when NODE_ENV=production and MONGODB_URI is missing', () => {
+    process.env.NODE_ENV = 'production';
+    process.env.JWT_SECRET = 'a'.repeat(40);
+    expect(() =>
+      validateEnv({
+        JWT_SECRET: 'a'.repeat(40),
+        CORS_ORIGIN: 'https://app.example.com',
+      }),
+    ).toThrow(/MONGODB_URI/);
+  });
+
+  it('does not throw in dev when MONGODB_URI is missing', () => {
+    process.env.NODE_ENV = 'development';
+    const out = validateEnv({});
+    expect(out.MONGODB_URI).toBeDefined();
   });
 });

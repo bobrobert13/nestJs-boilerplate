@@ -45,11 +45,17 @@ export function validateEnv(config: Record<string, any>): Record<string, any> {
   }
 
   // ── MongoDB ──────────────────────────────────────────────────
-  if (!validated.MONGODB_URI) {
-    const defaultUri =
-      'mongodb://localhost:27017/boilerplate_db?replicaSet=rs0';
-    logger.warn(`MONGODB_URI not set — using default: ${defaultUri}`);
-    validated.MONGODB_URI = defaultUri;
+  if (!validated.MONGODB_URI || String(validated.MONGODB_URI).trim() === '') {
+    if (process.env.NODE_ENV === 'production') {
+      errors.push(
+        'MONGODB_URI is required in production (L1); no fallback default is applied.',
+      );
+    } else {
+      const defaultUri =
+        'mongodb://localhost:27017/boilerplate_db?replicaSet=rs0';
+      logger.warn(`MONGODB_URI not set — using default: ${defaultUri}`);
+      validated.MONGODB_URI = defaultUri;
+    }
   }
 
   // ── Auth: JWT ─────────────────────────────────────────────────
