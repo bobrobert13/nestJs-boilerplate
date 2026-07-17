@@ -203,7 +203,7 @@ export class DynamicSchemaController {
     };
   }
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€ Lifecycle endpoints â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // -------- Lifecycle endpoints --------
 
   /** listSchemas (see class JSDoc for context). */
   @Get('schemas')

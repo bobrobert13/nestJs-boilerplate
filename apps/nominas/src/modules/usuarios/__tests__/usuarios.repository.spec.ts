@@ -116,4 +116,55 @@ describe('UsuariosRepository', () => {
       expect(result).toBeNull();
     });
   });
+
+  describe('findByEmailWithSecrets', () => {
+    it('returns only safe fields with the passwordHash renamed from password (REQ-L3-1)', async () => {
+      const storedPasswordHash = '$argon2id$v=19$m=65536,t=3,p=4$secret';
+      const docWithHash = {
+        _id: '507f1f77bcf86cd799439011',
+        email: 'john.doe@example.com',
+        password: storedPasswordHash,
+        roles: ['user'],
+        activo: true,
+      };
+      mockModel.findOne.mockReturnValue({
+        exec: jest.fn().mockResolvedValue(docWithHash),
+      });
+
+      const result = await repository.findByEmailWithSecrets(
+        'john.doe@example.com',
+      );
+
+      expect(result).not.toBeNull();
+      expect(result).toEqual({
+        id: '507f1f77bcf86cd799439011',
+        email: 'john.doe@example.com',
+        passwordHash: storedPasswordHash,
+        roles: ['user'],
+        activo: true,
+      });
+      // The repository MUST expose the hash under passwordHash (renamed from
+      // the Mongoose `password` field) and MUST NOT leak any other raw
+      // document fields to the caller.
+      expect(result).not.toHaveProperty('password');
+      expect(Object.keys(result as object).sort()).toEqual(
+        ['activo', 'email', 'id', 'passwordHash', 'roles'].sort(),
+      );
+      expect(mockModel.findOne).toHaveBeenCalledWith({
+        email: 'john.doe@example.com',
+      });
+    });
+
+    it('returns null when the email is not found', async () => {
+      mockModel.findOne.mockReturnValue({
+        exec: jest.fn().mockResolvedValue(null),
+      });
+
+      const result = await repository.findByEmailWithSecrets(
+        'missing@example.com',
+      );
+
+      expect(result).toBeNull();
+    });
+  });
 });
