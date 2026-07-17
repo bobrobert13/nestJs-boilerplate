@@ -16,6 +16,7 @@ import {
 } from '@nestjs/swagger';
 import { TwoFactorService } from './two-factor.service';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
+import { Throttle } from '@common/common';
 import {
   EnableTwoFactorDto,
   VerifyTwoFactorDto,
@@ -107,6 +108,7 @@ export class TwoFactorController {
    * does not declare one. Anonymous requests are rejected with HTTP 401.
    */
   @UseGuards(JwtAuthGuard)
+  @Throttle({ limit: 3, ttl: 60_000 })
   @Post('verify-backup')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()

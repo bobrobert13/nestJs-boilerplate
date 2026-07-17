@@ -15,6 +15,7 @@ import {
   ApiResponse,
   ApiBearerAuth,
 } from '@nestjs/swagger';
+import { Throttle } from '@common/common';
 import { AuthService } from '../services/auth.service';
 import { MagicLinkService } from '../services/magic-link.service';
 import { ResendService } from '@common/resend';
@@ -62,6 +63,7 @@ export class AuthController {
   }
 
   @Public()
+  @Throttle({ limit: 5, ttl: 60_000 })
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -92,6 +94,7 @@ export class AuthController {
   }
 
   @Public()
+  @Throttle({ limit: 10, ttl: 60_000 })
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Refresh JWT tokens' })
@@ -107,6 +110,7 @@ export class AuthController {
   }
 
   @Public()
+  @Throttle({ limit: 5, ttl: 60_000 })
   @Post('magic-link/request')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
