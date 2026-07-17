@@ -6,7 +6,7 @@ describe('AppLogger (M4)', () => {
     const writes: string[] = [];
     const origWrite = process.stdout.write.bind(process.stdout);
     // @ts-expect-error - override for capture
-    process.stdout.write = ((chunk: any, ...args: any[]) => {
+    process.stdout.write = ((chunk: any, ..._args: any[]) => {
       writes.push(String(chunk));
       return true;
     }) as any;
@@ -22,7 +22,9 @@ describe('AppLogger (M4)', () => {
     const cap = captureStdout();
     try {
       const logger = new AppLogger('TestCtx');
-      logger.log('user logged in: email=alice@example.com password=hunter2 token=abc123');
+      logger.log(
+        'user logged in: email=alice@example.com password=hunter2 token=abc123',
+      );
       const out = cap.getOutput();
       expect(out).toContain('email=[REDACTED]');
       expect(out).toContain('password=[REDACTED]');
@@ -52,7 +54,11 @@ describe('AppLogger (M4)', () => {
     const cap = captureStdout();
     try {
       // BootstrapLogger is a separate class; route-map output should pass through verbatim.
-      BootstrapLogger.log('routes', 'GET /api/users → 200', 'alice@example.com');
+      BootstrapLogger.log(
+        'routes',
+        'GET /api/users → 200',
+        'alice@example.com',
+      );
       const out = cap.getOutput();
       // We do NOT scrub BootstrapLogger output — email visible in route-map log.
       expect(out).toContain('alice@example.com');

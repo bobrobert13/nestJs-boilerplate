@@ -19,7 +19,6 @@ export class ScraperRepository {
    */
   constructor(
     @InjectModel(ScrapeResult.name)
-    /* eslint-disable-next-line no-unused-vars -- NestJS DI, used via this.model */
     private readonly model: Model<ScrapeResultDocument>,
   ) {}
 

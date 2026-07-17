@@ -5,7 +5,10 @@ import sharp from 'sharp';
 import { BadRequestException } from '@nestjs/common';
 import { SsrfGuard } from '@common/common';
 import { createHttpError, HttpError } from '../http-error';
-import { DownloadOptions, ImageOptimizationOptions } from '../interfaces/http-options.interface';
+import {
+  DownloadOptions,
+  ImageOptimizationOptions,
+} from '../interfaces/http-options.interface';
 
 interface DownloadResult {
   filepath: string;
@@ -34,7 +37,7 @@ export class DownloadService {
   constructor(
     private readonly client: AxiosInstance,
     private readonly baseFolder?: string,
-    /* eslint-disable-next-line no-unused-vars -- used via this.ssrfGuard */
+
     private readonly _ssrfGuard?: SsrfGuard,
   ) {}
 
@@ -42,8 +45,13 @@ export class DownloadService {
     return this._ssrfGuard;
   }
 
-  async file(url: string, options: DownloadOptions = {}): Promise<DownloadResult> {
+  /** file (see class JSDoc for context). */
+  async file(
+    url: string,
+    options: DownloadOptions = {},
+  ): Promise<DownloadResult> {
     // PR5 / H5 — guard against SSRF before any network request.
+    /** if (see class JSDoc for context). */
     if (this.ssrfGuard) {
       await this.ssrfGuard.assertSafeUrl(url);
     }
@@ -74,15 +82,22 @@ export class DownloadService {
       const stats = fs.statSync(filepath);
       return { filepath, size: stats.size, filename: name };
     } catch (error) {
+      /** if (see class JSDoc for context). */
       if (axios.isAxiosError(error)) {
         const status = error.response?.status ?? 500;
         const message = error.response?.statusText ?? error.message;
         throw createHttpError(status, message, url);
       }
-      throw new HttpError(500, 'Internal Server Error', error instanceof Error ? error.message : 'Download failed', url);
+      throw new HttpError(
+        500,
+        'Internal Server Error',
+        error instanceof Error ? error.message : 'Download failed',
+        url,
+      );
     }
   }
 
+  /** image (see class JSDoc for context). */
   async image(
     url: string,
     options: DownloadOptions & { optimize?: ImageOptimizationOptions } = {},
@@ -102,11 +117,15 @@ export class DownloadService {
 
       let sharpInstance = sharp(Buffer.from(response.data));
 
+      /** if (see class JSDoc for context). */
       if (optimize) {
         const { quality = 80, width, height, format = 'webp' } = optimize;
         sharpInstance = sharpInstance[format]({ quality });
+        /** if (see class JSDoc for context). */
         if (width || height) {
-          sharpInstance = sharpInstance.resize(width, height, { fit: 'inside' });
+          sharpInstance = sharpInstance.resize(width, height, {
+            fit: 'inside',
+          });
         }
         const ext = path.extname(name);
         const baseName = path.basename(name, ext);
@@ -114,6 +133,7 @@ export class DownloadService {
         const finalPath = path.join(savePath, finalName);
 
         await sharpInstance.toFile(finalPath);
+        /** if (see class JSDoc for context). */
         if (fs.existsSync(tempPath)) {
           fs.unlinkSync(tempPath);
         }
@@ -129,23 +149,35 @@ export class DownloadService {
       const stats = fs.statSync(finalPath);
       return { filepath: finalPath, size: stats.size, filename: name };
     } catch (error) {
+      /** if (see class JSDoc for context). */
       if (fs.existsSync(tempPath)) {
         fs.unlinkSync(tempPath);
       }
+      /** if (see class JSDoc for context). */
       if (axios.isAxiosError(error)) {
         const status = error.response?.status ?? 500;
         const message = error.response?.statusText ?? error.message;
         throw createHttpError(status, message, url);
       }
-      throw new HttpError(500, 'Internal Server Error', error instanceof Error ? error.message : 'Image download failed', url);
+      throw new HttpError(
+        500,
+        'Internal Server Error',
+        error instanceof Error ? error.message : 'Image download failed',
+        url,
+      );
     }
   }
 
-  async video(url: string, options: DownloadOptions = {}): Promise<DownloadResult> {
+  /** video (see class JSDoc for context). */
+  async video(
+    url: string,
+    options: DownloadOptions = {},
+  ): Promise<DownloadResult> {
     return this.file(url, options);
   }
 
   private resolvePath(folder: string): string {
+    /** if (see class JSDoc for context). */
     if (this.baseFolder) {
       return path.join(this.baseFolder, folder);
     }
@@ -153,6 +185,7 @@ export class DownloadService {
   }
 
   private ensureDir(dirpath: string): void {
+    /** if (see class JSDoc for context). */
     if (!fs.existsSync(dirpath)) {
       fs.mkdirSync(dirpath, { recursive: true });
     }

@@ -16,7 +16,7 @@ export class CronModule implements OnModuleInit {
   /** Logs cron availability on bootstrap. */
   onModuleInit() {
     this.logger.log(
-      '? CronModule initialized � @Cron/@Interval/@Timeout available',
+      '✅ CronModule initialized — @Cron/@Interval/@Timeout available',
     );
   }
 }

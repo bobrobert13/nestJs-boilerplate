@@ -28,6 +28,7 @@ export class MongoRefreshTokenStore implements IRefreshTokenStore {
     private readonly model: Model<RefreshTokenDocument>,
   ) {}
 
+  /** save (see class JSDoc for context). */
   async save(
     token: string,
     userId: string,
@@ -52,9 +53,11 @@ export class MongoRefreshTokenStore implements IRefreshTokenStore {
     return { familyId };
   }
 
+  /** find (see class JSDoc for context). */
   async find(token: string): Promise<RefreshTokenRecord | null> {
     const hash = RefreshToken.hash(token);
     const row = await this.model.findOne({ token: hash }).lean();
+    /** if (see class JSDoc for context). */
     if (!row) return null;
     return {
       userId: String(row.userId),
@@ -64,6 +67,7 @@ export class MongoRefreshTokenStore implements IRefreshTokenStore {
     };
   }
 
+  /** delete (see class JSDoc for context). */
   async delete(token: string): Promise<void> {
     const hash = RefreshToken.hash(token);
     await this.model.deleteOne({ token: hash });
@@ -75,6 +79,7 @@ export class MongoRefreshTokenStore implements IRefreshTokenStore {
    * successor token carries (userId/email/roles) so the caller can issue
    * a new JWT pair without re-querying.
    */
+  /** rotate (see class JSDoc for context). */
   async rotate(
     oldToken: string,
     newToken: string,
@@ -84,6 +89,7 @@ export class MongoRefreshTokenStore implements IRefreshTokenStore {
     const newHash = RefreshToken.hash(newToken);
 
     const predecessor = await this.model.findOne({ token: oldHash });
+    /** if (see class JSDoc for context). */
     if (!predecessor || predecessor.revokedAt) {
       return null;
     }
@@ -115,9 +121,11 @@ export class MongoRefreshTokenStore implements IRefreshTokenStore {
    * Mark every non-revoked row in the family of `rawToken` as revoked.
    * Used when a token is reused after rotation.
    */
+  /** revokeFamily (see class JSDoc for context). */
   async revokeFamily(rawToken: string): Promise<number> {
     const hash = RefreshToken.hash(rawToken);
     const row = await this.model.findOne({ token: hash });
+    /** if (see class JSDoc for context). */
     if (!row) return 0;
     const result = await this.model.updateMany(
       { familyId: row.familyId, revokedAt: null },

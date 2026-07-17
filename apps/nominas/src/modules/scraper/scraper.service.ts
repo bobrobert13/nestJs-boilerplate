@@ -28,9 +28,8 @@ export class ScraperService {
 
   constructor(
     @Inject(SCRAPER_STRATEGY)
-    /* eslint-disable-next-line no-unused-vars -- NestJS DI, used via this.strategies */
     private readonly strategies: IScraperStrategy[],
-    /* eslint-disable-next-line no-unused-vars -- NestJS DI, used via this.repository */
+
     private readonly repository: ScraperRepository,
     @Optional()
     private readonly _ssrfGuard?: SsrfGuard,

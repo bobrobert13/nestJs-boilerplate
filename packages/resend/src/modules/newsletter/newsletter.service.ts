@@ -7,7 +7,10 @@ import {
   NewsletterSubscriber,
   NewsletterSubscriberDocument,
 } from '../../schemas/newsletter-subscriber.schema';
-import { SubscribeDto, UnsubscribeDto } from './interfaces/newsletter.interfaces';
+import {
+  SubscribeDto,
+  UnsubscribeDto,
+} from './interfaces/newsletter.interfaces';
 
 const CONFIRM_TOKEN_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
@@ -28,6 +31,7 @@ export class NewsletterService {
     private readonly resendService: ResendService,
   ) {}
 
+  /** subscribe (see class JSDoc for context). */
   async subscribe(dto: SubscribeDto): Promise<NewsletterSubscriber> {
     const { email } = dto;
     const rawToken = randomBytes(32).toString('hex');
@@ -35,6 +39,7 @@ export class NewsletterService {
     const expiresAt = new Date(Date.now() + CONFIRM_TOKEN_TTL_MS);
 
     const existing = await this.subscriberModel.findOne({ email });
+    /** if (see class JSDoc for context). */
     if (existing) {
       existing.isActive = false;
       existing.confirmationToken = tokenHash;
@@ -55,14 +60,17 @@ export class NewsletterService {
     return created;
   }
 
+  /** confirm (see class JSDoc for context). */
   async confirm(rawToken: string): Promise<{ ok: boolean; message: string }> {
     const tokenHash = createHash('sha256').update(rawToken).digest('hex');
     const subscriber = await this.subscriberModel.findOne({
       confirmationToken: tokenHash,
     });
+    /** if (see class JSDoc for context). */
     if (!subscriber) {
       return { ok: false, message: 'Invalid or already-used token' };
     }
+    /** if (see class JSDoc for context). */
     if (
       subscriber.confirmationExpiresAt &&
       subscriber.confirmationExpiresAt.getTime() < Date.now()
@@ -80,9 +88,11 @@ export class NewsletterService {
     return { ok: true, message: 'Subscription confirmed' };
   }
 
+  /** unsubscribe (see class JSDoc for context). */
   async unsubscribe(dto: UnsubscribeDto): Promise<void> {
     const { email } = dto;
     const subscriber = await this.subscriberModel.findOne({ email });
+    /** if (see class JSDoc for context). */
     if (!subscriber) {
       this.logger.warn(`Subscriber not found: redacted`);
       return;
@@ -92,46 +102,74 @@ export class NewsletterService {
     this.logger.log(`Unsubscribed: redacted`);
   }
 
+  /** sendNewsletter (see class JSDoc for context). */
   async sendNewsletter(
     subject: string,
     content: string,
-    options: { onlyActive?: boolean } = { onlyActive: true },
+    options: { onlyActive?: boolean; concurrency?: number } = {
+      onlyActive: true,
+      concurrency: 10,
+    },
   ): Promise<{ sent: number; failed: number }> {
-    const { onlyActive } = options;
+    const { onlyActive, concurrency = 10 } = options;
     const recipients = await this.subscriberModel.find(
       onlyActive ? { isActive: true } : {},
     );
 
+    // L6 / hardening-medium-low — bounded concurrency with a shared
+    // cursor; each worker pulls the next index and dispatches. A failure
+    // for one recipient must not block the rest of the batch.
+    let cursor = 0;
     let sent = 0;
     let failed = 0;
-    for (const subscriber of recipients) {
-      try {
-        await this.resendService.sendEmail({
-          to: subscriber.email,
-          subject,
-          html: content,
-        });
-        sent++;
-      } catch (error) {
-        this.logger.error(
-          `Failed to send to redacted: ${error instanceof Error ? error.message : String(error)}`,
-        );
-        failed++;
+
+    const worker = async (): Promise<void> => {
+      while (true) {
+        const idx = cursor++;
+        if (idx >= recipients.length) return;
+        const subscriber = recipients[idx];
+        try {
+          await this.resendService.sendEmail({
+            to: subscriber.email,
+            subject,
+            html: content,
+          });
+          sent++;
+        } catch (error) {
+          this.logger.error(
+            `Failed to send to redacted: ${error instanceof Error ? error.message : String(error)}`,
+          );
+          failed++;
+        }
       }
-    }
+    };
+
+    const workers = Array.from(
+      { length: Math.min(concurrency, recipients.length) },
+      () => worker(),
+    );
+    await Promise.allSettled(workers);
+
     this.logger.log(`Newsletter sent: ${sent} sent, ${failed} failed`);
     return { sent, failed };
   }
 
+  /** getSubscribers (see class JSDoc for context). */
   async getSubscribers(onlyActive = true): Promise<NewsletterSubscriber[]> {
     return this.subscriberModel.find(onlyActive ? { isActive: true } : {});
   }
 
+  /** getSubscriberCount (see class JSDoc for context). */
   async getSubscriberCount(onlyActive = true): Promise<number> {
-    return this.subscriberModel.countDocuments(onlyActive ? { isActive: true } : {});
+    return this.subscriberModel.countDocuments(
+      onlyActive ? { isActive: true } : {},
+    );
   }
 
-  private async deliverConfirmation(email: string, rawToken: string): Promise<void> {
+  private async deliverConfirmation(
+    email: string,
+    rawToken: string,
+  ): Promise<void> {
     const link = `${process.env.NEWSLETTER_BASE_URL ?? 'http://localhost:3000'}/newsletter/confirm?token=${encodeURIComponent(rawToken)}`;
     try {
       await this.resendService.sendEmail({

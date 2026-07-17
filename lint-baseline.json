@@ -1,0 +1,79 @@
+﻿
+C:\Users\Robert\Desktop\TREBOR.JS\manga-website-trebordevjs\nestJs-boilerplate\apps\nominas\src\modules\dynamic-schema\services\schema-compiler.service.ts
+  361:3  warning  El metodo publico computeFieldsHashStatic no tiene JSDoc. Agrega un bloque /** ... */ antes del metodo  ai-readiness/require-public-jsdoc
+
+C:\Users\Robert\Desktop\TREBOR.JS\manga-website-trebordevjs\nestJs-boilerplate\apps\nominas\src\modules\health\health.controller.ts
+  14:3  warning  El metodo publico check no tiene JSDoc. Agrega un bloque /** ... */ antes del metodo  ai-readiness/require-public-jsdoc
+
+C:\Users\Robert\Desktop\TREBOR.JS\manga-website-trebordevjs\nestJs-boilerplate\apps\nominas\src\modules\usuarios\controllers\usuarios-roles.controller.ts
+  47:3  warning  El metodo publico updateRoles no tiene JSDoc. Agrega un bloque /** ... */ antes del metodo  ai-readiness/require-public-jsdoc
+
+C:\Users\Robert\Desktop\TREBOR.JS\manga-website-trebordevjs\nestJs-boilerplate\apps\nominas\src\modules\usuarios\usuarios.controller.ts
+  57:3  warning  El metodo publico findOne no tiene JSDoc. Agrega un bloque /** ... */ antes del metodo  ai-readiness/require-public-jsdoc
+  69:3  warning  El metodo publico update no tiene JSDoc. Agrega un bloque /** ... */ antes del metodo   ai-readiness/require-public-jsdoc
+  81:3  warning  El metodo publico remove no tiene JSDoc. Agrega un bloque /** ... */ antes del metodo   ai-readiness/require-public-jsdoc
+
+C:\Users\Robert\Desktop\TREBOR.JS\manga-website-trebordevjs\nestJs-boilerplate\packages\ai\src\ai.service.ts
+  323:3  warning  El metodo publico generateSchemaFromImage no tiene JSDoc. Agrega un bloque /** ... */ antes del metodo  ai-readiness/require-public-jsdoc
+  480:3  warning  El metodo publico generateSchemaFromText no tiene JSDoc. Agrega un bloque /** ... */ antes del metodo   ai-readiness/require-public-jsdoc
+
+C:\Users\Robert\Desktop\TREBOR.JS\manga-website-trebordevjs\nestJs-boilerplate\packages\auth\src\passkeys\passkeys.controller.ts
+   29:3  warning  El metodo publico generateRegistrationOptions no tiene JSDoc. Agrega un bloque /** ... */ antes del metodo  ai-readiness/require-public-jsdoc
+   50:3  warning  El metodo publico verifyRegistration no tiene JSDoc. Agrega un bloque /** ... */ antes del metodo           ai-readiness/require-public-jsdoc
+   72:3  warning  El metodo publico generateLoginOptions no tiene JSDoc. Agrega un bloque /** ... */ antes del metodo         ai-readiness/require-public-jsdoc
+   88:3  warning  El metodo publico verifyLogin no tiene JSDoc. Agrega un bloque /** ... */ antes del metodo                  ai-readiness/require-public-jsdoc
+  107:3  warning  El metodo publico listPasskeys no tiene JSDoc. Agrega un bloque /** ... */ antes del metodo                 ai-readiness/require-public-jsdoc
+  126:3  warning  El metodo publico deletePasskey no tiene JSDoc. Agrega un bloque /** ... */ antes del metodo                ai-readiness/require-public-jsdoc
+
+C:\Users\Robert\Desktop\TREBOR.JS\manga-website-trebordevjs\nestJs-boilerplate\packages\auth\src\strategies\auth.controller.ts
+   42:3  warning  El metodo publico register no tiene JSDoc. Agrega un bloque /** ... */ antes del metodo          ai-readiness/require-public-jsdoc
+   64:3  warning  El metodo publico login no tiene JSDoc. Agrega un bloque /** ... */ antes del metodo             ai-readiness/require-public-jsdoc
+   94:3  warning  El metodo publico refresh no tiene JSDoc. Agrega un bloque /** ... */ antes del metodo           ai-readiness/require-public-jsdoc
+  109:3  warning  El metodo publico requestMagicLink no tiene JSDoc. Agrega un bloque /** ... */ antes del metodo  ai-readiness/require-public-jsdoc
+  154:3  warning  El metodo publico verifyMagicLink no tiene JSDoc. Agrega un bloque /** ... */ antes del metodo   ai-readiness/require-public-jsdoc
+  191:3  warning  El metodo publico logout no tiene JSDoc. Agrega un bloque /** ... */ antes del metodo            ai-readiness/require-public-jsdoc
+  207:3  warning  El metodo publico verify no tiene JSDoc. Agrega un bloque /** ... */ antes del metodo            ai-readiness/require-public-jsdoc
+  224:3  warning  El metodo publico adminEndpoint no tiene JSDoc. Agrega un bloque /** ... */ antes del metodo     ai-readiness/require-public-jsdoc
+
+C:\Users\Robert\Desktop\TREBOR.JS\manga-website-trebordevjs\nestJs-boilerplate\packages\auth\src\two-factor\two-factor.controller.ts
+   31:3  warning  El metodo publico generate no tiene JSDoc. Agrega un bloque /** ... */ antes del metodo               ai-readiness/require-public-jsdoc
+   51:3  warning  El metodo publico enable no tiene JSDoc. Agrega un bloque /** ... */ antes del metodo                 ai-readiness/require-public-jsdoc
+   82:3  warning  El metodo publico verify no tiene JSDoc. Agrega un bloque /** ... */ antes del metodo                 ai-readiness/require-public-jsdoc
+  147:3  warning  El metodo publico regenerateBackupCodes no tiene JSDoc. Agrega un bloque /** ... */ antes del metodo  ai-readiness/require-public-jsdoc
+  178:3  warning  El metodo publico disable no tiene JSDoc. Agrega un bloque /** ... */ antes del metodo                ai-readiness/require-public-jsdoc
+  193:3  warning  El metodo publico status no tiene JSDoc. Agrega un bloque /** ... */ antes del metodo                 ai-readiness/require-public-jsdoc
+
+C:\Users\Robert\Desktop\TREBOR.JS\manga-website-trebordevjs\nestJs-boilerplate\packages\common\src\logger\app-logger.service.ts
+  27:3  warning  El metodo publico log no tiene JSDoc. Agrega un bloque /** ... */ antes del metodo      ai-readiness/require-public-jsdoc
+  33:3  warning  El metodo publico warn no tiene JSDoc. Agrega un bloque /** ... */ antes del metodo     ai-readiness/require-public-jsdoc
+  39:3  warning  El metodo publico error no tiene JSDoc. Agrega un bloque /** ... */ antes del metodo    ai-readiness/require-public-jsdoc
+  45:3  warning  El metodo publico debug no tiene JSDoc. Agrega un bloque /** ... */ antes del metodo    ai-readiness/require-public-jsdoc
+  51:3  warning  El metodo publico verbose no tiene JSDoc. Agrega un bloque /** ... */ antes del metodo  ai-readiness/require-public-jsdoc
+
+C:\Users\Robert\Desktop\TREBOR.JS\manga-website-trebordevjs\nestJs-boilerplate\packages\database\src\transaction\transactional-wrapper.ts
+  25:3  warning  El metodo publico execute no tiene JSDoc. Agrega un bloque /** ... */ antes del metodo  ai-readiness/require-public-jsdoc
+
+C:\Users\Robert\Desktop\TREBOR.JS\manga-website-trebordevjs\nestJs-boilerplate\packages\http\src\services\http.service.ts
+  19:3  warning  El metodo publico request no tiene JSDoc. Agrega un bloque /** ... */ antes del metodo  ai-readiness/require-public-jsdoc
+  56:3  warning  El metodo publico get no tiene JSDoc. Agrega un bloque /** ... */ antes del metodo      ai-readiness/require-public-jsdoc
+  63:3  warning  El metodo publico post no tiene JSDoc. Agrega un bloque /** ... */ antes del metodo     ai-readiness/require-public-jsdoc
+  71:3  warning  El metodo publico put no tiene JSDoc. Agrega un bloque /** ... */ antes del metodo      ai-readiness/require-public-jsdoc
+  79:3  warning  El metodo publico patch no tiene JSDoc. Agrega un bloque /** ... */ antes del metodo    ai-readiness/require-public-jsdoc
+  87:3  warning  El metodo publico delete no tiene JSDoc. Agrega un bloque /** ... */ antes del metodo   ai-readiness/require-public-jsdoc
+
+C:\Users\Robert\Desktop\TREBOR.JS\manga-website-trebordevjs\nestJs-boilerplate\packages\resend\src\modules\newsletter\newsletter.controller.ts
+   77:3  warning  El metodo publico unsubscribe no tiene JSDoc. Agrega un bloque /** ... */ antes del metodo       ai-readiness/require-public-jsdoc
+   87:3  warning  El metodo publico getSubscribers no tiene JSDoc. Agrega un bloque /** ... */ antes del metodo    ai-readiness/require-public-jsdoc
+   96:3  warning  El metodo publico getStats no tiene JSDoc. Agrega un bloque /** ... */ antes del metodo          ai-readiness/require-public-jsdoc
+  106:3  warning  El metodo publico removeSubscriber no tiene JSDoc. Agrega un bloque /** ... */ antes del metodo  ai-readiness/require-public-jsdoc
+
+C:\Users\Robert\Desktop\TREBOR.JS\manga-website-trebordevjs\nestJs-boilerplate\packages\serve-static\src\serve-static.service.ts
+   79:3  warning  El metodo publico render no tiene JSDoc. Agrega un bloque /** ... */ antes del metodo              ai-readiness/require-public-jsdoc
+  122:3  warning  El metodo publico renderString no tiene JSDoc. Agrega un bloque /** ... */ antes del metodo        ai-readiness/require-public-jsdoc
+  133:3  warning  El metodo publico getPartials no tiene JSDoc. Agrega un bloque /** ... */ antes del metodo         ai-readiness/require-public-jsdoc
+  145:3  warning  El metodo publico getPages no tiene JSDoc. Agrega un bloque /** ... */ antes del metodo            ai-readiness/require-public-jsdoc
+  157:3  warning  El metodo publico getAssetsPath no tiene JSDoc. Agrega un bloque /** ... */ antes del metodo       ai-readiness/require-public-jsdoc
+  161:3  warning  El metodo publico clearTemplateCache no tiene JSDoc. Agrega un bloque /** ... */ antes del metodo  ai-readiness/require-public-jsdoc
+
+Ô£û 50 problems (0 errors, 50 warnings)
+

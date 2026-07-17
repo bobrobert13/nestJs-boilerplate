@@ -7,7 +7,6 @@ import {
   AIResponse,
   ChatMessage,
   GeneratedSchema,
-  SchemaFieldDefinition,
   SchemaGenerationOptions,
 } from './types/ai.types';
 import { IAIProvider } from './interfaces/provider.interface';
@@ -57,6 +56,7 @@ export class AiService {
    * Register a new AI provider or override an existing one.
    * @param config - Provider configuration with name, model, and optional API settings
    */
+  /** registerProvider (see class JSDoc for context). */
   registerProvider(config: AIConfig): void {
     const provider = new OpenAICompatibleProvider(config);
     const key = config.provider;
@@ -72,6 +72,7 @@ export class AiService {
    * @param name - Provider name (e.g., 'openai', 'anthropic', 'google')
    * @returns The provider instance or undefined if not found
    */
+  /** getProvider (see class JSDoc for context). */
   getProvider(name: string): IAIProvider | undefined {
     return this.providers.get(name);
   }
@@ -80,6 +81,7 @@ export class AiService {
    * List all registered provider names.
    * @returns Array of provider name strings
    */
+  /** listProviders (see class JSDoc for context). */
   listProviders(): string[] {
     return Array.from(this.providers.keys());
   }
@@ -91,6 +93,7 @@ export class AiService {
    * @param options - Optional provider-specific options (model, temperature, etc.)
    * @returns AIResponse with success/error state
    */
+  /** chat (see class JSDoc for context). */
   async chat(
     providerName: string,
     messages: ChatMessage[],
@@ -98,6 +101,7 @@ export class AiService {
   ): Promise<AIResponse> {
     const provider = this.providers.get(providerName);
 
+    /** if (see class JSDoc for context). */
     if (!provider) {
       return {
         success: false,
@@ -117,6 +121,7 @@ export class AiService {
    * @param options - Optional settings (temperature, model)
    * @returns AIResponse with GeneratedSchema data
    */
+  /** generateSchema (see class JSDoc for context). */
   async generateSchema(
     providerName: string,
     description: string,
@@ -150,13 +155,17 @@ export class Product extends Document {
 export const ProductSchema = SchemaFactory.createForClass(Product);
 \`\`\``;
 
-    return this.chat(providerName, [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: description },
-    ], {
-      temperature: options?.temperature ?? 0.3,
-      model: options?.model,
-    });
+    return this.chat(
+      providerName,
+      [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: description },
+      ],
+      {
+        temperature: options?.temperature ?? 0.3,
+        model: options?.model,
+      },
+    );
   }
 
   /**
@@ -183,13 +192,17 @@ export const ProductSchema = SchemaFactory.createForClass(Product);
       code: `Genera código fuente completo y funcional basado en la descripción. Especifica el lenguaje si no está claro. Responde SOLO con el código.`,
     };
 
-    return this.chat(providerName, [
-      { role: 'system', content: prompts[templateType] || prompts.code },
-      { role: 'user', content: description },
-    ], {
-      temperature: options?.temperature ?? 0.3,
-      model: options?.model,
-    });
+    return this.chat(
+      providerName,
+      [
+        { role: 'system', content: prompts[templateType] || prompts.code },
+        { role: 'user', content: description },
+      ],
+      {
+        temperature: options?.temperature ?? 0.3,
+        model: options?.model,
+      },
+    );
   }
 
   /**
@@ -327,7 +340,10 @@ export const ProductSchema = SchemaFactory.createForClass(Product);
     if (!provider.capabilities.vision) {
       return {
         success: false,
-        error: 'VISION_NOT_SUPPORTED: provider "' + providerName + '" does not support vision',
+        error:
+          'VISION_NOT_SUPPORTED: provider "' +
+          providerName +
+          '" does not support vision',
         provider: providerName,
         model: options?.model || 'unknown',
       };
@@ -358,7 +374,10 @@ Rules:
     const userMessage: ChatMessage = {
       role: 'user',
       content: [
-        { type: 'text', text: 'Analyze this document image and extract the schema fields. Return ONLY the JSON schema.' },
+        {
+          type: 'text',
+          text: 'Analyze this document image and extract the schema fields. Return ONLY the JSON schema.',
+        },
         { type: 'image_url', image_url: { url: imageData } },
       ],
     };
@@ -367,19 +386,34 @@ Rules:
       userMessage,
     ];
 
-    const tryParse = (raw: string): { ok: true; schema: GeneratedSchema } | { ok: false; raw: string } => {
-      const cleaned: string = String(raw).replace(/\`\`\`json\\n?/g, '').replace(/\`\`\`\\n?/g, '').trim();
+    const tryParse = (
+      raw: string,
+    ): { ok: true; schema: GeneratedSchema } | { ok: false; raw: string } => {
+      const cleaned: string = String(raw)
+        .replace(/```json\n?/g, '')
+        .replace(/```\n?/g, '')
+        .trim();
       try {
         const schema = JSON.parse(cleaned);
-        if (!schema.fields || !Array.isArray(schema.fields)) return { ok: false, raw: cleaned };
+        if (!schema.fields || !Array.isArray(schema.fields))
+          return { ok: false, raw: cleaned };
         return { ok: true, schema };
       } catch {
         return { ok: false, raw: cleaned };
       }
     };
     const extractContent = (resp: AIResponse): string => {
-      const d = resp.data as { choices?: Array<{ message: { content: string } }> } | undefined;
-      return (d && d.choices && d.choices[0] && d.choices[0].message && d.choices[0].message.content) || '';
+      const d = resp.data as
+        | { choices?: Array<{ message: { content: string } }> }
+        | undefined;
+      return (
+        (d &&
+          d.choices &&
+          d.choices[0] &&
+          d.choices[0].message &&
+          d.choices[0].message.content) ||
+        ''
+      );
     };
 
     try {
@@ -391,35 +425,53 @@ Rules:
       if (!response.success) return response as AIResponse<GeneratedSchema>;
 
       const first = tryParse(extractContent(response));
-      if (first.ok) return { ...response, data: { ...first.schema, source: 'image' } };
+      if (first.ok)
+        return { ...response, data: { ...first.schema, source: 'image' } };
 
       // Retry: temperature 0 + reinforced prompt.
       const retryResponse = await this.chat(
         providerName,
         [
-          { role: 'system', content: systemPrompt + ' IMPORTANT: Your previous response was not valid JSON. Reply with a single JSON object only, no markdown.' },
+          {
+            role: 'system',
+            content:
+              systemPrompt +
+              ' IMPORTANT: Your previous response was not valid JSON. Reply with a single JSON object only, no markdown.',
+          },
           userMessage,
         ],
-        { temperature: 0, model: options?.model, responseFormat: 'json_object' },
+        {
+          temperature: 0,
+          model: options?.model,
+          responseFormat: 'json_object',
+        },
       );
 
-      if (!retryResponse.success) return retryResponse as AIResponse<GeneratedSchema>;
+      if (!retryResponse.success)
+        return retryResponse as AIResponse<GeneratedSchema>;
 
       const retryContent = extractContent(retryResponse);
       const reparsed = tryParse(retryContent);
-      if (reparsed.ok) return { ...retryResponse, data: { ...reparsed.schema, source: 'image' } };
+      if (reparsed.ok)
+        return {
+          ...retryResponse,
+          data: { ...reparsed.schema, source: 'image' },
+        };
 
       return {
         success: false,
-        error: 'SCHEMA_GENERATION_ERROR: AI returned malformed JSON after retry. Last raw: ' + retryContent.slice(0, 500),
+        error:
+          'SCHEMA_GENERATION_ERROR: AI returned malformed JSON after retry. Last raw: ' +
+          retryContent.slice(0, 500),
         provider: providerName,
         model: options?.model || 'unknown',
       };
-
     } catch (error) {
       return {
         success: false,
-        error: 'SCHEMA_GENERATION_ERROR: ' + (error instanceof Error ? error.message : 'Unknown error'),
+        error:
+          'SCHEMA_GENERATION_ERROR: ' +
+          (error instanceof Error ? error.message : 'Unknown error'),
         provider: providerName,
         model: options?.model || 'unknown',
       };
@@ -463,25 +515,44 @@ Rules:
 - Include all relevant fields mentioned in the text`;
 
     try {
-      const response = await this.chat(providerName, [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: text },
-      ], {
-        temperature: options?.temperature ?? 0.3,
-        model: options?.model,
-        responseFormat: 'json_object',
-      });
+      const response = await this.chat(
+        providerName,
+        [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: text },
+        ],
+        {
+          temperature: options?.temperature ?? 0.3,
+          model: options?.model,
+          responseFormat: 'json_object',
+        },
+      );
       if (!response.success) return response as AIResponse<GeneratedSchema>;
 
       const extractContent = (resp: AIResponse): string => {
-        const d = resp.data as { choices?: Array<{ message: { content: string } }> } | undefined;
-        return (d && d.choices && d.choices[0] && d.choices[0].message && d.choices[0].message.content) || '';
+        const d = resp.data as
+          | { choices?: Array<{ message: { content: string } }> }
+          | undefined;
+        return (
+          (d &&
+            d.choices &&
+            d.choices[0] &&
+            d.choices[0].message &&
+            d.choices[0].message.content) ||
+          ''
+        );
       };
-      const tryParse = (raw: string): { ok: true; schema: GeneratedSchema } | { ok: false; raw: string } => {
-        const cleaned: string = String(raw).replace(/\`\`\`json\\n?/g, '').replace(/\`\`\`\\n?/g, '').trim();
+      const tryParse = (
+        raw: string,
+      ): { ok: true; schema: GeneratedSchema } | { ok: false; raw: string } => {
+        const cleaned: string = String(raw)
+          .replace(/```json\n?/g, '')
+          .replace(/```\n?/g, '')
+          .trim();
         try {
           const schema = JSON.parse(cleaned);
-          if (!schema.fields || !Array.isArray(schema.fields)) return { ok: false, raw: cleaned };
+          if (!schema.fields || !Array.isArray(schema.fields))
+            return { ok: false, raw: cleaned };
           return { ok: true, schema };
         } catch {
           return { ok: false, raw: cleaned };
@@ -489,33 +560,52 @@ Rules:
       };
 
       const first = tryParse(extractContent(response));
-      if (first.ok) return { ...response, data: { ...first.schema, source: 'text' } };
+      if (first.ok)
+        return { ...response, data: { ...first.schema, source: 'text' } };
 
       // Retry: temperature 0 + reinforced prompt.
-      const retryResponse = await this.chat(providerName, [
-        { role: 'system', content: systemPrompt + ' IMPORTANT: Your previous response was not valid JSON. Reply with a single JSON object only, no markdown.' },
-        { role: 'user', content: text },
-      ], {
-        temperature: 0,
-        model: options?.model,
-        responseFormat: 'json_object',
-      });
-      if (!retryResponse.success) return retryResponse as AIResponse<GeneratedSchema>;
+      const retryResponse = await this.chat(
+        providerName,
+        [
+          {
+            role: 'system',
+            content:
+              systemPrompt +
+              ' IMPORTANT: Your previous response was not valid JSON. Reply with a single JSON object only, no markdown.',
+          },
+          { role: 'user', content: text },
+        ],
+        {
+          temperature: 0,
+          model: options?.model,
+          responseFormat: 'json_object',
+        },
+      );
+      if (!retryResponse.success)
+        return retryResponse as AIResponse<GeneratedSchema>;
 
       const retryContent = extractContent(retryResponse);
       const reparsed = tryParse(retryContent);
-      if (reparsed.ok) return { ...retryResponse, data: { ...reparsed.schema, source: 'text' } };
+      if (reparsed.ok)
+        return {
+          ...retryResponse,
+          data: { ...reparsed.schema, source: 'text' },
+        };
 
       return {
         success: false,
-        error: 'SCHEMA_GENERATION_ERROR: AI returned malformed JSON after retry. Last raw: ' + retryContent.slice(0, 500),
+        error:
+          'SCHEMA_GENERATION_ERROR: AI returned malformed JSON after retry. Last raw: ' +
+          retryContent.slice(0, 500),
         provider: providerName,
         model: options?.model || 'unknown',
       };
     } catch (error) {
       return {
         success: false,
-        error: 'SCHEMA_GENERATION_ERROR: ' + (error instanceof Error ? error.message : 'Unknown error'),
+        error:
+          'SCHEMA_GENERATION_ERROR: ' +
+          (error instanceof Error ? error.message : 'Unknown error'),
         provider: providerName,
         model: options?.model || 'unknown',
       };

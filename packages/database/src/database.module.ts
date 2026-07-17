@@ -28,7 +28,9 @@ interface DatabaseConfig {
         const config = configService.get<DatabaseConfig>('database');
         // uri is guaranteed by validateEnv() default; fallback for safety only
         return {
-          uri: config?.uri ?? 'mongodb://localhost:27017/boilerplate_db?replicaSet=rs0',
+          uri:
+            config?.uri ??
+            'mongodb://localhost:27017/boilerplate_db?replicaSet=rs0',
         };
       },
       inject: [ConfigService],

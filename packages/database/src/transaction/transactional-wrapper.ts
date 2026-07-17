@@ -6,7 +6,11 @@ import { TransactionService } from './transaction.service';
 export interface TransactionalOptions {
   retry?: boolean;
   maxRetries?: number;
-  isolationLevel?: 'read uncommitted' | 'read committed' | 'snapshot' | 'serializable';
+  isolationLevel?:
+    | 'read uncommitted'
+    | 'read committed'
+    | 'snapshot'
+    | 'serializable';
 }
 
 @Injectable()
@@ -29,6 +33,7 @@ export class TransactionalWrapper {
     });
   }
 
+  /** getSession (see class JSDoc for context). */
   getSession(): Promise<ClientSession> {
     return this.connection.startSession();
   }

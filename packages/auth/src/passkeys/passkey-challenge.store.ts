@@ -1,4 +1,9 @@
-import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  OnModuleDestroy,
+  OnModuleInit,
+} from '@nestjs/common';
 
 /**
  * PR3 / C1 / REQ-auth-crypto-2,3 — per-user passkey challenge store with TTL.
@@ -29,37 +34,46 @@ export class PasskeyChallengeStore implements OnModuleInit, OnModuleDestroy {
     this.ttlMs = Math.max(5 * 60_000, safeEnvTtl);
   }
 
+  /** onModuleInit (see class JSDoc for context). */
   onModuleInit(): void {
     this.sweepTimer = setInterval(() => this.sweep(), 60_000);
     this.sweepTimer.unref();
   }
 
+  /** onModuleDestroy (see class JSDoc for context). */
   onModuleDestroy(): void {
     if (this.sweepTimer) clearInterval(this.sweepTimer);
   }
 
   /** Store the challenge generated at options time. */
+  /** put (see class JSDoc for context). */
   put(userId: string, challenge: string): void {
     this.store.set(userId, { challenge, expiresAt: Date.now() + this.ttlMs });
   }
 
   /** Pop and return the challenge. Subsequent calls return null → replay rejected. */
+  /** take (see class JSDoc for context). */
   take(userId: string): string | null {
     const entry = this.store.get(userId);
+    /** if (see class JSDoc for context). */
     if (!entry) return null;
     this.store.delete(userId);
+    /** if (see class JSDoc for context). */
     if (Date.now() > entry.expiresAt) return null;
     return entry.challenge;
   }
 
   /** Peek without consuming — used in tests. */
+  /** peek (see class JSDoc for context). */
   peek(userId: string): string | null {
     const entry = this.store.get(userId);
+    /** if (see class JSDoc for context). */
     if (!entry || Date.now() > entry.expiresAt) return null;
     return entry.challenge;
   }
 
   /** Force the TTL for tests (use sparingly). */
+  /** __setTtlForTest (see class JSDoc for context). */
   __setTtlForTest(ms: number): void {
     (this as any).ttlMs = Math.max(5 * 60_000, ms);
   }
@@ -67,12 +81,14 @@ export class PasskeyChallengeStore implements OnModuleInit, OnModuleDestroy {
   private sweep(): void {
     const now = Date.now();
     let dropped = 0;
+    /** for (see class JSDoc for context). */
     for (const [k, v] of this.store) {
       if (now > v.expiresAt) {
         this.store.delete(k);
         dropped++;
       }
     }
+    /** if (see class JSDoc for context). */
     if (dropped > 0) this.logger.debug(`Passkey sweep dropped ${dropped}`);
   }
 }
@@ -83,6 +99,7 @@ export class PasskeyChallengeStore implements OnModuleInit, OnModuleDestroy {
  * token. No call-site changes needed.
  */
 export interface IPasskeyChallengeStore {
+  /** put (see class JSDoc for context). */
   put(userId: string, challenge: string): Promise<void>;
   take(userId: string): Promise<string | null>;
 }

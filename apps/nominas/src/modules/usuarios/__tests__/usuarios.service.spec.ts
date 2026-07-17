@@ -21,11 +21,12 @@ describe('UsuariosService', () => {
     updatedAt: new Date(),
   };
 
-  const mockDoc = {
-    _id: { toString: () => '507f1f77bcf86cd799439011' },
+  const mockSecrets = {
+    id: '507f1f77bcf86cd799439011',
     email: 'john.doe@example.com',
-    password: '$argon2id$...',
+    passwordHash: '$argon2id$...',
     roles: ['user'],
+    activo: true,
   };
 
   beforeEach(async () => {
@@ -34,7 +35,7 @@ describe('UsuariosService', () => {
       findAll: jest.fn(),
       findOne: jest.fn(),
       findByEmail: jest.fn(),
-      findByEmailWithPassword: jest.fn(),
+      findByEmailWithSecrets: jest.fn(),
       update: jest.fn(),
       remove: jest.fn(),
     } as any;
@@ -60,7 +61,7 @@ describe('UsuariosService', () => {
 
   describe('findByEmail (IUserService)', () => {
     it('should return user data for auth when found', async () => {
-      mockRepository.findByEmailWithPassword.mockResolvedValue(mockDoc as any);
+      mockRepository.findByEmailWithSecrets.mockResolvedValue(mockSecrets);
 
       const result = await service.findByEmail('john.doe@example.com');
 
@@ -73,7 +74,7 @@ describe('UsuariosService', () => {
     });
 
     it('should return null when user not found', async () => {
-      mockRepository.findByEmailWithPassword.mockResolvedValue(null);
+      mockRepository.findByEmailWithSecrets.mockResolvedValue(null);
 
       const result = await service.findByEmail('unknown@example.com');
 

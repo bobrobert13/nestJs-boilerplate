@@ -37,14 +37,12 @@ describe('AuthService.refreshTokens (H3)', () => {
       roles: ['user'],
       expiresAt: new Date(Date.now() + 60_000),
     });
-    const find = jest
-      .fn()
-      .mockResolvedValue({
-        userId: 'u-1',
-        email: 'a@b.com',
-        roles: ['user'],
-        expiresAt: new Date(Date.now() + 60_000),
-      });
+    const find = jest.fn().mockResolvedValue({
+      userId: 'u-1',
+      email: 'a@b.com',
+      roles: ['user'],
+      expiresAt: new Date(Date.now() + 60_000),
+    });
     const { svc } = build({ rotate, find });
 
     const result = await svc.refreshTokens('RAW-TOKEN');
@@ -65,14 +63,12 @@ describe('AuthService.refreshTokens (H3)', () => {
       roles: ['user'],
       expiresAt: new Date(Date.now() + 60_000),
     });
-    const find = jest
-      .fn()
-      .mockResolvedValue({
-        userId: 'u-1',
-        email: 'a@b.com',
-        roles: ['user'],
-        expiresAt: new Date(Date.now() + 60_000),
-      });
+    const find = jest.fn().mockResolvedValue({
+      userId: 'u-1',
+      email: 'a@b.com',
+      roles: ['user'],
+      expiresAt: new Date(Date.now() + 60_000),
+    });
     const { svc } = build({ rotate, find });
 
     await svc.refreshTokens('OLD-TOKEN');

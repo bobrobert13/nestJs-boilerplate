@@ -14,7 +14,10 @@ import { RolesGuard } from './guards/roles.guard';
 import { AuthController } from './strategies/auth.controller';
 import { REFRESH_TOKEN_STORE } from './interfaces/auth.interfaces';
 import authConfig, { DEV_JWT_SECRET_FALLBACK } from './config/auth.config';
-import { RefreshToken, RefreshTokenSchema } from './schemas/refresh-token.schema';
+import {
+  RefreshToken,
+  RefreshTokenSchema,
+} from './schemas/refresh-token.schema';
 import {
   TwoFactorBackupCode,
   TwoFactorBackupCodeSchema,
@@ -23,6 +26,10 @@ import {
   TwoFactorSecret,
   TwoFactorSecretSchema,
 } from './schemas/two-factor-secret.schema';
+import {
+  MagicLinkToken,
+  MagicLinkTokenSchema,
+} from './schemas/magic-link-token.schema';
 
 interface AuthConfig {
   jwt: {
@@ -45,6 +52,7 @@ interface AuthConfig {
       { name: RefreshToken.name, schema: RefreshTokenSchema },
       { name: TwoFactorBackupCode.name, schema: TwoFactorBackupCodeSchema },
       { name: TwoFactorSecret.name, schema: TwoFactorSecretSchema },
+      { name: MagicLinkToken.name, schema: MagicLinkTokenSchema },
     ]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
@@ -96,12 +104,17 @@ interface AuthConfig {
 export class AuthModule implements OnModuleInit {
   private readonly logger = new Logger(AuthModule.name);
 
+  /** onModuleInit (see class JSDoc for context). */
   onModuleInit() {
     this.logger.log('✅ AuthModule initialized successfully');
     this.logger.log('   - JWT authentication: enabled');
     this.logger.log('   - Magic Links: available');
     this.logger.log('   - Roles Guard: available');
 
-    BootstrapLogger.log(LogCategory.AUTH, 'JWT · MagicLink · Roles Guard', 'enabled');
+    BootstrapLogger.log(
+      LogCategory.AUTH,
+      'JWT · MagicLink · Roles Guard',
+      'enabled',
+    );
   }
 }

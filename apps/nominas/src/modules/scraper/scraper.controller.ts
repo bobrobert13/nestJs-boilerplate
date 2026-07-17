@@ -1,4 +1,4 @@
-import {
+﻿import {
   Controller,
   Get,
   Post,
@@ -28,7 +28,7 @@ export class ScraperController {
   /**
    * @param scraperService Orchestrator for scraping strategies.
    */
-  /* eslint-disable-next-line no-unused-vars -- NestJS DI, used via this.scraperService */
+
   constructor(private readonly scraperService: ScraperService) {}
 
   /**
@@ -50,10 +50,10 @@ export class ScraperController {
     status: 400,
     description: 'Invalid URL or missing required fields.',
   })
-  @ApiResponse({ status: 401, description: 'Unauthorized â€” missing JWT.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized Ã¢â‚¬— missing JWT.' })
   @ApiResponse({
     status: 403,
-    description: 'Forbidden â€” requires admin role.',
+    description: 'Forbidden Ã¢â‚¬— requires admin role.',
   })
   @ApiResponse({
     status: 404,
@@ -78,10 +78,10 @@ export class ScraperController {
       items: { type: 'string', example: 'default' },
     },
   })
-  @ApiResponse({ status: 401, description: 'Unauthorized â€” missing JWT.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized Ã¢â‚¬— missing JWT.' })
   @ApiResponse({
     status: 403,
-    description: 'Forbidden â€” requires admin role.',
+    description: 'Forbidden Ã¢â‚¬— requires admin role.',
   })
   listStrategies(): string[] {
     return this.scraperService.listStrategies();
@@ -106,10 +106,10 @@ export class ScraperController {
     description: 'Recent scrape results.',
     type: [ScrapeResultDto],
   })
-  @ApiResponse({ status: 401, description: 'Unauthorized â€” missing JWT.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized Ã¢â‚¬— missing JWT.' })
   @ApiResponse({
     status: 403,
-    description: 'Forbidden â€” requires admin role.',
+    description: 'Forbidden Ã¢â‚¬— requires admin role.',
   })
   async findRecent(@Query('limit') limit?: string): Promise<ScrapeResultDto[]> {
     const docs = await this.scraperService.getRecent(Number(limit) || 20);
@@ -133,10 +133,10 @@ export class ScraperController {
     description: 'Scrape result found.',
     type: ScrapeResultDto,
   })
-  @ApiResponse({ status: 401, description: 'Unauthorized â€” missing JWT.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized Ã¢â‚¬— missing JWT.' })
   @ApiResponse({
     status: 403,
-    description: 'Forbidden â€” requires admin role.',
+    description: 'Forbidden Ã¢â‚¬— requires admin role.',
   })
   @ApiResponse({ status: 404, description: 'Scrape result not found.' })
   async findOne(@Param('id') id: string): Promise<ScrapeResultDto> {
@@ -147,7 +147,7 @@ export class ScraperController {
     return this.toDto(doc);
   }
 
-  // â”€â”€ Private â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Ã¢—â‚¬Ã¢—â‚¬ Private Ã¢—â‚¬Ã¢—â‚¬Ã¢—â‚¬Ã¢—â‚¬Ã¢—â‚¬Ã¢—â‚¬Ã¢—â‚¬Ã¢—â‚¬Ã¢—â‚¬Ã¢—â‚¬Ã¢—â‚¬Ã¢—â‚¬Ã¢—â‚¬Ã¢—â‚¬Ã¢—â‚¬Ã¢—â‚¬Ã¢—â‚¬Ã¢—â‚¬Ã¢—â‚¬Ã¢—â‚¬Ã¢—â‚¬Ã¢—â‚¬Ã¢—â‚¬Ã¢—â‚¬Ã¢—â‚¬Ã¢—â‚¬Ã¢—â‚¬Ã¢—â‚¬Ã¢—â‚¬Ã¢—â‚¬Ã¢—â‚¬Ã¢—â‚¬Ã¢—â‚¬Ã¢—â‚¬Ã¢—â‚¬Ã¢—â‚¬Ã¢—â‚¬Ã¢—â‚¬Ã¢—â‚¬Ã¢—â‚¬Ã¢—â‚¬Ã¢—â‚¬Ã¢—â‚¬Ã¢—â‚¬Ã¢—â‚¬Ã¢—â‚¬Ã¢—â‚¬Ã¢—â‚¬
 
   private toDto(doc: any): ScrapeResultDto {
     return {

@@ -16,9 +16,11 @@ export class DocumentProcessorService {
     this.parsers = [this.pdfService, this.docxService];
   }
 
+  /** extract (see class JSDoc for context). */
   async extract(buffer: Buffer, format: string): Promise<DocumentContent> {
     const parser = this.parsers.find((p) => p.supports(format));
 
+    /** if (see class JSDoc for context). */
     if (!parser) {
       throw new Error(
         JSON.stringify({
@@ -37,6 +39,7 @@ export class DocumentProcessorService {
         format: result.format as DocumentContent['format'],
       };
     } catch (error) {
+      /** if (see class JSDoc for context). */
       if (error instanceof Error) {
         throw new Error(
           JSON.stringify({

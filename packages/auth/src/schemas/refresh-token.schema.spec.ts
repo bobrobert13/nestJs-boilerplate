@@ -11,7 +11,8 @@ describe('RefreshToken schema (H3)', () => {
 
   it('declares the familyId and revokedAt compound index', () => {
     const familyIndex = RefreshTokenSchema.indexes().find(
-      (idx) => idx[0]?.familyId !== undefined && idx[0]?.revokedAt !== undefined,
+      (idx) =>
+        idx[0]?.familyId !== undefined && idx[0]?.revokedAt !== undefined,
     );
     expect(familyIndex).toBeDefined();
   });

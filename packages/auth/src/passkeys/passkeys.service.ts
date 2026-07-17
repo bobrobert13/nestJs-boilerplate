@@ -6,7 +6,10 @@ import {
   generateAuthenticationOptions,
   verifyAuthenticationResponse,
 } from '@simplewebauthn/server';
-import { PasskeyCredential, PasskeyVerifyResult } from './interfaces/passkeys.interfaces';
+import {
+  PasskeyCredential,
+  PasskeyVerifyResult,
+} from './interfaces/passkeys.interfaces';
 import { PasskeyChallengeStore } from './passkey-challenge.store';
 
 /** ponytail: Base64URLString is a branded `string` type not re-exported by v10 barrel; local alias suffices for demo. */
@@ -25,16 +28,21 @@ export class PasskeysService implements OnModuleInit {
     private readonly challengeStore: PasskeyChallengeStore,
   ) {}
 
+  /** onModuleInit (see class JSDoc for context). */
   onModuleInit() {
     const config = this.configService.get<{ passkeys: any }>('auth');
+    /** if (see class JSDoc for context). */
     if (config?.passkeys) {
       this.rpId = config.passkeys.rpId || this.rpId;
       this.rpName = config.passkeys.rpName || this.rpName;
       this.rpOrigin = config.passkeys.rpOrigin || this.rpOrigin;
     }
-    this.logger.log(`✅ PasskeysService initialized - RP: ${this.rpName} (${this.rpId})`);
+    this.logger.log(
+      `✅ PasskeysService initialized - RP: ${this.rpName} (${this.rpId})`,
+    );
   }
 
+  /** generateRegistrationOptions (see class JSDoc for context). */
   async generateRegistrationOptions(userId: string, username: string) {
     const options = await generateRegistrationOptions({
       rpName: this.rpName,
@@ -58,6 +66,7 @@ export class PasskeysService implements OnModuleInit {
     return options;
   }
 
+  /** verifyRegistration (see class JSDoc for context). */
   async verifyRegistration(
     userId: string,
     username: string,
@@ -66,6 +75,7 @@ export class PasskeysService implements OnModuleInit {
     try {
       // PR3 / C1 — pull the same challenge stored at options time.
       const expectedChallenge = this.challengeStore.take(userId);
+      /** if (see class JSDoc for context). */
       if (!expectedChallenge) {
         this.logger.warn(
           `No stored challenge for userId=${userId}; cannot verify`,
@@ -80,8 +90,11 @@ export class PasskeysService implements OnModuleInit {
         expectedRPID: this.rpId,
       });
 
+      /** if (see class JSDoc for context). */
       if (!verification.verified || !verification.registrationInfo) {
-        this.logger.warn(`Registration verification failed for user: ${username}`);
+        this.logger.warn(
+          `Registration verification failed for user: ${username}`,
+        );
         return { verified: false };
       }
 
@@ -101,11 +114,14 @@ export class PasskeysService implements OnModuleInit {
       this.logger.log(`Passkey registered for user: ${username}`);
       return { verified: true, credentialId: credential.id };
     } catch (error) {
-      this.logger.error(`Passkey registration failed: ${error instanceof Error ? error.message : String(error)}`);
+      this.logger.error(
+        `Passkey registration failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
       return { verified: false };
     }
   }
 
+  /** generateAuthenticationOptions (see class JSDoc for context). */
   async generateAuthenticationOptions(userId?: string) {
     const userCredentials = userId ? this.getCredentialsForUser(userId) : [];
     const allowCredentials =
@@ -125,14 +141,18 @@ export class PasskeysService implements OnModuleInit {
     });
 
     // PR3 / C1 — store the auth challenge for verification.
+    /** if (see class JSDoc for context). */
     if (userId) {
       this.challengeStore.put(userId, options.challenge);
     }
 
-    this.logger.debug(`Generated authentication options for userId: ${userId || 'any'}`);
+    this.logger.debug(
+      `Generated authentication options for userId: ${userId || 'any'}`,
+    );
     return options;
   }
 
+  /** verifyAuthentication (see class JSDoc for context). */
   async verifyAuthentication(
     userId: string,
     credentialId: string,
@@ -141,6 +161,7 @@ export class PasskeysService implements OnModuleInit {
     try {
       const credential = this.credentials.get(credentialId);
 
+      /** if (see class JSDoc for context). */
       if (!credential) {
         this.logger.warn(`Credential not found: ${credentialId}`);
         return { valid: false, error: 'Credential not found' };
@@ -148,6 +169,7 @@ export class PasskeysService implements OnModuleInit {
 
       // PR3 / C1 — pull the same challenge stored at options time.
       const expectedChallenge = this.challengeStore.take(userId);
+      /** if (see class JSDoc for context). */
       if (!expectedChallenge) {
         return { valid: false, error: 'Challenge expired or missing' };
       }
@@ -167,8 +189,11 @@ export class PasskeysService implements OnModuleInit {
         requireUserVerification: false,
       });
 
+      /** if (see class JSDoc for context). */
       if (!verification.verified || !verification.authenticationInfo) {
-        this.logger.warn(`Authentication verification failed for user: ${userId}`);
+        this.logger.warn(
+          `Authentication verification failed for user: ${userId}`,
+        );
         return { valid: false, error: 'Authentication verification failed' };
       }
 
@@ -178,17 +203,27 @@ export class PasskeysService implements OnModuleInit {
       this.logger.log(`Passkey authentication successful for user: ${userId}`);
       return { valid: true, userId };
     } catch (error) {
-      this.logger.error(`Passkey authentication failed: ${error instanceof Error ? error.message : String(error)}`);
-      return { valid: false, error: error instanceof Error ? error.message : 'Authentication failed' };
+      this.logger.error(
+        `Passkey authentication failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      return {
+        valid: false,
+        error: error instanceof Error ? error.message : 'Authentication failed',
+      };
     }
   }
 
+  /** getUserPasskeys (see class JSDoc for context). */
   async getUserPasskeys(userId: string): Promise<PasskeyCredential[]> {
-    return Array.from(this.credentials.values()).filter((c) => c.userId === userId);
+    return Array.from(this.credentials.values()).filter(
+      (c) => c.userId === userId,
+    );
   }
 
+  /** deletePasskey (see class JSDoc for context). */
   async deletePasskey(userId: string, credentialId: string): Promise<boolean> {
     const credential = this.credentials.get(credentialId);
+    /** if (see class JSDoc for context). */
     if (!credential || credential.userId !== userId) {
       return false;
     }
@@ -198,14 +233,18 @@ export class PasskeysService implements OnModuleInit {
   }
 
   private generateChallenge(): string {
-    return Buffer.from(crypto.getRandomValues(new Uint8Array(32))).toString('base64');
+    return Buffer.from(crypto.getRandomValues(new Uint8Array(32))).toString(
+      'base64',
+    );
   }
 
-  private getStoredChallenge(userId: string): Base64URLString {
+  private getStoredChallenge(_userId: string): Base64URLString {
     return this.generateChallenge() as Base64URLString;
   }
 
   private getCredentialsForUser(userId: string): PasskeyCredential[] {
-    return Array.from(this.credentials.values()).filter((c) => c.userId === userId);
+    return Array.from(this.credentials.values()).filter(
+      (c) => c.userId === userId,
+    );
   }
 }

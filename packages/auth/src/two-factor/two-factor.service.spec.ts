@@ -22,7 +22,8 @@ describe('TwoFactorService.verifyBackupCodeWithUser (M11)', () => {
           Promise.resolve(
             stored.filter(
               (s) =>
-                String(s.userId) === String(query.userId) && s.isUsed === query.isUsed,
+                String(s.userId) === String(query.userId) &&
+                s.isUsed === query.isUsed,
             ),
           ),
       })),
@@ -30,7 +31,9 @@ describe('TwoFactorService.verifyBackupCodeWithUser (M11)', () => {
         (filter: any, update: any) =>
           new Promise((resolve) => {
             const row = stored.find(
-              (s) => String(s._id) === String(filter._id) && s.isUsed === filter.isUsed,
+              (s) =>
+                String(s._id) === String(filter._id) &&
+                s.isUsed === filter.isUsed,
             );
             if (row) {
               row.isUsed = true;
@@ -58,10 +61,23 @@ describe('TwoFactorService.verifyBackupCodeWithUser (M11)', () => {
   }
 
   async function build(model?: any) {
-    const cfg: any = { get: () => ({ twoFactor: { issuer: 'I', algorithm: 'SHA1', digits: 6, period: 30, backupCodes: { count: 5, length: 10 } } }) };
+    const cfg: any = {
+      get: () => ({
+        twoFactor: {
+          issuer: 'I',
+          algorithm: 'SHA1',
+          digits: 6,
+          period: 30,
+          backupCodes: { count: 5, length: 10 },
+        },
+      }),
+    };
     const providers: any[] = [{ provide: ConfigService, useValue: cfg }];
     if (model) {
-      providers.push({ provide: getModelToken(TwoFactorBackupCode.name), useValue: model });
+      providers.push({
+        provide: getModelToken(TwoFactorBackupCode.name),
+        useValue: model,
+      });
     }
     const moduleRef = await Test.createTestingModule({
       providers: [TwoFactorService, ...providers],
@@ -111,7 +127,11 @@ describe('TwoFactorService.verifyBackupCodeWithUser (M11)', () => {
 
 describe('TwoFactorService — TOTP secret persistence (C4)', () => {
   function makeSecretModel() {
-    const stored: Array<{ userId: string; secret: string; lastUsedAt: Date | null }> = [];
+    const stored: Array<{
+      userId: string;
+      secret: string;
+      lastUsedAt: Date | null;
+    }> = [];
     const model: any = {
       updateOne: jest.fn(
         (filter: any, update: any) =>
@@ -135,7 +155,8 @@ describe('TwoFactorService — TOTP secret persistence (C4)', () => {
         select: () => ({
           lean: () =>
             Promise.resolve(
-              stored.find((s) => String(s.userId) === String(filter.userId)) ?? null,
+              stored.find((s) => String(s.userId) === String(filter.userId)) ??
+                null,
             ),
         }),
       })),
@@ -145,10 +166,23 @@ describe('TwoFactorService — TOTP secret persistence (C4)', () => {
   }
 
   async function build(secretModel?: any) {
-    const cfg: any = { get: () => ({ twoFactor: { issuer: 'I', algorithm: 'SHA1', digits: 6, period: 30, backupCodes: { count: 5, length: 10 } } }) };
+    const cfg: any = {
+      get: () => ({
+        twoFactor: {
+          issuer: 'I',
+          algorithm: 'SHA1',
+          digits: 6,
+          period: 30,
+          backupCodes: { count: 5, length: 10 },
+        },
+      }),
+    };
     const providers: any[] = [{ provide: ConfigService, useValue: cfg }];
     if (secretModel) {
-      providers.push({ provide: getModelToken(TwoFactorSecret.name), useValue: secretModel });
+      providers.push({
+        provide: getModelToken(TwoFactorSecret.name),
+        useValue: secretModel,
+      });
     }
     const moduleRef = await Test.createTestingModule({
       providers: [TwoFactorService, ...providers],

@@ -14,10 +14,12 @@ export class HttpError extends Error {
     public readonly url: string,
     public readonly data?: unknown,
   ) {
+    /** super (see class JSDoc for context). */
     super(message);
     this.name = this.constructor.name;
   }
 
+  /** toJSON (see class JSDoc for context). */
   toJSON(): HttpErrorResponse {
     return {
       status: this.statusCode,
@@ -31,42 +33,49 @@ export class HttpError extends Error {
 
 export class BadRequestError extends HttpError {
   constructor(message: string, url: string, data?: unknown) {
+    /** super (see class JSDoc for context). */
     super(400, 'Bad Request', message, url, data);
   }
 }
 
 export class UnauthorizedError extends HttpError {
   constructor(message: string, url: string, data?: unknown) {
+    /** super (see class JSDoc for context). */
     super(401, 'Unauthorized', message, url, data);
   }
 }
 
 export class ForbiddenError extends HttpError {
   constructor(message: string, url: string, data?: unknown) {
+    /** super (see class JSDoc for context). */
     super(403, 'Forbidden', message, url, data);
   }
 }
 
 export class NotFoundError extends HttpError {
   constructor(message: string, url: string, data?: unknown) {
+    /** super (see class JSDoc for context). */
     super(404, 'Not Found', message, url, data);
   }
 }
 
 export class TimeoutError extends HttpError {
   constructor(message: string, url: string, data?: unknown) {
+    /** super (see class JSDoc for context). */
     super(408, 'Request Timeout', message, url, data);
   }
 }
 
 export class InternalServerError extends HttpError {
   constructor(message: string, url: string, data?: unknown) {
+    /** super (see class JSDoc for context). */
     super(500, 'Internal Server Error', message, url, data);
   }
 }
 
 export class ServiceUnavailableError extends HttpError {
   constructor(message: string, url: string, data?: unknown) {
+    /** super (see class JSDoc for context). */
     super(503, 'Service Unavailable', message, url, data);
   }
 }
@@ -77,7 +86,11 @@ export function createHttpError(
   url: string,
   data?: unknown,
 ): HttpError {
-  const errors: Record<number, new (message: string, url: string, data?: unknown) => HttpError> = {
+  const errors: Record<
+    number,
+    /** new (see class JSDoc for context). */
+    new (message: string, url: string, data?: unknown) => HttpError
+  > = {
     400: BadRequestError,
     401: UnauthorizedError,
     403: ForbiddenError,

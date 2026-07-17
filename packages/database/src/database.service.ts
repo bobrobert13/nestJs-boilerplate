@@ -1,4 +1,9 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  OnApplicationShutdown,
+  OnModuleInit,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { BootstrapLogger, LogCategory } from '@common/common';
 import mongoose, { ConnectOptions } from 'mongoose';
@@ -28,9 +33,17 @@ interface DatabaseConfig {
  * @see {@link TransactionService} for transactional operations.
  */
 @Injectable()
-export class DatabaseService implements OnModuleInit {
+export class DatabaseService implements OnModuleInit, OnApplicationShutdown {
   private readonly logger = new Logger(DatabaseService.name);
   private retryCount = 0;
+
+  /**
+   * M9 / hardening-medium-low — the pending retry timer (if any) so
+   * shutdown can cancel it. Stored as a number because Node's setTimeout
+   * returns NodeJS.Timeout in modern targets; we accept either.
+   */
+  private pendingRetry: ReturnType<typeof setTimeout> | null = null;
+  private shuttingDown = false;
 
   constructor(private readonly configService: ConfigService) {}
 
@@ -66,25 +79,45 @@ export class DatabaseService implements OnModuleInit {
     const connectOptions: ConnectOptions = { ...options };
 
     try {
-      this.logger.log(`Attempting to connect to MongoDB... (Attempt ${this.retryCount + 1})`);
-      BootstrapLogger.log(LogCategory.DB, `Connecting... attempt ${this.retryCount + 1}`);
+      this.logger.log(
+        `Attempting to connect to MongoDB... (Attempt ${this.retryCount + 1})`,
+      );
+      BootstrapLogger.log(
+        LogCategory.DB,
+        `Connecting... attempt ${this.retryCount + 1}`,
+      );
       await mongoose.connect(uri, connectOptions);
       this.logger.log('Successfully connected to MongoDB');
       BootstrapLogger.log(LogCategory.DB, 'Connected', 'boilerplate_db');
       this.retryCount = 0;
       this.setupEventListeners();
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       this.logger.error(`MongoDB connection error: ${errorMessage}`);
 
       if (this.retryCount < retry.maxRetries) {
-        const delay = this.calculateBackoff(retry.initialDelayMs, retry.maxDelayMs);
+        const delay = this.calculateBackoff(
+          retry.initialDelayMs,
+          retry.maxDelayMs,
+        );
         this.logger.warn(`Retrying connection in ${delay}ms...`);
         this.retryCount++;
-        setTimeout(() => { void this.connectWithRetry(); }, delay);
+        if (!this.shuttingDown) {
+          this.pendingRetry = setTimeout(() => {
+            this.pendingRetry = null;
+            void this.connectWithRetry();
+          }, delay);
+        }
       } else {
-        this.logger.error('Max MongoDB connection retries reached. Server continues without DB.');
-        BootstrapLogger.log(LogCategory.DB, 'Connection failed', 'max retries reached');
+        this.logger.error(
+          'Max MongoDB connection retries reached. Server continues without DB.',
+        );
+        BootstrapLogger.log(
+          LogCategory.DB,
+          'Connection failed',
+          'max retries reached',
+        );
       }
     }
   }
@@ -112,7 +145,9 @@ export class DatabaseService implements OnModuleInit {
    * @internal Invoked automatically after a successful connection.
    */
   private setupEventListeners(): void {
+    if (this.shuttingDown) return;
     mongoose.connection.on('disconnected', () => {
+      if (this.shuttingDown) return;
       this.logger.warn('MongoDB disconnected. Attempting to reconnect...');
       this.retryCount = 0;
       this.connectWithRetry();
@@ -127,14 +162,30 @@ export class DatabaseService implements OnModuleInit {
   }
 
   /**
-   * Gracefully close the MongoDB connection.
-   *
-   * Use during application shutdown or in test afterAll() hooks.
-   *
-   * @returns Resolves when the connection is fully closed.
+   * Gracefully close the MongoDB connection. M9 / hardening-medium-low
+   * also clears any pending retry timer so the Node process exits
+   * cleanly.
    */
   async disconnect(): Promise<void> {
+    if (this.pendingRetry) {
+      clearTimeout(this.pendingRetry);
+      this.pendingRetry = null;
+    }
     await mongoose.disconnect();
     this.logger.log('MongoDB connection closed');
+  }
+
+  /**
+   * M9 — invoked by Nest when `enableShutdownHooks` is on (SIGTERM,
+   * SIGINT). Cancels any pending retry timer so the process exits
+   * promptly instead of waiting for the backoff to elapse.
+   */
+  async onApplicationShutdown(signal?: string): Promise<void> {
+    this.shuttingDown = true;
+    if (this.pendingRetry) {
+      clearTimeout(this.pendingRetry);
+      this.pendingRetry = null;
+    }
+    this.logger.log(`DatabaseService shutdown (${signal ?? 'unknown'})`);
   }
 }

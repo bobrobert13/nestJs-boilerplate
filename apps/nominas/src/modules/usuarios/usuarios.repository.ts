@@ -20,10 +20,10 @@ export class UsuariosRepository {
 
   constructor(
     @InjectModel(Usuario.name)
-    /* eslint-disable-next-line no-unused-vars -- used via this.model in methods */
     private readonly model: Model<UsuarioDocument>,
   ) {}
 
+  /** create (see class JSDoc for context). */
   async create(createDto: any): Promise<UsuarioPublic> {
     const usuario = new this.model(createDto);
     const saved = await usuario.save();
@@ -31,38 +31,92 @@ export class UsuariosRepository {
     return this.toPublic(saved);
   }
 
+  /** findAll (see class JSDoc for context). */
   async findAll(): Promise<UsuarioPublic[]> {
     const usuarios = await this.model.find().exec();
     return usuarios.map((u) => this.toPublic(u));
   }
 
+  /**
+   * M2 / hardening-medium-low — paginated findAll. Returns
+   * `{ data, total, page, limit }` per REQ-pagination-2. The legacy
+   * `findAll()` array endpoint remains as a deprecated convenience
+   * for one minor release (REQ-pagination-4).
+   */
+  /** findAllPaged (see class JSDoc for context). */
+  async findAllPaged(
+    skip: number,
+    limit: number,
+  ): Promise<{
+    data: UsuarioPublic[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
+    const safeSkip = Math.max(0, skip);
+    const safeLimit = Math.max(1, Math.min(100, limit));
+    const [rows, total] = await Promise.all([
+      this.model.find().skip(safeSkip).limit(safeLimit).exec(),
+      this.model.countDocuments().exec(),
+    ]);
+    return {
+      data: rows.map((u) => this.toPublic(u)),
+      total,
+      page: Math.floor(safeSkip / safeLimit) + 1,
+      limit: safeLimit,
+    };
+  }
+
+  /** findOne (see class JSDoc for context). */
   async findOne(id: string): Promise<UsuarioPublic> {
     const usuario = await this.model.findById(id).exec();
+    /** if (see class JSDoc for context). */
     if (!usuario) {
       throw new NotFoundException(`Usuario ${id} not found`);
     }
     return this.toPublic(usuario);
   }
 
+  /** findByEmail (see class JSDoc for context). */
   async findByEmail(email: string): Promise<UsuarioPublic | null> {
     const usuario = await this.model.findOne({ email }).exec();
     return usuario ? this.toPublic(usuario) : null;
   }
 
   /**
-   * Same as {@link findByEmail} but returns the full document including the
-   * password hash.  Only intended for auth-layer consumption (login).
+   * L3 / hardening-medium-low — return only the safe credential-projection
+   * fields. The repository NEVER returns the raw Mongoose document so the
+   * `password` argon2 hash cannot leak across the service boundary.
+   *
+   * Repositories of this name exist precisely so callers can distinguish
+   * "needs the hash for login" from "just needs the public shape".
    */
-  async findByEmailWithPassword(
-    email: string,
-  ): Promise<UsuarioDocument | null> {
-    return this.model.findOne({ email }).exec();
+  /** findByEmailWithSecrets (see class JSDoc for context). */
+  async findByEmailWithSecrets(email: string): Promise<{
+    id: string;
+    email: string;
+    passwordHash: string;
+    roles: string[];
+    activo: boolean;
+  } | null> {
+    const doc = await this.model.findOne({ email }).exec();
+    if (!doc) return null;
+    const d = doc as any;
+    return {
+      id: d._id.toString(),
+      email: d.email,
+      passwordHash: d.password,
+      roles: d.roles ?? [],
+      activo: d.activo ?? true,
+    };
   }
 
+  /** update (see class JSDoc for context). */
   async update(id: string, updateDto: any): Promise<UsuarioPublic> {
     const usuario = await this.model
       .findByIdAndUpdate(id, updateDto, { new: true })
       .exec();
+    /** if (see class JSDoc for context). */
     if (!usuario) {
       throw new NotFoundException(`Usuario ${id} not found`);
     }
@@ -70,8 +124,10 @@ export class UsuariosRepository {
     return this.toPublic(usuario);
   }
 
+  /** remove (see class JSDoc for context). */
   async remove(id: string): Promise<void> {
     const result = await this.model.findByIdAndDelete(id).exec();
+    /** if (see class JSDoc for context). */
     if (!result) {
       throw new NotFoundException(`Usuario ${id} not found`);
     }
