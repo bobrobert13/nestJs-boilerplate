@@ -125,7 +125,7 @@ export class AuthService {
     }
 
     // Fallback — demo stub (no persistence)
-    const hashedPassword = await this.hashPassword(password);
+    await this.hashPassword(password);
     this.logger.debug(`Password hashed for ${email}`);
 
     return {

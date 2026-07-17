@@ -28,9 +28,8 @@ export class UsuariosService implements IUserService {
   private readonly logger = new Logger(UsuariosService.name);
 
   constructor(
-    /* eslint-disable-next-line no-unused-vars -- NestJS DI, used via this.repository */
     private readonly repository: UsuariosRepository,
-    /* eslint-disable-next-line no-unused-vars -- NestJS DI, used via this.authService */
+
     private readonly authService: AuthService,
   ) {}
 

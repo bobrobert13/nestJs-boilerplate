@@ -20,7 +20,6 @@ export class UsuariosRepository {
 
   constructor(
     @InjectModel(Usuario.name)
-    /* eslint-disable-next-line no-unused-vars -- used via this.model in methods */
     private readonly model: Model<UsuarioDocument>,
   ) {}
 

@@ -7,7 +7,6 @@ import {
   AIResponse,
   ChatMessage,
   GeneratedSchema,
-  SchemaFieldDefinition,
   SchemaGenerationOptions,
 } from './types/ai.types';
 import { IAIProvider } from './interfaces/provider.interface';
@@ -385,8 +384,8 @@ Rules:
       raw: string,
     ): { ok: true; schema: GeneratedSchema } | { ok: false; raw: string } => {
       const cleaned: string = String(raw)
-        .replace(/\`\`\`json\\n?/g, '')
-        .replace(/\`\`\`\\n?/g, '')
+        .replace(/```json\n?/g, '')
+        .replace(/```\n?/g, '')
         .trim();
       try {
         const schema = JSON.parse(cleaned);
@@ -541,8 +540,8 @@ Rules:
         raw: string,
       ): { ok: true; schema: GeneratedSchema } | { ok: false; raw: string } => {
         const cleaned: string = String(raw)
-          .replace(/\`\`\`json\\n?/g, '')
-          .replace(/\`\`\`\\n?/g, '')
+          .replace(/```json\n?/g, '')
+          .replace(/```\n?/g, '')
           .trim();
         try {
           const schema = JSON.parse(cleaned);

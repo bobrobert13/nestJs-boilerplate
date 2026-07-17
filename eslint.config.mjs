@@ -20,7 +20,15 @@ export default tseslint.config(
     },
     languageOptions: {
       parser: tseslint.parser,
-      globals: { ...globals.node, ...globals.jest },
+      globals: {
+        ...globals.node,
+        ...globals.jest,
+        // The `globals` package does not expose the `NodeJS` namespace by
+        // default; allow it so `NodeJS.Timeout`, `NodeJS.ReadableStream`,
+        // etc., pass the `no-undef` rule without prefixing every file
+        // with a triple-slash reference.
+        NodeJS: "readonly",
+      },
       sourceType: "module",
       parserOptions: {
         projectService: true,
@@ -29,12 +37,12 @@ export default tseslint.config(
     },
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
-      "@typescript-eslint/no-unused-vars": "off",
       "@typescript-eslint/no-floating-promises": "off",
-      // Ignore args/properties prefixed with underscore (NestJS DI convention:
-      // private readonly _serviceName is acceptable, and Strategy callbacks
-      // often pass an unused _context).
-      "no-unused-vars": [
+      // Use @typescript-eslint/no-unused-vars (which understands
+      // parameter properties like `private readonly foo`) instead of the
+      // base no-unused-vars which produces false positives on NestJS DI.
+      // Prefix args/vars with `_` to opt out of the check.
+      "@typescript-eslint/no-unused-vars": [
         "error",
         {
           args: "after-used",
@@ -45,6 +53,7 @@ export default tseslint.config(
           ignoreRestSiblings: true,
         },
       ],
+      "no-unused-vars": "off",
       "prettier/prettier": ["error", { endOfLine: "auto" }],
       "ai-readiness/require-public-jsdoc": "warn",
     },
@@ -54,16 +63,16 @@ export default tseslint.config(
   {
     files: ["**/*.interface.ts"],
     rules: {
-      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": "off",
     },
   },
   // Enum files: members are part of the public API and may be consumed
-  // elsewhere via TypeScript types, which the base no-unused-vars rule
+  // elsewhere via TypeScript types, which the unused-vars rule
   // does not understand. Disable for enum files.
   {
     files: ["**/*.enum.ts"],
     rules: {
-      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": "off",
     },
   },
 );

@@ -7,13 +7,6 @@ import { Reflector } from '@nestjs/core';
 import { ExecutionContext, Injectable } from '@nestjs/common';
 
 @Injectable()
-class AllowAllGuard {
-  canActivate(): boolean {
-    return true;
-  }
-}
-
-@Injectable()
 class DenyAllGuard {
   canActivate(): boolean {
     return false;

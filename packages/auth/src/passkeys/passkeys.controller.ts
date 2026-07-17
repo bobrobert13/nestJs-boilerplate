@@ -19,11 +19,7 @@ import {
 import { PasskeysService } from './passkeys.service';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { Public } from '../decorators/public.decorator';
-import {
-  RegisterPasskeyDto,
-  VerifyPasskeyDto,
-  LoginWithPasskeyDto,
-} from './dto/passkeys.dto';
+import { RegisterPasskeyDto, LoginWithPasskeyDto } from './dto/passkeys.dto';
 
 @ApiTags('auth', 'passkeys')
 @Controller('auth/passkeys')

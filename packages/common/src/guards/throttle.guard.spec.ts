@@ -1,13 +1,4 @@
 import { ThrottlerGuard } from './throttle.guard';
-import { ExecutionContext } from '@nestjs/common';
-
-function makeCtx(req: any): ExecutionContext {
-  return {
-    switchToHttp: () => ({ getRequest: () => req }),
-    getHandler: () => undefined as any,
-    getClass: () => undefined as any,
-  } as any;
-}
 
 describe('ThrottlerGuard — composite tracker (H4)', () => {
   function makeGuard() {

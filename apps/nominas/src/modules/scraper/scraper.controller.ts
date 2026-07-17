@@ -28,7 +28,7 @@ export class ScraperController {
   /**
    * @param scraperService Orchestrator for scraping strategies.
    */
-  /* eslint-disable-next-line no-unused-vars -- NestJS DI, used via this.scraperService */
+
   constructor(private readonly scraperService: ScraperService) {}
 
   /**

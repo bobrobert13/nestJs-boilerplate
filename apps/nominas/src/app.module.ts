@@ -39,7 +39,6 @@ import { CronModule } from './common/cron/cron.module';
   ],
 })
 export class AppModule implements OnApplicationBootstrap {
-  // eslint-disable-next-line no-unused-vars -- used via this.configService in onApplicationBootstrap
   constructor(private readonly configService: ConfigService) {}
 
   onApplicationBootstrap(): void {

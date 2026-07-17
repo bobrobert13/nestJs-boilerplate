@@ -37,7 +37,7 @@ export class NewsletterController {
   @ApiResponse({ status: 200, description: 'Confirmation email queued' })
   @ApiResponse({ status: 429, description: 'Too many requests' })
   async subscribe(@Body() dto: SubscribeDto) {
-    const subscriber = await this.newsletterService.subscribe(dto);
+    await this.newsletterService.subscribe(dto);
     return {
       success: true,
       data: {

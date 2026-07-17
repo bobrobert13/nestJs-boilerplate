@@ -24,7 +24,6 @@ import { UpdateUsuarioDto } from './dto/update-usuario.dto';
 @ApiBearerAuth()
 @Controller('usuarios')
 export class UsuariosController {
-  // eslint-disable-next-line no-unused-vars -- NestJS DI parameter property, used via this.usuariosService
   constructor(private readonly usuariosService: UsuariosService) {}
 
   /** Public — anyone can register. PR5 / M3: response shape is the same

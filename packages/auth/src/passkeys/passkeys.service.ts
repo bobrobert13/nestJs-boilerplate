@@ -223,7 +223,7 @@ export class PasskeysService implements OnModuleInit {
     );
   }
 
-  private getStoredChallenge(userId: string): Base64URLString {
+  private getStoredChallenge(_userId: string): Base64URLString {
     return this.generateChallenge() as Base64URLString;
   }
 

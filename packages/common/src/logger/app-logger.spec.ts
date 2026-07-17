@@ -6,7 +6,7 @@ describe('AppLogger (M4)', () => {
     const writes: string[] = [];
     const origWrite = process.stdout.write.bind(process.stdout);
     // @ts-expect-error - override for capture
-    process.stdout.write = ((chunk: any, ...args: any[]) => {
+    process.stdout.write = ((chunk: any, ..._args: any[]) => {
       writes.push(String(chunk));
       return true;
     }) as any;

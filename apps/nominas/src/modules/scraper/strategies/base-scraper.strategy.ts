@@ -42,7 +42,7 @@ export abstract class BaseScraperStrategy implements IScraperStrategy {
   /**
    * @param playwright Shared Playwright browser automation service.
    */
-  /* eslint-disable-next-line no-unused-vars -- NestJS DI, used by subclasses */
+
   constructor(protected readonly playwright: PlaywrightService) {
     this.logger = new Logger(this.constructor.name);
   }
@@ -50,7 +50,7 @@ export abstract class BaseScraperStrategy implements IScraperStrategy {
   // ── IScraperStrategy ────────────────────────────────────────
 
   /** @inheritdoc */
-  /* eslint-disable-next-line no-unused-vars -- abstract contract param */
+
   abstract supports(url: string): boolean;
 
   /**
@@ -85,7 +85,7 @@ export abstract class BaseScraperStrategy implements IScraperStrategy {
    * @param page The live Playwright {@link Page}.
    * @returns A flat key-value record of extracted data.
    */
-  /* eslint-disable-next-line no-unused-vars -- abstract contract param */
+
   protected abstract extractData(page: Page): Promise<Record<string, unknown>>;
 
   // ── Helpers (shared across all strategies) ─────────────────

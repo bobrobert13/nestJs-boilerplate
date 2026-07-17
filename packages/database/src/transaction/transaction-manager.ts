@@ -25,7 +25,7 @@ export class TransactionManager {
       return;
     }
 
-    const { maxRetries = 3 } = options;
+    const { maxRetries: _maxRetries = 3 } = options;
     let attempt = 0;
 
     const startSession = async (): Promise<ClientSession> => {
