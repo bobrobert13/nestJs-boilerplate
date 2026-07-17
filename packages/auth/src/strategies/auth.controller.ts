@@ -94,7 +94,7 @@ export class AuthController {
   }
 
   @Public()
-  @Throttle({ limit: 10, ttl: 60_000 })
+  @Throttle({ limit: 10, ttl: 60 })
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Refresh JWT tokens' })
