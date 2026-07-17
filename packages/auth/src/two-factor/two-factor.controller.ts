@@ -108,7 +108,7 @@ export class TwoFactorController {
    * does not declare one. Anonymous requests are rejected with HTTP 401.
    */
   @UseGuards(JwtAuthGuard)
-  @Throttle({ limit: 3, ttl: 60_000 })
+  @Throttle({ limit: 3, ttl: 60 })
   @Post('verify-backup')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()

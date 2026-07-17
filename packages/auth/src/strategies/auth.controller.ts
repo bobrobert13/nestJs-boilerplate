@@ -63,7 +63,7 @@ export class AuthController {
   }
 
   @Public()
-  @Throttle({ limit: 5, ttl: 60_000 })
+  @Throttle({ limit: 5, ttl: 60 })
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -110,7 +110,7 @@ export class AuthController {
   }
 
   @Public()
-  @Throttle({ limit: 5, ttl: 60_000 })
+  @Throttle({ limit: 5, ttl: 60 })
   @Post('magic-link/request')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
