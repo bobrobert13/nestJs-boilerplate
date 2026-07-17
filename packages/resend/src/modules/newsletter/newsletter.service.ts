@@ -106,31 +106,50 @@ export class NewsletterService {
   async sendNewsletter(
     subject: string,
     content: string,
-    options: { onlyActive?: boolean } = { onlyActive: true },
+    options: { onlyActive?: boolean; concurrency?: number } = {
+      onlyActive: true,
+      concurrency: 10,
+    },
   ): Promise<{ sent: number; failed: number }> {
-    const { onlyActive } = options;
+    const { onlyActive, concurrency = 10 } = options;
     const recipients = await this.subscriberModel.find(
       onlyActive ? { isActive: true } : {},
     );
 
+    // L6 / hardening-medium-low — bounded concurrency with a shared
+    // cursor; each worker pulls the next index and dispatches. A failure
+    // for one recipient must not block the rest of the batch.
+    let cursor = 0;
     let sent = 0;
     let failed = 0;
-    /** for (see class JSDoc for context). */
-    for (const subscriber of recipients) {
-      try {
-        await this.resendService.sendEmail({
-          to: subscriber.email,
-          subject,
-          html: content,
-        });
-        sent++;
-      } catch (error) {
-        this.logger.error(
-          `Failed to send to redacted: ${error instanceof Error ? error.message : String(error)}`,
-        );
-        failed++;
+
+    const worker = async (): Promise<void> => {
+      while (true) {
+        const idx = cursor++;
+        if (idx >= recipients.length) return;
+        const subscriber = recipients[idx];
+        try {
+          await this.resendService.sendEmail({
+            to: subscriber.email,
+            subject,
+            html: content,
+          });
+          sent++;
+        } catch (error) {
+          this.logger.error(
+            `Failed to send to redacted: ${error instanceof Error ? error.message : String(error)}`,
+          );
+          failed++;
+        }
       }
-    }
+    };
+
+    const workers = Array.from(
+      { length: Math.min(concurrency, recipients.length) },
+      () => worker(),
+    );
+    await Promise.allSettled(workers);
+
     this.logger.log(`Newsletter sent: ${sent} sent, ${failed} failed`);
     return { sent, failed };
   }

@@ -64,4 +64,25 @@ describe('SsrfGuard (H5)', () => {
     expect(msg).toMatch(/not allowed/i);
     expect(msg).not.toContain('169.254.169.254');
   });
+
+  it('E-1: rejects bracketed IPv6 loopback (http://[::1]/)', async () => {
+    const g = build();
+    await expect(g.assertSafeUrl('http://[::1]/foo')).rejects.toThrow(
+      /not allowed/,
+    );
+  });
+
+  it('E-1: rejects bracketed IPv6 link-local (http://[fe80::1]/)', async () => {
+    const g = build();
+    await expect(g.assertSafeUrl('http://[fe80::1]/foo')).rejects.toThrow(
+      /not allowed/,
+    );
+  });
+
+  it('E-1: accepts public DNS over IPv6 ([2606:4700:4700::1111])', async () => {
+    const g = build();
+    await expect(
+      g.assertSafeUrl('http://[2606:4700:4700::1111]/foo'),
+    ).resolves.toBeUndefined();
+  });
 });

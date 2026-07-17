@@ -34,7 +34,14 @@ async function bootstrap() {
       contentSecurityPolicy: {
         directives: {
           defaultSrc: ["'self'"],
-          scriptSrc: ["'self'", "'unsafe-inline'"], // swagger-ui requires inline
+          scriptSrc: [
+            "'self'",
+            "'unsafe-inline'",
+            // L2 / hardening-medium-low — allow the Tailwind CDN host
+            // explicitly so the SRI-verified inline script can load
+            // from the rendered HTML pages.
+            'https://cdn.tailwindcss.com',
+          ],
           styleSrc: ["'self'", "'unsafe-inline'"],
           imgSrc: ["'self'", 'data:'],
           connectSrc: ["'self'"],

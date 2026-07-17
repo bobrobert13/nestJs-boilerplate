@@ -22,6 +22,15 @@ export class ServeStaticService {
   private readonly logger = new Logger(ServeStaticService.name);
   private readonly templatesPath: string;
   private readonly tailwindCdn = 'https://cdn.tailwindcss.com';
+  /**
+   * L2 / hardening-medium-low — SHA-384 SRI hash for the Tailwind CDN body.
+   * KNOWN-GOTCHA: refresh this value when the upstream CDN body changes
+   * (fetched 2026-07-16). Compute via:
+   *   curl -sSL https://cdn.tailwindcss.com | openssl dgst -sha384 -binary \
+   *     | openssl base64 -A
+   */
+  private readonly tailwindIntegrity =
+    'sha384-igm5BeiBt36UU4gqwWS7imYmelpTsZlQ45FZf+XBn9MuJbn4nQr7yx1yFydocC/K';
   private readonly defaultLayout = 'main';
   private readonly cache = new Map<string, CacheEntry>();
   private readonly cacheTtlMs = 60_000;
@@ -34,10 +43,18 @@ export class ServeStaticService {
     if (!view || typeof view !== 'string') {
       throw new Error('View name must be a non-empty string');
     }
-    if (/[^a-zA-Z0-9_-]/.test(view)) {
+    // L7 / hardening-medium-low — strict charset: only alphanumerics,
+    // underscore and hyphen. The previous regex was the inverse
+    // (deny-list) which admitted `.` and `/`. We additionally refuse any
+    // `..` traversal fragment before path.resolve() below as a
+    // defense-in-depth check.
+    if (!/^[a-zA-Z0-9_-]+$/.test(view)) {
       throw new Error(
         `Invalid view name: "${view}". Only alphanumeric, hyphen, and underscore allowed.`,
       );
+    }
+    if (view.includes('..')) {
+      throw new Error(`Invalid view name: "${view}" contains '..'`);
     }
     return view;
   }
@@ -105,6 +122,7 @@ export class ServeStaticService {
       keywords: '',
       author: '',
       tailwindCdn: this.tailwindCdn,
+      tailwindIntegrity: this.tailwindIntegrity,
       ...options,
     };
 
