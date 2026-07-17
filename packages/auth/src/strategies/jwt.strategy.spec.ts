@@ -37,6 +37,8 @@ describe('JwtStrategy (C5)', () => {
         },
       }),
     };
-    expect(() => new JwtStrategy(config as unknown as ConfigService)).not.toThrow();
+    expect(
+      () => new JwtStrategy(config as unknown as ConfigService),
+    ).not.toThrow();
   });
 });

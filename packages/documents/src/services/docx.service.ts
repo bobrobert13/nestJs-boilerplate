@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import * as mammoth from 'mammoth';
-import { IDocumentParser, ParsedDocument } from '../interfaces/parser.interface';
+import {
+  IDocumentParser,
+  ParsedDocument,
+} from '../interfaces/parser.interface';
 import { DOCUMENT_ERROR_CODES } from '../interfaces/parser.interface';
 
 const MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10MB

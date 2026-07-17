@@ -18,7 +18,9 @@ describe('ThrottlerGuard — composite tracker (H4)', () => {
 
   it('uses userId as the throttle key for an authenticated request', () => {
     const g = makeGuard();
-    expect(g.getTracker({ user: { id: 'u-1' }, ip: '1.2.3.4' })).toBe('user:u-1');
+    expect(g.getTracker({ user: { id: 'u-1' }, ip: '1.2.3.4' })).toBe(
+      'user:u-1',
+    );
   });
 
   it('uses the trusted client IP when no user is authenticated', () => {
@@ -28,8 +30,8 @@ describe('ThrottlerGuard — composite tracker (H4)', () => {
 
   it('falls back to socket remoteAddress when req.ip is unavailable', () => {
     const g = makeGuard();
-    expect(
-      g.getTracker({ socket: { remoteAddress: '5.6.7.8' } } as any),
-    ).toBe('ip:5.6.7.8');
+    expect(g.getTracker({ socket: { remoteAddress: '5.6.7.8' } } as any)).toBe(
+      'ip:5.6.7.8',
+    );
   });
 });

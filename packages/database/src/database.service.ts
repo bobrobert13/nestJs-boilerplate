@@ -66,25 +66,42 @@ export class DatabaseService implements OnModuleInit {
     const connectOptions: ConnectOptions = { ...options };
 
     try {
-      this.logger.log(`Attempting to connect to MongoDB... (Attempt ${this.retryCount + 1})`);
-      BootstrapLogger.log(LogCategory.DB, `Connecting... attempt ${this.retryCount + 1}`);
+      this.logger.log(
+        `Attempting to connect to MongoDB... (Attempt ${this.retryCount + 1})`,
+      );
+      BootstrapLogger.log(
+        LogCategory.DB,
+        `Connecting... attempt ${this.retryCount + 1}`,
+      );
       await mongoose.connect(uri, connectOptions);
       this.logger.log('Successfully connected to MongoDB');
       BootstrapLogger.log(LogCategory.DB, 'Connected', 'boilerplate_db');
       this.retryCount = 0;
       this.setupEventListeners();
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       this.logger.error(`MongoDB connection error: ${errorMessage}`);
 
       if (this.retryCount < retry.maxRetries) {
-        const delay = this.calculateBackoff(retry.initialDelayMs, retry.maxDelayMs);
+        const delay = this.calculateBackoff(
+          retry.initialDelayMs,
+          retry.maxDelayMs,
+        );
         this.logger.warn(`Retrying connection in ${delay}ms...`);
         this.retryCount++;
-        setTimeout(() => { void this.connectWithRetry(); }, delay);
+        setTimeout(() => {
+          void this.connectWithRetry();
+        }, delay);
       } else {
-        this.logger.error('Max MongoDB connection retries reached. Server continues without DB.');
-        BootstrapLogger.log(LogCategory.DB, 'Connection failed', 'max retries reached');
+        this.logger.error(
+          'Max MongoDB connection retries reached. Server continues without DB.',
+        );
+        BootstrapLogger.log(
+          LogCategory.DB,
+          'Connection failed',
+          'max retries reached',
+        );
       }
     }
   }

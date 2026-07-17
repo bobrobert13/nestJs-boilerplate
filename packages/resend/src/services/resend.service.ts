@@ -1,7 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Resend } from 'resend';
-import { EmailOptions, SendEmailResult } from '../interfaces/email-options.interface';
+import {
+  EmailOptions,
+  SendEmailResult,
+} from '../interfaces/email-options.interface';
 
 interface ResendConfig {
   apiKey: string;
@@ -22,7 +25,9 @@ export class ResendService {
     const config = this.configService.get<ResendConfig>('resend');
 
     if (!config?.apiKey) {
-      this.logger.warn('Resend API key not configured. Email sending will be disabled.');
+      this.logger.warn(
+        'Resend API key not configured. Email sending will be disabled.',
+      );
     }
 
     this.client = new Resend(config?.apiKey || '');
@@ -48,7 +53,9 @@ export class ResendService {
     if (bcc) payload.bcc = Array.isArray(bcc) ? bcc : [bcc];
 
     try {
-      this.logger.debug(`Sending email to: ${Array.isArray(to) ? to.join(', ') : to}`);
+      this.logger.debug(
+        `Sending email to: ${Array.isArray(to) ? to.join(', ') : to}`,
+      );
 
       const result = await this.client.emails.send(payload as any);
 
@@ -62,7 +69,9 @@ export class ResendService {
         createdAt: new Date(),
       };
     } catch (error) {
-      this.logger.error(`Failed to send email: ${error instanceof Error ? error.message : String(error)}`);
+      this.logger.error(
+        `Failed to send email: ${error instanceof Error ? error.message : String(error)}`,
+      );
       throw error;
     }
   }
@@ -86,7 +95,11 @@ export class ResendService {
    * The token NEVER reaches the caller of the auth API — it is only sent
    * here to the user's email inbox (C3/REQ-auth-2).
    */
-  async sendMagicLink(to: string, token: string, ttlSeconds: number): Promise<SendEmailResult> {
+  async sendMagicLink(
+    to: string,
+    token: string,
+    ttlSeconds: number,
+  ): Promise<SendEmailResult> {
     const link = `${process.env.MAGIC_LINK_BASE_URL ?? 'http://localhost:3000'}/auth/magic-link/verify?token=${encodeURIComponent(token)}`;
     const html = `<p>Your magic link is valid for ${Math.floor(ttlSeconds / 60)} minutes.</p><p><a href="${link}">Sign in</a></p>`;
     return this.sendEmail({

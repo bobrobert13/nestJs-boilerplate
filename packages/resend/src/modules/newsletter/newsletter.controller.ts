@@ -13,7 +13,10 @@ import {
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { Throttle } from '@common/common';
 import { NewsletterService } from './newsletter.service';
-import { SubscribeDto, UnsubscribeDto } from './interfaces/newsletter.interfaces';
+import {
+  SubscribeDto,
+  UnsubscribeDto,
+} from './interfaces/newsletter.interfaces';
 
 @ApiTags('newsletter')
 @Controller('newsletter')
@@ -38,8 +41,7 @@ export class NewsletterController {
     return {
       success: true,
       data: {
-        message:
-          'If the email is valid, a confirmation link has been sent.',
+        message: 'If the email is valid, a confirmation link has been sent.',
       },
     };
   }

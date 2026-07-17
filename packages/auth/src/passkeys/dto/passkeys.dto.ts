@@ -29,7 +29,8 @@ export class VerifyPasskeyDto {
 export class LoginWithPasskeyDto {
   @ApiPropertyOptional({
     example: 'user-id-xyz789',
-    description: 'Optional user ID to look up existing credentials (auto-discovery when omitted)',
+    description:
+      'Optional user ID to look up existing credentials (auto-discovery when omitted)',
   })
   @IsOptional()
   @IsString()

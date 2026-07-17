@@ -25,4 +25,3 @@ export function requestIdMiddleware(
   res.setHeader('X-Request-Id', requestId);
   next();
 }
-

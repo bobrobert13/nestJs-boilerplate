@@ -10,11 +10,20 @@ import {
   Delete,
   Param,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { PasskeysService } from './passkeys.service';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { Public } from '../decorators/public.decorator';
-import { RegisterPasskeyDto, VerifyPasskeyDto, LoginWithPasskeyDto } from './dto/passkeys.dto';
+import {
+  RegisterPasskeyDto,
+  VerifyPasskeyDto,
+  LoginWithPasskeyDto,
+} from './dto/passkeys.dto';
 
 @ApiTags('auth', 'passkeys')
 @Controller('auth/passkeys')
@@ -26,7 +35,10 @@ export class PasskeysController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get WebAuthn registration options' })
   @ApiResponse({ status: 200, description: 'Registration options' })
-  async generateRegistrationOptions(@Request() req: any, @Body() dto: RegisterPasskeyDto) {
+  async generateRegistrationOptions(
+    @Request() req: any,
+    @Body() dto: RegisterPasskeyDto,
+  ) {
     const options = await this.passkeysService.generateRegistrationOptions(
       req.user.id,
       dto.username,
@@ -42,7 +54,10 @@ export class PasskeysController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Verify and register a passkey' })
   @ApiResponse({ status: 200, description: 'Passkey registered' })
-  async verifyRegistration(@Request() req: any, @Body() body: { response: any }) {
+  async verifyRegistration(
+    @Request() req: any,
+    @Body() body: { response: any },
+  ) {
     const result = await this.passkeysService.verifyRegistration(
       req.user.id,
       req.user.email,
@@ -59,7 +74,9 @@ export class PasskeysController {
   @ApiOperation({ summary: 'Get WebAuthn login (authentication) options' })
   @ApiResponse({ status: 200, description: 'Login options' })
   async generateLoginOptions(@Body() dto: LoginWithPasskeyDto) {
-    const options = await this.passkeysService.generateAuthenticationOptions(dto.userId);
+    const options = await this.passkeysService.generateAuthenticationOptions(
+      dto.userId,
+    );
     return {
       success: true,
       data: options,
@@ -105,8 +122,14 @@ export class PasskeysController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete a registered passkey' })
   @ApiResponse({ status: 200, description: 'Passkey deleted' })
-  async deletePasskey(@Request() req: any, @Param('credentialId') credentialId: string) {
-    const deleted = await this.passkeysService.deletePasskey(req.user.id, credentialId);
+  async deletePasskey(
+    @Request() req: any,
+    @Param('credentialId') credentialId: string,
+  ) {
+    const deleted = await this.passkeysService.deletePasskey(
+      req.user.id,
+      credentialId,
+    );
     return {
       success: deleted,
       message: deleted ? 'Passkey deleted' : 'Passkey not found',

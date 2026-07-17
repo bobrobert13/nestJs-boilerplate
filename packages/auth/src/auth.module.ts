@@ -14,7 +14,10 @@ import { RolesGuard } from './guards/roles.guard';
 import { AuthController } from './strategies/auth.controller';
 import { REFRESH_TOKEN_STORE } from './interfaces/auth.interfaces';
 import authConfig, { DEV_JWT_SECRET_FALLBACK } from './config/auth.config';
-import { RefreshToken, RefreshTokenSchema } from './schemas/refresh-token.schema';
+import {
+  RefreshToken,
+  RefreshTokenSchema,
+} from './schemas/refresh-token.schema';
 import {
   TwoFactorBackupCode,
   TwoFactorBackupCodeSchema,
@@ -102,6 +105,10 @@ export class AuthModule implements OnModuleInit {
     this.logger.log('   - Magic Links: available');
     this.logger.log('   - Roles Guard: available');
 
-    BootstrapLogger.log(LogCategory.AUTH, 'JWT · MagicLink · Roles Guard', 'enabled');
+    BootstrapLogger.log(
+      LogCategory.AUTH,
+      'JWT · MagicLink · Roles Guard',
+      'enabled',
+    );
   }
 }

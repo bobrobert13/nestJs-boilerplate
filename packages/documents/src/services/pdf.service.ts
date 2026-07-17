@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import pdfParse from 'pdf-parse';
-import { IDocumentParser, ParsedDocument } from '../interfaces/parser.interface';
+import {
+  IDocumentParser,
+  ParsedDocument,
+} from '../interfaces/parser.interface';
 import { DOCUMENT_ERROR_CODES } from '../interfaces/parser.interface';
 
 const MAX_PAGES = 20;

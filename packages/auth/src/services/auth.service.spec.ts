@@ -37,7 +37,13 @@ describe('AuthController — magic-link delivery (C3)', () => {
     mockMagicLink.isEnabled.mockReturnValue(true);
     mockMagicLink.generateMagicLink.mockResolvedValue('TOKEN-SHOULD-NOT-LEAK');
     mockMagicLink.getConfig.mockReturnValue({ enabled: true, tokenTtl: 300 });
-    mockResend.sendMagicLink.mockResolvedValue({ id: 'email-1', to: [], from: '', subject: '', createdAt: new Date() } as any);
+    mockResend.sendMagicLink.mockResolvedValue({
+      id: 'email-1',
+      to: [],
+      from: '',
+      subject: '',
+      createdAt: new Date(),
+    } as any);
 
     const controller = await buildController();
     const result = await controller.requestMagicLink({ email: 'a@b.com' });
@@ -51,12 +57,22 @@ describe('AuthController — magic-link delivery (C3)', () => {
     mockMagicLink.isEnabled.mockReturnValue(true);
     mockMagicLink.generateMagicLink.mockResolvedValue('the-real-token');
     mockMagicLink.getConfig.mockReturnValue({ enabled: true, tokenTtl: 300 });
-    mockResend.sendMagicLink.mockResolvedValue({ id: 'x', to: [], from: '', subject: '', createdAt: new Date() } as any);
+    mockResend.sendMagicLink.mockResolvedValue({
+      id: 'x',
+      to: [],
+      from: '',
+      subject: '',
+      createdAt: new Date(),
+    } as any);
 
     const controller = await buildController();
     await controller.requestMagicLink({ email: 'a@b.com' });
 
-    expect(mockResend.sendMagicLink).toHaveBeenCalledWith('a@b.com', 'the-real-token', 300);
+    expect(mockResend.sendMagicLink).toHaveBeenCalledWith(
+      'a@b.com',
+      'the-real-token',
+      300,
+    );
   });
 
   it('returns HTTP 503 when Resend delivery is unavailable without exposing a token', async () => {
@@ -75,7 +91,9 @@ describe('AuthController — magic-link delivery (C3)', () => {
     }
     expect(caught).toBeDefined();
     expect(caught.getStatus?.() ?? caught?.status).toBe(503);
-    expect(JSON.stringify(caught?.getResponse?.() ?? caught?.response ?? {})).not.toContain('must-not-leak');
+    expect(
+      JSON.stringify(caught?.getResponse?.() ?? caught?.response ?? {}),
+    ).not.toContain('must-not-leak');
     expect(mockMagicLink.invalidateToken).toHaveBeenCalledWith('must-not-leak');
   });
 });

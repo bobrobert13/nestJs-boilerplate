@@ -35,7 +35,9 @@ export class ServeStaticService {
       throw new Error('View name must be a non-empty string');
     }
     if (/[^a-zA-Z0-9_-]/.test(view)) {
-      throw new Error(`Invalid view name: "${view}". Only alphanumeric, hyphen, and underscore allowed.`);
+      throw new Error(
+        `Invalid view name: "${view}". Only alphanumeric, hyphen, and underscore allowed.`,
+      );
     }
     return view;
   }
@@ -51,7 +53,11 @@ export class ServeStaticService {
       this.cache.set(filePath, { content, timestamp: Date.now() });
       return content;
     } catch (error) {
-      if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
+      if (
+        error instanceof Error &&
+        'code' in error &&
+        error.code === 'ENOENT'
+      ) {
         throw new Error(`File not found: ${path.basename(filePath)}`);
       }
       throw error;
@@ -102,7 +108,9 @@ export class ServeStaticService {
       ...options,
     };
 
-    const renderedView = await ejs.render(viewContent, baseData, { strict: false });
+    const renderedView = await ejs.render(viewContent, baseData, {
+      strict: false,
+    });
 
     return ejs.render(
       layoutContent,

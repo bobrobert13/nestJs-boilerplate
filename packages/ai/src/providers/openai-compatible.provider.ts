@@ -71,9 +71,21 @@ export class OpenAICompatibleProvider implements IAIProvider {
       case 'google':
         return { ...defaults, vision: true, functionCalling: true };
       case 'moonshot':
-        return { chat: true, embeddings: true, vision: false, streaming: true, functionCalling: true };
+        return {
+          chat: true,
+          embeddings: true,
+          vision: false,
+          streaming: true,
+          functionCalling: true,
+        };
       case 'minimax':
-        return { chat: true, embeddings: true, vision: false, streaming: true, functionCalling: false };
+        return {
+          chat: true,
+          embeddings: true,
+          vision: false,
+          streaming: true,
+          functionCalling: false,
+        };
       default:
         return defaults;
     }
@@ -92,14 +104,17 @@ export class OpenAICompatibleProvider implements IAIProvider {
 
       // Vision capability guard: reject multimodal content early if provider
       // doesn't support it, instead of letting the upstream API return a 400.
-      const wantsVision = options.messages.some((m) =>
-        Array.isArray(m.content) &&
-        m.content.some((p) => p.type !== 'text'),
+      const wantsVision = options.messages.some(
+        (m) =>
+          Array.isArray(m.content) && m.content.some((p) => p.type !== 'text'),
       );
       if (wantsVision && !this.capabilities.vision) {
         return {
           success: false,
-          error: 'VISION_NOT_SUPPORTED: provider "' + this.config.provider + '" has capabilities.vision=false',
+          error:
+            'VISION_NOT_SUPPORTED: provider "' +
+            this.config.provider +
+            '" has capabilities.vision=false',
           provider: this.config.provider,
           model,
         };
@@ -143,7 +158,10 @@ export class OpenAICompatibleProvider implements IAIProvider {
               };
             }
             if (part.type === 'text') return { type: 'text', text: part.text };
-            return { type: part.type, source: (part as { source?: unknown }).source };
+            return {
+              type: part.type,
+              source: (part as { source?: unknown }).source,
+            };
           }
           // Google Gemini uses {inline_data: {mime_type, data}}
           if (providerName === 'google') {
@@ -165,7 +183,11 @@ export class OpenAICompatibleProvider implements IAIProvider {
             return {
               type: 'image_url',
               image_url: {
-                url: 'data:' + part.inline_data.mime_type + ';base64,' + part.inline_data.data,
+                url:
+                  'data:' +
+                  part.inline_data.mime_type +
+                  ';base64,' +
+                  part.inline_data.data,
               },
             };
           }
@@ -188,14 +210,21 @@ export class OpenAICompatibleProvider implements IAIProvider {
         stop: options.stop,
         stream: false,
       };
-      if (options.responseFormat === 'json_object' && this.config.provider === 'openai') {
+      if (
+        options.responseFormat === 'json_object' &&
+        this.config.provider === 'openai'
+      ) {
         body.response_format = { type: 'json_object' };
       }
 
       const response = await this.client.post('/chat/completions', body);
 
       const data = response.data as Record<string, unknown>;
-      const choices = (data.choices as Array<{ message: { role: string; content: string }; finish_reason: string }>) || [];
+      const choices =
+        (data.choices as Array<{
+          message: { role: string; content: string };
+          finish_reason: string;
+        }>) || [];
       const usage = data.usage as Record<string, number> | undefined;
 
       return {
@@ -211,11 +240,13 @@ export class OpenAICompatibleProvider implements IAIProvider {
         },
         provider: this.config.provider,
         model: String(data.model || model),
-        usage: usage ? {
-          promptTokens: usage.prompt_tokens,
-          completionTokens: usage.completion_tokens,
-          totalTokens: usage.total_tokens,
-        } : undefined,
+        usage: usage
+          ? {
+              promptTokens: usage.prompt_tokens,
+              completionTokens: usage.completion_tokens,
+              totalTokens: usage.total_tokens,
+            }
+          : undefined,
       };
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Unknown error';
@@ -294,7 +325,9 @@ export class OpenAICompatibleProvider implements IAIProvider {
   async embeddings(options: EmbeddingOptions): Promise<AIResponse> {
     try {
       const model = options.model || this.getDefaultEmbeddingModel();
-      const input = Array.isArray(options.input) ? options.input : [options.input];
+      const input = Array.isArray(options.input)
+        ? options.input
+        : [options.input];
 
       const response = await this.client.post('/embeddings', {
         model,
@@ -304,7 +337,8 @@ export class OpenAICompatibleProvider implements IAIProvider {
       });
 
       const data = response.data as Record<string, unknown>;
-      const embeddingData = (data.data as Array<{ embedding: number[]; index: number }>) || [];
+      const embeddingData =
+        (data.data as Array<{ embedding: number[]; index: number }>) || [];
       const usage = data.usage as Record<string, number> | undefined;
 
       return {
@@ -319,11 +353,13 @@ export class OpenAICompatibleProvider implements IAIProvider {
         },
         provider: this.config.provider,
         model: String(data.model || model),
-        usage: usage ? {
-          promptTokens: usage.prompt_tokens,
-          completionTokens: usage.completion_tokens,
-          totalTokens: usage.total_tokens,
-        } : undefined,
+        usage: usage
+          ? {
+              promptTokens: usage.prompt_tokens,
+              completionTokens: usage.completion_tokens,
+              totalTokens: usage.total_tokens,
+            }
+          : undefined,
       };
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Unknown error';

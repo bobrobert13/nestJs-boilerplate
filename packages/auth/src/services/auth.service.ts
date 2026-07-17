@@ -1,10 +1,26 @@
-import { Injectable, Logger, UnauthorizedException, ConflictException, Inject, Optional } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  UnauthorizedException,
+  ConflictException,
+  Inject,
+  Optional,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { randomBytes } from 'crypto';
 import argon2 from 'argon2';
-import type { IUserService, IRefreshTokenStore } from '../interfaces/auth.interfaces';
-import { JwtPayload, TokenResponse, AuthenticatedUser, USER_SERVICE, REFRESH_TOKEN_STORE } from '../interfaces/auth.interfaces';
+import type {
+  IUserService,
+  IRefreshTokenStore,
+} from '../interfaces/auth.interfaces';
+import {
+  JwtPayload,
+  TokenResponse,
+  AuthenticatedUser,
+  USER_SERVICE,
+  REFRESH_TOKEN_STORE,
+} from '../interfaces/auth.interfaces';
 
 interface AuthConfig {
   jwt: {
@@ -22,18 +38,24 @@ interface AuthConfig {
   };
 }
 
-
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
   /** ponytail: fallback store when no IRefreshTokenStore is registered. */
-  private readonly memoryStore: Map<string, { userId: string; email: string; roles: string[]; expiresAt: Date }> = new Map();
+  private readonly memoryStore: Map<
+    string,
+    { userId: string; email: string; roles: string[]; expiresAt: Date }
+  > = new Map();
 
   constructor(
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-    @Optional() @Inject(USER_SERVICE) private readonly userService?: IUserService,
-    @Optional() @Inject(REFRESH_TOKEN_STORE) private readonly tokenStore?: IRefreshTokenStore,
+    @Optional()
+    @Inject(USER_SERVICE)
+    private readonly userService?: IUserService,
+    @Optional()
+    @Inject(REFRESH_TOKEN_STORE)
+    private readonly tokenStore?: IRefreshTokenStore,
   ) {}
 
   /**
@@ -43,7 +65,10 @@ export class AuthService {
    * `userService.findByEmail()` + argon2 comparison.  Otherwise it
    * falls back to the built-in demo stub (`demo@example.com` / `demo123`).
    */
-  async validateUser(email: string, password: string): Promise<AuthenticatedUser | null> {
+  async validateUser(
+    email: string,
+    password: string,
+  ): Promise<AuthenticatedUser | null> {
     // PR3 / M4 — log userId-or-redacted, never the email.
     this.logger.log(`Validating user: redacted`);
 
@@ -76,7 +101,11 @@ export class AuthService {
     return null;
   }
 
-  async register(email: string, password: string, name?: string): Promise<AuthenticatedUser> {
+  async register(
+    email: string,
+    password: string,
+    name?: string,
+  ): Promise<AuthenticatedUser> {
     this.logger.log(`Registering user: ${email}`);
 
     if (email === 'demo@example.com') {
@@ -87,7 +116,11 @@ export class AuthService {
     // so the user is persisted in MongoDB. Otherwise fall back to the demo stub.
     if (this.userService) {
       const hashedPassword = await this.hashPassword(password);
-      const user = await this.userService.createUser(email, hashedPassword, name);
+      const user = await this.userService.createUser(
+        email,
+        hashedPassword,
+        name,
+      );
       return { id: user.id, email: user.email, roles: user.roles };
     }
 
@@ -124,7 +157,10 @@ export class AuthService {
   async refreshTokens(refreshToken: string): Promise<TokenResponse> {
     // PR2 / H3 — use the Mongoose-backed rotation path when the store
     // exposes `rotate`; otherwise fall back to the in-memory rotation.
-    if (this.tokenStore && typeof (this.tokenStore as any).rotate === 'function') {
+    if (
+      this.tokenStore &&
+      typeof (this.tokenStore as any).rotate === 'function'
+    ) {
       const config = this.configService.get<AuthConfig>('auth');
       const ttl = config?.jwt?.refreshTokenTtl || 604800;
       const expiresAt = new Date(Date.now() + ttl * 1000);
@@ -229,12 +265,12 @@ export class AuthService {
     try {
       return await argon2.verify(hash, password);
     } catch (error) {
-      this.logger.error(`Password comparison failed: ${error instanceof Error ? error.message : String(error)}`);
+      this.logger.error(
+        `Password comparison failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
       return false;
     }
   }
-
-
 
   private async createRefreshToken(user: AuthenticatedUser): Promise<string> {
     const token = randomBytes(32).toString('hex');
@@ -247,7 +283,13 @@ export class AuthService {
   }
 
   /** Save token via the injected store or fall back to the in-memory Map. */
-  private async saveToken(token: string, userId: string, email: string, roles: string[], expiresAt: Date): Promise<void> {
+  private async saveToken(
+    token: string,
+    userId: string,
+    email: string,
+    roles: string[],
+    expiresAt: Date,
+  ): Promise<void> {
     if (this.tokenStore) {
       await this.tokenStore.save(token, userId, email, roles, expiresAt);
     } else {
@@ -256,7 +298,12 @@ export class AuthService {
   }
 
   /** Load token via the injected store or fall back to the in-memory Map. */
-  private async loadToken(token: string): Promise<{ userId: string; email: string; roles: string[]; expiresAt: Date } | null> {
+  private async loadToken(token: string): Promise<{
+    userId: string;
+    email: string;
+    roles: string[];
+    expiresAt: Date;
+  } | null> {
     if (this.tokenStore) {
       return this.tokenStore.find(token);
     }

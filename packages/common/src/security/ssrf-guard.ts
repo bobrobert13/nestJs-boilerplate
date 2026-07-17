@@ -79,9 +79,7 @@ function ipToBigInt(ip: string): bigint {
   if (ip.includes(':')) {
     return BigInt('0x' + ip.replaceAll(':', '').padStart(32, '0'));
   }
-  return BigInt(
-    ip.split('.').reduce((a, o) => a * 256 + Number(o), 0),
-  );
+  return BigInt(ip.split('.').reduce((a, o) => a * 256 + Number(o), 0));
 }
 
 /** Does the given CIDR contain the IP? */

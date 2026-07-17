@@ -20,18 +20,24 @@ export class MagicLinkService implements OnModuleInit {
   constructor(private readonly configService: ConfigService) {}
 
   onModuleInit() {
-    const config = this.configService.get<{ magicLink: MagicLinkConfig }>('auth');
+    const config = this.configService.get<{ magicLink: MagicLinkConfig }>(
+      'auth',
+    );
     const isEnabled = config?.magicLink?.enabled || false;
-    
+
     if (isEnabled) {
       this.logger.log('✅ MagicLinkService initialized - Magic links ENABLED');
     } else {
-      this.logger.warn('⚠️ MagicLinkService initialized - Magic links DISABLED');
+      this.logger.warn(
+        '⚠️ MagicLinkService initialized - Magic links DISABLED',
+      );
     }
   }
 
   async generateMagicLink(email: string): Promise<string> {
-    const config = this.configService.get<{ magicLink: MagicLinkConfig }>('auth');
+    const config = this.configService.get<{ magicLink: MagicLinkConfig }>(
+      'auth',
+    );
 
     if (!config?.magicLink?.enabled) {
       this.logger.warn('Magic link is disabled');
@@ -47,7 +53,7 @@ export class MagicLinkService implements OnModuleInit {
     });
 
     this.logger.log(`Magic link generated for: ${email}`);
-    
+
     return token;
   }
 
@@ -75,7 +81,9 @@ export class MagicLinkService implements OnModuleInit {
   }
 
   isEnabled(): boolean {
-    const config = this.configService.get<{ magicLink: MagicLinkConfig }>('auth');
+    const config = this.configService.get<{ magicLink: MagicLinkConfig }>(
+      'auth',
+    );
     return config?.magicLink?.enabled || false;
   }
 
@@ -84,7 +92,9 @@ export class MagicLinkService implements OnModuleInit {
    * without exposing the entire auth config.
    */
   getConfig(): MagicLinkConfig | null {
-    const config = this.configService.get<{ magicLink: MagicLinkConfig }>('auth');
+    const config = this.configService.get<{ magicLink: MagicLinkConfig }>(
+      'auth',
+    );
     return config?.magicLink ?? null;
   }
 

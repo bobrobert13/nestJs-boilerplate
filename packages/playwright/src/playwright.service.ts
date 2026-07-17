@@ -1,10 +1,16 @@
-import { Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
-import { BootstrapLogger, LogCategory } from "@common/common";
-import { chromium, Browser, BrowserContext, Page } from "playwright";
-import { PLAYWRIGHT_OPTIONS } from "./constants/playwright.constants";
+import {
+  Inject,
+  Injectable,
+  Logger,
+  OnModuleDestroy,
+  OnModuleInit,
+} from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { BootstrapLogger, LogCategory } from '@common/common';
+import { chromium, Browser, BrowserContext, Page } from 'playwright';
+import { PLAYWRIGHT_OPTIONS } from './constants/playwright.constants';
 import { execSync } from 'child_process';
-import type { PlaywrightOptions } from "./interfaces/playwright-options.interface";
+import type { PlaywrightOptions } from './interfaces/playwright-options.interface';
 
 /**
  * NestJS wrapper around Playwright Chromium for browser automation.
@@ -31,10 +37,14 @@ export class PlaywrightService implements OnModuleInit, OnModuleDestroy {
   ) {}
 
   /** NestJS lifecycle: launches Chromium on boot. */
-  async onModuleInit(): Promise<void> { await this.initialize(); }
+  async onModuleInit(): Promise<void> {
+    await this.initialize();
+  }
 
   /** NestJS lifecycle: closes the browser gracefully on shutdown. */
-  async onModuleDestroy(): Promise<void> { await this.close(); }
+  async onModuleDestroy(): Promise<void> {
+    await this.close();
+  }
 
   /**
    * Launches Chromium with the configured PlaywrightOptions and creates a shared browser context.
@@ -42,23 +52,37 @@ export class PlaywrightService implements OnModuleInit, OnModuleDestroy {
    * @throws On launch failure (e.g. missing browser binary).
    */
   async initialize(): Promise<void> {
-    if (this.browser) { return; }
+    if (this.browser) {
+      return;
+    }
     try {
       const browserOptions = {
         headless: this.options.headless ?? true,
         executablePath: this.getChromiumPath(),
         args: this.buildLaunchArgs(),
       };
-      this.logger.log(`Launching Chromium from: ${browserOptions.executablePath || "default"}`);
+      this.logger.log(
+        `Launching Chromium from: ${browserOptions.executablePath || 'default'}`,
+      );
       this.browser = await chromium.launch(browserOptions);
-      this.logger.log("Browser initialized successfully");
-      BootstrapLogger.log(LogCategory.PLAYWRIGHT, 'Chromium initialized', browserOptions.headless ? 'headless' : 'headed');
+      this.logger.log('Browser initialized successfully');
+      BootstrapLogger.log(
+        LogCategory.PLAYWRIGHT,
+        'Chromium initialized',
+        browserOptions.headless ? 'headless' : 'headed',
+      );
       const viewport = this.options.viewport ?? { width: 1920, height: 1080 };
-      const userAgent = this.options.userAgent ?? "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
-      this.context = await this.browser.newContext({ viewport, userAgent, acceptDownloads: false });
-      this.logger.log("Browser context created successfully");
+      const userAgent =
+        this.options.userAgent ??
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+      this.context = await this.browser.newContext({
+        viewport,
+        userAgent,
+        acceptDownloads: false,
+      });
+      this.logger.log('Browser context created successfully');
     } catch (error) {
-      this.logger.error("Failed to initialize browser", error);
+      this.logger.error('Failed to initialize browser', error);
       throw error;
     }
   }
@@ -71,8 +95,12 @@ export class PlaywrightService implements OnModuleInit, OnModuleDestroy {
    */
   async createPage(url: string): Promise<Page> {
     await this.ensureInitialized();
-    if (!this.context) { throw new Error('Browser context is not initialized'); }
-    if (this.page) { await this.page.close(); }
+    if (!this.context) {
+      throw new Error('Browser context is not initialized');
+    }
+    if (this.page) {
+      await this.page.close();
+    }
     this.page = await this.context.newPage();
     try {
       await this.page.goto(url, {
@@ -104,16 +132,34 @@ export class PlaywrightService implements OnModuleInit, OnModuleDestroy {
    * Called automatically on module destroy.
    */
   async close(): Promise<void> {
-    if (this.page) { await this.page.close(); this.page = null; }
-    if (this.context) { await this.context.close(); this.context = null; }
-    if (this.browser) { await this.browser.close(); this.browser = null; this.logger.log('Browser closed successfully'); }
+    if (this.page) {
+      await this.page.close();
+      this.page = null;
+    }
+    if (this.context) {
+      await this.context.close();
+      this.context = null;
+    }
+    if (this.browser) {
+      await this.browser.close();
+      this.browser = null;
+      this.logger.log('Browser closed successfully');
+    }
   }
 
   /** Ensures the browser is initialized; lazily calls initialize(). @internal */
-  private async ensureInitialized(): Promise<void> { if (!this.browser) { await this.initialize(); } }
+  private async ensureInitialized(): Promise<void> {
+    if (!this.browser) {
+      await this.initialize();
+    }
+  }
 
   /** Ensures a page is open. @internal */
-  private async ensurePageExists(): Promise<void> { if (!this.page) { throw new Error('No page exists. Call createPage() or navigate() first.'); } }
+  private async ensurePageExists(): Promise<void> {
+    if (!this.page) {
+      throw new Error('No page exists. Call createPage() or navigate() first.');
+    }
+  }
 
   /**
    * Builds the chromium launch-args list. PR4 / H4 — `--no-sandbox` is
@@ -142,13 +188,17 @@ export class PlaywrightService implements OnModuleInit, OnModuleDestroy {
    * @internal
    */
   private getChromiumPath(): string | undefined {
-    const pwConfig = this.configService.get<{ browsersPath?: string }>('playwright');
+    const pwConfig = this.configService.get<{ browsersPath?: string }>(
+      'playwright',
+    );
     const browsersPath = pwConfig?.browsersPath;
     if (browsersPath) {
       if (process.platform !== 'win32') {
         try {
           const result = execSync(
-            'find ' + browsersPath + ' -name chrome-headless-shell -type f 2>/dev/null | head -1',
+            'find ' +
+              browsersPath +
+              ' -name chrome-headless-shell -type f 2>/dev/null | head -1',
             { encoding: 'utf8' },
           ).trim();
           if (result) {
@@ -156,10 +206,15 @@ export class PlaywrightService implements OnModuleInit, OnModuleDestroy {
             return result;
           }
         } catch (error) {
-          this.logger.warn('Could not find chromium executable, using default', (error as Error).stack);
+          this.logger.warn(
+            'Could not find chromium executable, using default',
+            (error as Error).stack,
+          );
         }
       } else {
-        this.logger.debug('Windows detected - relying on Playwright built-in browser discovery');
+        this.logger.debug(
+          'Windows detected - relying on Playwright built-in browser discovery',
+        );
       }
     }
     return undefined;

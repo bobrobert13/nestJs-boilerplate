@@ -8,7 +8,12 @@ import {
   HttpStatus,
   UnauthorizedException,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { TwoFactorService } from './two-factor.service';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import {
@@ -47,7 +52,10 @@ export class TwoFactorController {
   @ApiOperation({ summary: 'Enable 2FA with TOTP code' })
   @ApiResponse({ status: 200, description: '2FA enabled' })
   async enable(@Request() req: any, @Body() dto: EnableTwoFactorDto) {
-    const result = await this.twoFactorService.enableTwoFactor(req.user.id, dto.code);
+    const result = await this.twoFactorService.enableTwoFactor(
+      req.user.id,
+      dto.code,
+    );
 
     if (!result.success) {
       return {
@@ -72,7 +80,10 @@ export class TwoFactorController {
   @ApiOperation({ summary: 'Verify a TOTP code' })
   @ApiResponse({ status: 200, description: 'Verification result' })
   async verify(@Request() req: any, @Body() dto: VerifyTwoFactorDto) {
-    const result = await this.twoFactorService.verifyCode(req.user.id, dto.code);
+    const result = await this.twoFactorService.verifyCode(
+      req.user.id,
+      dto.code,
+    );
 
     return {
       success: result.valid,
@@ -93,7 +104,10 @@ export class TwoFactorController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Verify a 2FA backup code' })
   @ApiResponse({ status: 200, description: 'Backup code verification result' })
-  @ApiResponse({ status: 401, description: 'Unauthorized — JWT required or backup code invalid' })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized — JWT required or backup code invalid',
+  })
   async verifyBackup(@Request() req: any, @Body() dto: VerifyBackupCodeDto) {
     const userId = req?.user?.id;
     if (!userId) {
@@ -121,9 +135,15 @@ export class TwoFactorController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Regenerate backup codes' })
   @ApiResponse({ status: 200, description: 'Backup codes regenerated' })
-  async regenerateBackupCodes(@Request() req: any, @Body() dto: GenerateBackupCodesDto) {
+  async regenerateBackupCodes(
+    @Request() req: any,
+    @Body() dto: GenerateBackupCodesDto,
+  ) {
     try {
-      const newCodes = await this.twoFactorService.regenerateBackupCodes(req.user.id, dto.currentCode!);
+      const newCodes = await this.twoFactorService.regenerateBackupCodes(
+        req.user.id,
+        dto.currentCode!,
+      );
       return {
         success: true,
         data: {
@@ -133,7 +153,8 @@ export class TwoFactorController {
     } catch (error) {
       return {
         success: false,
-        message: error instanceof Error ? error.message : 'Failed to regenerate codes',
+        message:
+          error instanceof Error ? error.message : 'Failed to regenerate codes',
       };
     }
   }

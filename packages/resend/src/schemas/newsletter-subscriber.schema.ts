@@ -1,7 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
 
-export type NewsletterSubscriberDocument = HydratedDocument<NewsletterSubscriber>;
+export type NewsletterSubscriberDocument =
+  HydratedDocument<NewsletterSubscriber>;
 
 /**
  * PR5 / H6 / REQ-email-1..3 — single collection with nullable hashed
@@ -17,7 +18,12 @@ export class NewsletterSubscriber {
   isActive!: boolean;
 
   /** SHA-256 hash of the raw token; null after confirm. */
-  @Prop({ required: false, type: String, default: null, index: { sparse: true } })
+  @Prop({
+    required: false,
+    type: String,
+    default: null,
+    index: { sparse: true },
+  })
   confirmationToken?: string | null;
 
   /** Absolute expiry for the pending token (TTL). */

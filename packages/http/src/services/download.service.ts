@@ -5,7 +5,10 @@ import sharp from 'sharp';
 import { BadRequestException } from '@nestjs/common';
 import { SsrfGuard } from '@common/common';
 import { createHttpError, HttpError } from '../http-error';
-import { DownloadOptions, ImageOptimizationOptions } from '../interfaces/http-options.interface';
+import {
+  DownloadOptions,
+  ImageOptimizationOptions,
+} from '../interfaces/http-options.interface';
 
 interface DownloadResult {
   filepath: string;
@@ -34,7 +37,7 @@ export class DownloadService {
   constructor(
     private readonly client: AxiosInstance,
     private readonly baseFolder?: string,
-    /* eslint-disable-next-line no-unused-vars -- used via this.ssrfGuard */
+
     private readonly _ssrfGuard?: SsrfGuard,
   ) {}
 
@@ -42,7 +45,10 @@ export class DownloadService {
     return this._ssrfGuard;
   }
 
-  async file(url: string, options: DownloadOptions = {}): Promise<DownloadResult> {
+  async file(
+    url: string,
+    options: DownloadOptions = {},
+  ): Promise<DownloadResult> {
     // PR5 / H5 — guard against SSRF before any network request.
     if (this.ssrfGuard) {
       await this.ssrfGuard.assertSafeUrl(url);
@@ -79,7 +85,12 @@ export class DownloadService {
         const message = error.response?.statusText ?? error.message;
         throw createHttpError(status, message, url);
       }
-      throw new HttpError(500, 'Internal Server Error', error instanceof Error ? error.message : 'Download failed', url);
+      throw new HttpError(
+        500,
+        'Internal Server Error',
+        error instanceof Error ? error.message : 'Download failed',
+        url,
+      );
     }
   }
 
@@ -106,7 +117,9 @@ export class DownloadService {
         const { quality = 80, width, height, format = 'webp' } = optimize;
         sharpInstance = sharpInstance[format]({ quality });
         if (width || height) {
-          sharpInstance = sharpInstance.resize(width, height, { fit: 'inside' });
+          sharpInstance = sharpInstance.resize(width, height, {
+            fit: 'inside',
+          });
         }
         const ext = path.extname(name);
         const baseName = path.basename(name, ext);
@@ -137,11 +150,19 @@ export class DownloadService {
         const message = error.response?.statusText ?? error.message;
         throw createHttpError(status, message, url);
       }
-      throw new HttpError(500, 'Internal Server Error', error instanceof Error ? error.message : 'Image download failed', url);
+      throw new HttpError(
+        500,
+        'Internal Server Error',
+        error instanceof Error ? error.message : 'Image download failed',
+        url,
+      );
     }
   }
 
-  async video(url: string, options: DownloadOptions = {}): Promise<DownloadResult> {
+  async video(
+    url: string,
+    options: DownloadOptions = {},
+  ): Promise<DownloadResult> {
     return this.file(url, options);
   }
 

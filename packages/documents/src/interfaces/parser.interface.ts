@@ -17,5 +17,5 @@ export const DOCUMENT_ERROR_CODES = {
 } as const;
 
 export type DocumentErrorCode =
-  | typeof DOCUMENT_ERROR_CODES[keyof typeof DOCUMENT_ERROR_CODES]
+  | (typeof DOCUMENT_ERROR_CODES)[keyof typeof DOCUMENT_ERROR_CODES]
   | 'UNKNOWN_ERROR';

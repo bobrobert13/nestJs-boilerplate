@@ -1,4 +1,11 @@
-export type AIProvider = 'openai' | 'anthropic' | 'google' | 'moonshot' | 'minimax' | 'custom' | string;
+export type AIProvider =
+  | 'openai'
+  | 'anthropic'
+  | 'google'
+  | 'moonshot'
+  | 'minimax'
+  | 'custom'
+  | string;
 
 export type ModelType = 'chat' | 'embedding' | 'vision' | 'code';
 
@@ -24,7 +31,10 @@ export interface ChatMessage {
  */
 export type MessageContentPart =
   | { type: 'text'; text: string }
-  | { type: 'image_url'; image_url: { url: string; detail?: 'low' | 'high' | 'auto' } }
+  | {
+      type: 'image_url';
+      image_url: { url: string; detail?: 'low' | 'high' | 'auto' };
+    }
   | {
       type: 'image';
       source: { type: 'base64' | 'url'; media_type: string; data: string };

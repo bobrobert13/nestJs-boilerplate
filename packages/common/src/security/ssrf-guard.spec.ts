@@ -16,25 +16,37 @@ describe('SsrfGuard (H5)', () => {
 
   it('rejects loopback, link-local metadata, private IPv4, and private IPv6 destinations', async () => {
     const g = build();
-    await expect(g.assertSafeUrl('http://127.0.0.1/foo')).rejects.toThrow(/not allowed/);
-    await expect(g.assertSafeUrl('http://169.254.169.254/latest/meta-data/')).rejects.toThrow(
+    await expect(g.assertSafeUrl('http://127.0.0.1/foo')).rejects.toThrow(
       /not allowed/,
     );
-    await expect(g.assertSafeUrl('http://10.0.0.5/foo')).rejects.toThrow(/not allowed/);
-    await expect(g.assertSafeUrl('http://192.168.1.1/foo')).rejects.toThrow(/not allowed/);
-    await expect(g.assertSafeUrl('http://[::1]/foo')).rejects.toThrow(/not allowed/);
+    await expect(
+      g.assertSafeUrl('http://169.254.169.254/latest/meta-data/'),
+    ).rejects.toThrow(/not allowed/);
+    await expect(g.assertSafeUrl('http://10.0.0.5/foo')).rejects.toThrow(
+      /not allowed/,
+    );
+    await expect(g.assertSafeUrl('http://192.168.1.1/foo')).rejects.toThrow(
+      /not allowed/,
+    );
+    await expect(g.assertSafeUrl('http://[::1]/foo')).rejects.toThrow(
+      /not allowed/,
+    );
   });
 
   it('rejects a hostname resolving to a private address', async () => {
     const g = build();
     // localhost resolves to 127.0.0.1
-    await expect(g.assertSafeUrl('http://localhost/foo')).rejects.toThrow(/not allowed/);
+    await expect(g.assertSafeUrl('http://localhost/foo')).rejects.toThrow(
+      /not allowed/,
+    );
   });
 
   it('honors a matching SSRF_ALLOWED_CIDRS exception', async () => {
     const g = build('127.0.0.0/8');
     // 127.0.0.1 is in the allow-list now.
-    await expect(g.assertSafeUrl('http://127.0.0.1/foo')).resolves.toBeUndefined();
+    await expect(
+      g.assertSafeUrl('http://127.0.0.1/foo'),
+    ).resolves.toBeUndefined();
   });
 
   it('returns a client-safe blocked-destination message', async () => {
@@ -46,7 +58,9 @@ describe('SsrfGuard (H5)', () => {
       caught = err;
     }
     expect(caught).toBeDefined();
-    const msg = caught?.message ?? JSON.stringify(caught?.getResponse?.() ?? caught?.response ?? {});
+    const msg =
+      caught?.message ??
+      JSON.stringify(caught?.getResponse?.() ?? caught?.response ?? {});
     expect(msg).toMatch(/not allowed/i);
     expect(msg).not.toContain('169.254.169.254');
   });

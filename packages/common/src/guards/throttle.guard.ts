@@ -67,9 +67,14 @@ export class ThrottlerGuard implements CanActivate {
     entry.count++;
 
     if (entry.count > limit) {
-      this.logger.warn(`Rate limit exceeded for ${key}: ${entry.count}/${limit}`);
+      this.logger.warn(
+        `Rate limit exceeded for ${key}: ${entry.count}/${limit}`,
+      );
       throw new HttpException(
-        { message: 'Too Many Requests', retryAfter: Math.ceil((entry.resetAt - now) / 1000) },
+        {
+          message: 'Too Many Requests',
+          retryAfter: Math.ceil((entry.resetAt - now) / 1000),
+        },
         HttpStatus.TOO_MANY_REQUESTS,
       );
     }

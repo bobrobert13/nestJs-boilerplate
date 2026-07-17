@@ -30,11 +30,7 @@ export class BootstrapLogger {
    * Rich format: `  ◉ Category — Message (detail)`
    * Plain format: `[Category] ◉ Message (detail)`
    */
-  static log(
-    category: LogCategory,
-    message: string,
-    detail?: string,
-  ): void {
+  static log(category: LogCategory, message: string, detail?: string): void {
     const detailStr = detail != null ? ` (${detail})` : '';
     if (IS_PLAIN) {
       BootstrapLogger.logger.log(`[${category}] ◉ ${message}${detailStr}`);
@@ -129,7 +125,9 @@ export class BootstrapLogger {
       BootstrapLogger.logger.log(`║  ${title} v${version.padEnd(38)}║`);
       BootstrapLogger.logger.log(`╠${line}╣`);
       BootstrapLogger.logger.log(`║  ● HTTP     ${endpoint.padEnd(32)}║`);
-      BootstrapLogger.logger.log(`║  ● Swagger  ${(endpoint + '/' + prefix).padEnd(32)}║`);
+      BootstrapLogger.logger.log(
+        `║  ● Swagger  ${(endpoint + '/' + prefix).padEnd(32)}║`,
+      );
       BootstrapLogger.logger.log(`╚${line}╝`);
     }
 
@@ -155,10 +153,7 @@ export class BootstrapLogger {
    * ║    POST   /api/auth/login           ║
    * ```
    */
-  static routeMap(
-    swaggerDocument: Record<string, any>,
-    prefix = 'api',
-  ): void {
+  static routeMap(swaggerDocument: Record<string, any>, prefix = 'api'): void {
     const paths = swaggerDocument?.paths;
     if (!paths || typeof paths !== 'object') return;
 
@@ -171,7 +166,8 @@ export class BootstrapLogger {
       for (const [httpMethod, details] of Object.entries(methods)) {
         if (httpMethod === 'parameters') continue;
         const tags = (details as any)?.tags;
-        const tag = Array.isArray(tags) && tags.length > 0 ? tags[0] : 'default';
+        const tag =
+          Array.isArray(tags) && tags.length > 0 ? tags[0] : 'default';
         if (!groups.has(tag)) {
           groups.set(tag, []);
           tagOrder.push(tag);

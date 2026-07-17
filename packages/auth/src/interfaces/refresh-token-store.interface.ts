@@ -53,9 +53,7 @@ export interface IRefreshTokenStore {
    * Look up a refresh token (raw, will be hashed internally).
    * @returns The stored metadata, or `null` when the token is unknown.
    */
-  find(
-    token: string,
-  ): Promise<RefreshTokenRecord | null>;
+  find(token: string): Promise<RefreshTokenRecord | null>;
 
   /**
    * Remove a refresh token (used for logout or rotation).

@@ -52,15 +52,16 @@ describe('TwoFactorController.verify-backup (C2)', () => {
     svc.verifyBackupCodeWithUser.mockResolvedValue(true);
     let caught: any;
     try {
-      await controller.verifyBackup(
-        { headers: {}, user: undefined } as any,
-        { backupCode: 'AAAA' },
-      );
+      await controller.verifyBackup({ headers: {}, user: undefined } as any, {
+        backupCode: 'AAAA',
+      });
     } catch (err) {
       caught = err;
     }
     expect(caught).toBeDefined();
-    expect(caught.getStatus?.() ?? caught?.status ?? caught?.statusCode).toBe(401);
+    expect(caught.getStatus?.() ?? caught?.status ?? caught?.statusCode).toBe(
+      401,
+    );
   });
 
   it('uses req.user.id and ignores a body-supplied userId', async () => {
@@ -68,11 +69,17 @@ describe('TwoFactorController.verify-backup (C2)', () => {
     svc.verifyBackupCodeWithUser.mockResolvedValue(true);
 
     const result = await controller.verifyBackup(
-      { headers: { authorization: 'Bearer x' }, user: { id: 'user-42' } } as any,
+      {
+        headers: { authorization: 'Bearer x' },
+        user: { id: 'user-42' },
+      } as any,
       { backupCode: 'AAAA' } as any,
     );
 
-    expect(svc.verifyBackupCodeWithUser).toHaveBeenCalledWith('user-42', 'AAAA');
+    expect(svc.verifyBackupCodeWithUser).toHaveBeenCalledWith(
+      'user-42',
+      'AAAA',
+    );
     expect((result.data as any).verified).toBe(true);
   });
 
@@ -83,7 +90,10 @@ describe('TwoFactorController.verify-backup (C2)', () => {
     let caught: any;
     try {
       await controller.verifyBackup(
-        { headers: { authorization: 'Bearer x' }, user: { id: 'user-42' } } as any,
+        {
+          headers: { authorization: 'Bearer x' },
+          user: { id: 'user-42' },
+        } as any,
         { backupCode: 'WRONG' },
       );
     } catch (err) {

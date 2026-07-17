@@ -7,7 +7,10 @@ import {
   NewsletterSubscriber,
   NewsletterSubscriberDocument,
 } from '../../schemas/newsletter-subscriber.schema';
-import { SubscribeDto, UnsubscribeDto } from './interfaces/newsletter.interfaces';
+import {
+  SubscribeDto,
+  UnsubscribeDto,
+} from './interfaces/newsletter.interfaces';
 
 const CONFIRM_TOKEN_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
@@ -128,10 +131,15 @@ export class NewsletterService {
   }
 
   async getSubscriberCount(onlyActive = true): Promise<number> {
-    return this.subscriberModel.countDocuments(onlyActive ? { isActive: true } : {});
+    return this.subscriberModel.countDocuments(
+      onlyActive ? { isActive: true } : {},
+    );
   }
 
-  private async deliverConfirmation(email: string, rawToken: string): Promise<void> {
+  private async deliverConfirmation(
+    email: string,
+    rawToken: string,
+  ): Promise<void> {
     const link = `${process.env.NEWSLETTER_BASE_URL ?? 'http://localhost:3000'}/newsletter/confirm?token=${encodeURIComponent(rawToken)}`;
     try {
       await this.resendService.sendEmail({

@@ -77,7 +77,10 @@ export function createHttpError(
   url: string,
   data?: unknown,
 ): HttpError {
-  const errors: Record<number, new (message: string, url: string, data?: unknown) => HttpError> = {
+  const errors: Record<
+    number,
+    new (message: string, url: string, data?: unknown) => HttpError
+  > = {
     400: BadRequestError,
     401: UnauthorizedError,
     403: ForbiddenError,

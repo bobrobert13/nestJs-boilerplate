@@ -85,7 +85,9 @@ export class TwoFactorService implements OnModuleInit {
   }
 
   private loadConfig() {
-    const config = this.configService.get<{ twoFactor: TwoFactorConfig }>('auth');
+    const config = this.configService.get<{ twoFactor: TwoFactorConfig }>(
+      'auth',
+    );
     if (config?.twoFactor) {
       this.issuer = config.twoFactor.issuer || 'MyApp';
       this.algorithm = config.twoFactor.algorithm || 'SHA1';
@@ -130,25 +132,43 @@ export class TwoFactorService implements OnModuleInit {
     try {
       return await toDataURL(otpauthUrl);
     } catch (error) {
-      this.logger.error(`Failed to generate QR code: ${error instanceof Error ? error.message : String(error)}`);
+      this.logger.error(
+        `Failed to generate QR code: ${error instanceof Error ? error.message : String(error)}`,
+      );
       return '';
     }
   }
 
-  async verifyCode(userId: string, code: string): Promise<TwoFactorVerifyResult> {
+  async verifyCode(
+    userId: string,
+    code: string,
+  ): Promise<TwoFactorVerifyResult> {
     const backupCodes = this.backupCodes.get(userId) || [];
 
-    if (backupCodes.some(bc => !bc.isUsed && this.verifyBackupCode(code, bc.hashedCode))) {
+    if (
+      backupCodes.some(
+        (bc) => !bc.isUsed && this.verifyBackupCode(code, bc.hashedCode),
+      )
+    ) {
       return { valid: true };
     }
 
-    const isValid = authenticator.verify({ token: code, secret: this.getUserSecret(userId) });
+    const isValid = authenticator.verify({
+      token: code,
+      secret: this.getUserSecret(userId),
+    });
 
     return { valid: isValid };
   }
 
-  async enableTwoFactor(userId: string, code: string): Promise<{ success: boolean; backupCodes?: string[] }> {
-    const isValid = authenticator.verify({ token: code, secret: this.getUserSecret(userId) });
+  async enableTwoFactor(
+    userId: string,
+    code: string,
+  ): Promise<{ success: boolean; backupCodes?: string[] }> {
+    const isValid = authenticator.verify({
+      token: code,
+      secret: this.getUserSecret(userId),
+    });
 
     if (!isValid) {
       this.logger.warn(`Invalid 2FA code for user: ${userId}`);
@@ -180,12 +200,17 @@ export class TwoFactorService implements OnModuleInit {
       codes.push(code);
     }
 
-    this.logger.log(`Generated ${codes.length} backup codes for user: ${userId}`);
+    this.logger.log(
+      `Generated ${codes.length} backup codes for user: ${userId}`,
+    );
 
     return codes;
   }
 
-  async verifyBackupCodeWithUser(userId: string, backupCode: string): Promise<boolean> {
+  async verifyBackupCodeWithUser(
+    userId: string,
+    backupCode: string,
+  ): Promise<boolean> {
     // PR2 / M11 partial — durable path: find a matching unused code and
     // atomically mark it as used. A second verification of the same code
     // finds `isUsed: true` and returns false.
@@ -222,8 +247,14 @@ export class TwoFactorService implements OnModuleInit {
     return false;
   }
 
-  async regenerateBackupCodes(userId: string, currentCode: string): Promise<string[]> {
-    const isValid = authenticator.verify({ token: currentCode, secret: this.getUserSecret(userId) });
+  async regenerateBackupCodes(
+    userId: string,
+    currentCode: string,
+  ): Promise<string[]> {
+    const isValid = authenticator.verify({
+      token: currentCode,
+      secret: this.getUserSecret(userId),
+    });
 
     if (!isValid) {
       throw new Error('Invalid 2FA code');
@@ -238,7 +269,9 @@ export class TwoFactorService implements OnModuleInit {
   }
 
   isTwoFactorEnabled(userId: string): boolean {
-    return this.backupCodes.has(userId) && this.backupCodes.get(userId)!.length > 0;
+    return (
+      this.backupCodes.has(userId) && this.backupCodes.get(userId)!.length > 0
+    );
   }
 
   private generateBackupCode(): string {
@@ -272,7 +305,10 @@ export class TwoFactorService implements OnModuleInit {
    */
   async getPersistedSecret(userId: string): Promise<string | null> {
     if (this.secretModel) {
-      const doc = await this.secretModel.findOne({ userId }).select('+secret').lean();
+      const doc = await this.secretModel
+        .findOne({ userId })
+        .select('+secret')
+        .lean();
       return doc?.secret ?? null;
     }
     return this.secrets.get(userId) ?? null;

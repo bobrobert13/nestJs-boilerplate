@@ -9,7 +9,12 @@ import {
   ServiceUnavailableException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { AuthService } from '../services/auth.service';
 import { MagicLinkService } from '../services/magic-link.service';
 import { ResendService } from '@common/resend';
@@ -36,11 +41,18 @@ export class AuthController {
 
   @Public()
   @Post('register')
-  @ApiOperation({ summary: 'Register a new user', description: '⚠️ DEMO: Uses hardcoded demo user. Not for production.' })
+  @ApiOperation({
+    summary: 'Register a new user',
+    description: '⚠️ DEMO: Uses hardcoded demo user. Not for production.',
+  })
   @ApiResponse({ status: 201, description: 'User registered' })
   @ApiResponse({ status: 400, description: 'Invalid input' })
   async register(@Body() dto: RegisterDto) {
-    const user = await this.authService.register(dto.email, dto.password, dto.name);
+    const user = await this.authService.register(
+      dto.email,
+      dto.password,
+      dto.name,
+    );
     return {
       success: true,
       data: user,
@@ -50,8 +62,15 @@ export class AuthController {
   @Public()
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Login with credentials', description: '⚠️ DEMO: Uses hardcoded demo user (demo@example.com / demo123).' })
-  @ApiResponse({ status: 200, description: 'Login successful, returns JWT tokens' })
+  @ApiOperation({
+    summary: 'Login with credentials',
+    description:
+      '⚠️ DEMO: Uses hardcoded demo user (demo@example.com / demo123).',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Login successful, returns JWT tokens',
+  })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
   async login(@Body() dto: LoginDto) {
     const user = await this.authService.validateUser(dto.email, dto.password);
@@ -88,7 +107,10 @@ export class AuthController {
       'Generates a one-time token and delivers it to the user via Resend. The token is never returned in the response (C3/REQ-auth-2).',
   })
   @ApiResponse({ status: 200, description: 'Magic link sent (out-of-band)' })
-  @ApiResponse({ status: 503, description: 'Magic-link delivery is unavailable' })
+  @ApiResponse({
+    status: 503,
+    description: 'Magic-link delivery is unavailable',
+  })
   async requestMagicLink(@Body() dto: MagicLinkRequestDto) {
     if (!this.magicLinkService.isEnabled()) {
       throw new ServiceUnavailableException(
@@ -123,12 +145,15 @@ export class AuthController {
   @Post('magic-link/verify')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Verify a magic link token' })
-  @ApiResponse({ status: 200, description: 'Token verified, returns JWT tokens' })
+  @ApiResponse({
+    status: 200,
+    description: 'Token verified, returns JWT tokens',
+  })
   async verifyMagicLink(@Body() dto: MagicLinkVerifyDto) {
     try {
       const email = await this.magicLinkService.verifyMagicLink(dto.token);
       const user = await this.authService.validateUser(email, '');
-      
+
       if (user) {
         const tokens = await this.authService.login(user);
         return {
