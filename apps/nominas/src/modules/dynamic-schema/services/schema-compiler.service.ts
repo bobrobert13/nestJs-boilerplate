@@ -144,11 +144,24 @@ export class SchemaCompilerService {
         );
         return { success: true, collectionName, fieldsHash, idempotent: true };
       }
+      // L4 / hardening-medium-low — fieldsHash changed. Drop the
+      // stale in-memory entry and the Mongoose model BEFORE
+      // registering the new schema, so the next connection.model(...)
+      // call returns the new schema instead of the cached old one.
       this.logger.warn(
         'compileAndRegister: ' +
           collectionName +
-          ' already registered with different fields',
+          ' already registered with different fields — re-registering',
       );
+      this.logger.log(
+        'compileAndRegister: fieldsHash ' +
+          existingHash +
+          ' -> ' +
+          fieldsHash,
+      );
+      if (!options.dryRun) {
+        this.unregister(collectionName);
+      }
     }
 
     let mongooseSchema: Schema;

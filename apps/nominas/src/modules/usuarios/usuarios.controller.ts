@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
@@ -19,6 +20,7 @@ import { Public, Roles } from '@common/auth';
 import { UsuariosService } from './usuarios.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
+import { FindUsuariosDto } from './dto/find-usuarios.dto';
 
 @ApiTags('usuarios')
 @ApiBearerAuth()
@@ -42,10 +44,34 @@ export class UsuariosController {
     return this.usuariosService.create(createDto);
   }
 
+  /**
+   * M2 / hardening-medium-low — paginated list. Returns
+   * `{ data, total, page, limit }`. The legacy `GET /usuarios`
+   * array endpoint above is preserved for one minor release per
+   * REQ-pagination-4.
+   */
+  @Roles('admin')
+  @Get('page')
+  @ApiOperation({ summary: 'Get paginated usuarios (admin)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Paginated list of usuarios (data, total, page, limit)',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden — requires admin role' })
+  @ApiResponse({ status: 400, description: 'Invalid page/limit' })
+  /** findAllPaged (see class JSDoc for context). */
+  findAllPaged(@Query() query: FindUsuariosDto) {
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 20;
+    const skip = (page - 1) * limit;
+    return this.usuariosService.findAllPaged(skip, limit);
+  }
+
   /** Admin-only CRUD operations. */
   @Roles('admin')
   @Get()
-  @ApiOperation({ summary: 'Get all usuarios (admin)' })
+  @ApiOperation({ summary: 'Get all usuarios (admin, deprecated)' })
   @ApiResponse({ status: 200, description: 'List of usuarios' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden — requires admin role' })

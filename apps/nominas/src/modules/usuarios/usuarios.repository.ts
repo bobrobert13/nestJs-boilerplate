@@ -37,6 +37,36 @@ export class UsuariosRepository {
     return usuarios.map((u) => this.toPublic(u));
   }
 
+  /**
+   * M2 / hardening-medium-low — paginated findAll. Returns
+   * `{ data, total, page, limit }` per REQ-pagination-2. The legacy
+   * `findAll()` array endpoint remains as a deprecated convenience
+   * for one minor release (REQ-pagination-4).
+   */
+  /** findAllPaged (see class JSDoc for context). */
+  async findAllPaged(
+    skip: number,
+    limit: number,
+  ): Promise<{
+    data: UsuarioPublic[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
+    const safeSkip = Math.max(0, skip);
+    const safeLimit = Math.max(1, Math.min(100, limit));
+    const [rows, total] = await Promise.all([
+      this.model.find().skip(safeSkip).limit(safeLimit).exec(),
+      this.model.countDocuments().exec(),
+    ]);
+    return {
+      data: rows.map((u) => this.toPublic(u)),
+      total,
+      page: Math.floor(safeSkip / safeLimit) + 1,
+      limit: safeLimit,
+    };
+  }
+
   /** findOne (see class JSDoc for context). */
   async findOne(id: string): Promise<UsuarioPublic> {
     const usuario = await this.model.findById(id).exec();

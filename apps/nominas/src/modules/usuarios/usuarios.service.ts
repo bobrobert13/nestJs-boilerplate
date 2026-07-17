@@ -107,6 +107,14 @@ export class UsuariosService implements IUserService {
     return this.repository.findAll();
   }
 
+  /**
+   * M2 / hardening-medium-low — paginated retrieval.
+   */
+  /** findAllPaged (see class JSDoc for context). */
+  async findAllPaged(skip: number, limit: number) {
+    return this.repository.findAllPaged(skip, limit);
+  }
+
   /** findOne (see class JSDoc for context). */
   async findOne(id: string): Promise<UsuarioPublic> {
     this.logger.log(`Finding usuario: ${id}`);
@@ -120,15 +128,29 @@ export class UsuariosService implements IUserService {
   ): Promise<UsuarioPublic> {
     this.logger.log(`Updating usuario: ${id}`);
 
-    const data: any = { ...updateDto };
+    // L10 / hardening-medium-low — type-safe update shape. Only the
+    // fields the DTO declares can be passed through; any unknown key
+    // becomes a TypeScript error at compile time. The repository
+    // continues to accept `any` internally because Mongoose's typings
+    // are intentionally permissive, but we no longer build the payload
+    // here with `data: any`.
+    const data: Partial<UsuarioPublic> & {
+      password?: string;
+    } = {
+      nombre: updateDto.nombre,
+      apellido: updateDto.apellido,
+      email: updateDto.email,
+      telefono: updateDto.telefono,
+      activo: updateDto.activo,
+      roles: updateDto.roles,
+      password: undefined,
+    };
 
-    /** Re-hash password when a new one is provided. */
-    /** if (see class JSDoc for context). */
     if (updateDto.password) {
       data.password = await this.authService.hashPassword(updateDto.password);
     }
 
-    return this.repository.update(id, data);
+    return this.repository.update(id, data as any);
   }
 
   /** remove (see class JSDoc for context). */
