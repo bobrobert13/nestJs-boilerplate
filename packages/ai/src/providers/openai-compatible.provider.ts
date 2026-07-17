@@ -43,10 +43,12 @@ export class OpenAICompatibleProvider implements IAIProvider {
       minimax: 'https://api.minimax.chat/v1',
     };
 
+    /** if (see class JSDoc for context). */
     if (bases[provider]) {
       return bases[provider];
     }
 
+    /** if (see class JSDoc for context). */
     if (provider === 'azure' && apiKey) {
       return 'https://{resource}.openai.azure.com/v1';
     }
@@ -63,6 +65,7 @@ export class OpenAICompatibleProvider implements IAIProvider {
       functionCalling: false,
     };
 
+    /** switch (see class JSDoc for context). */
     switch (provider) {
       case 'openai':
         return { ...defaults, vision: true, functionCalling: true };
@@ -91,6 +94,7 @@ export class OpenAICompatibleProvider implements IAIProvider {
     }
   }
 
+  /** validateConfig (see class JSDoc for context). */
   validateConfig(): boolean {
     if (!this.config.model) {
       return false;
@@ -98,6 +102,7 @@ export class OpenAICompatibleProvider implements IAIProvider {
     return true;
   }
 
+  /** chat (see class JSDoc for context). */
   async chat(options: ChatCompletionOptions): Promise<AIResponse> {
     try {
       const model = options.model || this.config.model;
@@ -108,6 +113,7 @@ export class OpenAICompatibleProvider implements IAIProvider {
         (m) =>
           Array.isArray(m.content) && m.content.some((p) => p.type !== 'text'),
       );
+      /** if (see class JSDoc for context). */
       if (wantsVision && !this.capabilities.vision) {
         return {
           success: false,
@@ -124,14 +130,17 @@ export class OpenAICompatibleProvider implements IAIProvider {
       // expected by the target provider. By default we use the OpenAI image_url
       // shape, which most OpenAI-compatible APIs accept.
       const messages = options.messages.map((m) => {
+        /** if (see class JSDoc for context). */
         if (typeof m.content === 'string') return m;
         const providerName = this.config.provider;
         const converted = m.content.map((part) => {
           // Anthropic uses {type: 'image', source: {...}}
+          /** if (see class JSDoc for context). */
           if (providerName === 'anthropic') {
             if (part.type === 'image_url') {
               const url = part.image_url.url;
               const match = url.match(/^data:([^;]+);base64,(.+)$/);
+              /** if (see class JSDoc for context). */
               if (match) {
                 return {
                   type: 'image',
@@ -147,6 +156,7 @@ export class OpenAICompatibleProvider implements IAIProvider {
                 source: { type: 'url', media_type: 'image/jpeg', data: url },
               };
             }
+            /** if (see class JSDoc for context). */
             if (part.type === 'inline_data') {
               return {
                 type: 'image',
@@ -157,6 +167,7 @@ export class OpenAICompatibleProvider implements IAIProvider {
                 },
               };
             }
+            /** if (see class JSDoc for context). */
             if (part.type === 'text') return { type: 'text', text: part.text };
             return {
               type: part.type,
@@ -164,21 +175,26 @@ export class OpenAICompatibleProvider implements IAIProvider {
             };
           }
           // Google Gemini uses {inline_data: {mime_type, data}}
+          /** if (see class JSDoc for context). */
           if (providerName === 'google') {
             if (part.type === 'image_url') {
               const url = part.image_url.url;
               const match = url.match(/^data:([^;]+);base64,(.+)$/);
+              /** if (see class JSDoc for context). */
               if (match) {
                 return { inline_data: { mime_type: match[1], data: match[2] } };
               }
             }
+            /** if (see class JSDoc for context). */
             if (part.type === 'inline_data') {
               return part;
             }
+            /** if (see class JSDoc for context). */
             if (part.type === 'text') return { text: part.text };
             return { text: '' };
           }
           // OpenAI / compatible: pass image_url through, convert inline_data.
+          /** if (see class JSDoc for context). */
           if (part.type === 'inline_data') {
             return {
               type: 'image_url',
@@ -210,6 +226,7 @@ export class OpenAICompatibleProvider implements IAIProvider {
         stop: options.stop,
         stream: false,
       };
+      /** if (see class JSDoc for context). */
       if (
         options.responseFormat === 'json_object' &&
         this.config.provider === 'openai'
@@ -259,6 +276,7 @@ export class OpenAICompatibleProvider implements IAIProvider {
     }
   }
 
+  /** chatStream (see class JSDoc for context). */
   async chatStream(
     options: ChatCompletionOptions,
     onChunk: (chunk: AIResponse) => void,
@@ -286,15 +304,18 @@ export class OpenAICompatibleProvider implements IAIProvider {
           const lines = buffer.split('\n');
           buffer = lines.pop() || '';
 
+          /** for (see class JSDoc for context). */
           for (const line of lines) {
             if (line.startsWith('data: ')) {
               const data = line.slice(6);
+              /** if (see class JSDoc for context). */
               if (data === '[DONE]') {
                 resolve();
                 return;
               }
               try {
                 const parsed = JSON.parse(data);
+                /** onChunk (see class JSDoc for context). */
                 onChunk({
                   success: true,
                   data: parsed,
@@ -313,6 +334,7 @@ export class OpenAICompatibleProvider implements IAIProvider {
       });
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Unknown error';
+      /** onChunk (see class JSDoc for context). */
       onChunk({
         success: false,
         error: message,
@@ -322,6 +344,7 @@ export class OpenAICompatibleProvider implements IAIProvider {
     }
   }
 
+  /** embeddings (see class JSDoc for context). */
   async embeddings(options: EmbeddingOptions): Promise<AIResponse> {
     try {
       const model = options.model || this.getDefaultEmbeddingModel();

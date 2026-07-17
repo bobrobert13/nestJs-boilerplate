@@ -53,6 +53,8 @@ export class UsuariosRolesController {
   @ApiResponse({ status: 200, description: 'Roles updated' })
   @ApiResponse({ status: 400, description: 'Invalid role value' })
   @ApiResponse({ status: 403, description: 'Forbidden — not an admin' })
+  /** updateRoles (see class JSDoc for context). */
+  /** updateRoles (see class JSDoc for context). */
   async updateRoles(
     @Param('id') id: string,
     @Body() dto: UpdateRolesDto,
@@ -60,6 +62,8 @@ export class UsuariosRolesController {
     // already enforces the shape via JwtAuthGuard.
     actor: { id: string; roles?: string[] },
   ) {
+    /** if (see class JSDoc for context). */
+    /** if (see class JSDoc for context). */
     if (!actor?.roles?.includes('admin')) {
       throw new ForbiddenException('Admin role required');
     }

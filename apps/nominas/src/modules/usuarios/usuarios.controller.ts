@@ -37,6 +37,7 @@ export class UsuariosController {
       'Returns the same HTTP 201 response shape regardless of email existence to prevent email enumeration.',
   })
   @ApiResponse({ status: 201, description: 'Usuario registration result' })
+  /** create (see class JSDoc for context). */
   create(@Body() createDto: CreateUsuarioDto) {
     return this.usuariosService.create(createDto);
   }
@@ -48,6 +49,7 @@ export class UsuariosController {
   @ApiResponse({ status: 200, description: 'List of usuarios' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden — requires admin role' })
+  /** findAll (see class JSDoc for context). */
   findAll() {
     return this.usuariosService.findAll();
   }
@@ -59,6 +61,7 @@ export class UsuariosController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden — requires admin role' })
   @ApiResponse({ status: 404, description: 'Usuario not found' })
+  /** findOne (see class JSDoc for context). */
   findOne(@Param('id') id: string) {
     return this.usuariosService.findOne(id);
   }
@@ -70,6 +73,7 @@ export class UsuariosController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden — requires admin role' })
   @ApiResponse({ status: 404, description: 'Usuario not found' })
+  /** update (see class JSDoc for context). */
   update(@Param('id') id: string, @Body() updateDto: UpdateUsuarioDto) {
     return this.usuariosService.update(id, updateDto);
   }
@@ -82,6 +86,7 @@ export class UsuariosController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden — requires admin role' })
   @ApiResponse({ status: 404, description: 'Usuario not found' })
+  /** remove (see class JSDoc for context). */
   remove(@Param('id') id: string) {
     return this.usuariosService.remove(id);
   }

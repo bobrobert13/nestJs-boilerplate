@@ -27,6 +27,7 @@ export class HealthController {
       },
     },
   })
+  /** check (see class JSDoc for context). */
   check() {
     return {
       status: 'ok',

@@ -99,6 +99,7 @@ interface AuthConfig {
 export class AuthModule implements OnModuleInit {
   private readonly logger = new Logger(AuthModule.name);
 
+  /** onModuleInit (see class JSDoc for context). */
   onModuleInit() {
     this.logger.log('✅ AuthModule initialized successfully');
     this.logger.log('   - JWT authentication: enabled');

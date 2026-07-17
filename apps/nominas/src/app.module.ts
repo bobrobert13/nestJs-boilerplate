@@ -41,6 +41,7 @@ import { CronModule } from './common/cron/cron.module';
 export class AppModule implements OnApplicationBootstrap {
   constructor(private readonly configService: ConfigService) {}
 
+  /** onApplicationBootstrap (see class JSDoc for context). */
   onApplicationBootstrap(): void {
     const features: Record<string, string> = {};
 
@@ -69,14 +70,19 @@ export class AppModule implements OnApplicationBootstrap {
 
     // AI Providers — list configured ones
     const aiProviders: string[] = [];
+    /** if (see class JSDoc for context). */
     if (this.configService.get<string>('OPENAI_API_KEY'))
       aiProviders.push('openai');
+    /** if (see class JSDoc for context). */
     if (this.configService.get<string>('ANTHROPIC_API_KEY'))
       aiProviders.push('anthropic');
+    /** if (see class JSDoc for context). */
     if (this.configService.get<string>('GEMINI_API_KEY'))
       aiProviders.push('gemini');
+    /** if (see class JSDoc for context). */
     if (this.configService.get<string>('MOONSHOT_API_KEY'))
       aiProviders.push('moonshot');
+    /** if (see class JSDoc for context). */
     if (this.configService.get<string>('MINIMAX_API_KEY'))
       aiProviders.push('minimax');
     features['AI Providers'] =

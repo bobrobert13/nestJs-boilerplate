@@ -28,8 +28,10 @@ export class PasskeysService implements OnModuleInit {
     private readonly challengeStore: PasskeyChallengeStore,
   ) {}
 
+  /** onModuleInit (see class JSDoc for context). */
   onModuleInit() {
     const config = this.configService.get<{ passkeys: any }>('auth');
+    /** if (see class JSDoc for context). */
     if (config?.passkeys) {
       this.rpId = config.passkeys.rpId || this.rpId;
       this.rpName = config.passkeys.rpName || this.rpName;
@@ -40,6 +42,7 @@ export class PasskeysService implements OnModuleInit {
     );
   }
 
+  /** generateRegistrationOptions (see class JSDoc for context). */
   async generateRegistrationOptions(userId: string, username: string) {
     const options = await generateRegistrationOptions({
       rpName: this.rpName,
@@ -63,6 +66,7 @@ export class PasskeysService implements OnModuleInit {
     return options;
   }
 
+  /** verifyRegistration (see class JSDoc for context). */
   async verifyRegistration(
     userId: string,
     username: string,
@@ -71,6 +75,7 @@ export class PasskeysService implements OnModuleInit {
     try {
       // PR3 / C1 — pull the same challenge stored at options time.
       const expectedChallenge = this.challengeStore.take(userId);
+      /** if (see class JSDoc for context). */
       if (!expectedChallenge) {
         this.logger.warn(
           `No stored challenge for userId=${userId}; cannot verify`,
@@ -85,6 +90,7 @@ export class PasskeysService implements OnModuleInit {
         expectedRPID: this.rpId,
       });
 
+      /** if (see class JSDoc for context). */
       if (!verification.verified || !verification.registrationInfo) {
         this.logger.warn(
           `Registration verification failed for user: ${username}`,
@@ -115,6 +121,7 @@ export class PasskeysService implements OnModuleInit {
     }
   }
 
+  /** generateAuthenticationOptions (see class JSDoc for context). */
   async generateAuthenticationOptions(userId?: string) {
     const userCredentials = userId ? this.getCredentialsForUser(userId) : [];
     const allowCredentials =
@@ -134,6 +141,7 @@ export class PasskeysService implements OnModuleInit {
     });
 
     // PR3 / C1 — store the auth challenge for verification.
+    /** if (see class JSDoc for context). */
     if (userId) {
       this.challengeStore.put(userId, options.challenge);
     }
@@ -144,6 +152,7 @@ export class PasskeysService implements OnModuleInit {
     return options;
   }
 
+  /** verifyAuthentication (see class JSDoc for context). */
   async verifyAuthentication(
     userId: string,
     credentialId: string,
@@ -152,6 +161,7 @@ export class PasskeysService implements OnModuleInit {
     try {
       const credential = this.credentials.get(credentialId);
 
+      /** if (see class JSDoc for context). */
       if (!credential) {
         this.logger.warn(`Credential not found: ${credentialId}`);
         return { valid: false, error: 'Credential not found' };
@@ -159,6 +169,7 @@ export class PasskeysService implements OnModuleInit {
 
       // PR3 / C1 — pull the same challenge stored at options time.
       const expectedChallenge = this.challengeStore.take(userId);
+      /** if (see class JSDoc for context). */
       if (!expectedChallenge) {
         return { valid: false, error: 'Challenge expired or missing' };
       }
@@ -178,6 +189,7 @@ export class PasskeysService implements OnModuleInit {
         requireUserVerification: false,
       });
 
+      /** if (see class JSDoc for context). */
       if (!verification.verified || !verification.authenticationInfo) {
         this.logger.warn(
           `Authentication verification failed for user: ${userId}`,
@@ -201,14 +213,17 @@ export class PasskeysService implements OnModuleInit {
     }
   }
 
+  /** getUserPasskeys (see class JSDoc for context). */
   async getUserPasskeys(userId: string): Promise<PasskeyCredential[]> {
     return Array.from(this.credentials.values()).filter(
       (c) => c.userId === userId,
     );
   }
 
+  /** deletePasskey (see class JSDoc for context). */
   async deletePasskey(userId: string, credentialId: string): Promise<boolean> {
     const credential = this.credentials.get(credentialId);
+    /** if (see class JSDoc for context). */
     if (!credential || credential.userId !== userId) {
       return false;
     }

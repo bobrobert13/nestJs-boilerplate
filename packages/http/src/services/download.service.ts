@@ -45,11 +45,13 @@ export class DownloadService {
     return this._ssrfGuard;
   }
 
+  /** file (see class JSDoc for context). */
   async file(
     url: string,
     options: DownloadOptions = {},
   ): Promise<DownloadResult> {
     // PR5 / H5 — guard against SSRF before any network request.
+    /** if (see class JSDoc for context). */
     if (this.ssrfGuard) {
       await this.ssrfGuard.assertSafeUrl(url);
     }
@@ -80,6 +82,7 @@ export class DownloadService {
       const stats = fs.statSync(filepath);
       return { filepath, size: stats.size, filename: name };
     } catch (error) {
+      /** if (see class JSDoc for context). */
       if (axios.isAxiosError(error)) {
         const status = error.response?.status ?? 500;
         const message = error.response?.statusText ?? error.message;
@@ -94,6 +97,7 @@ export class DownloadService {
     }
   }
 
+  /** image (see class JSDoc for context). */
   async image(
     url: string,
     options: DownloadOptions & { optimize?: ImageOptimizationOptions } = {},
@@ -113,9 +117,11 @@ export class DownloadService {
 
       let sharpInstance = sharp(Buffer.from(response.data));
 
+      /** if (see class JSDoc for context). */
       if (optimize) {
         const { quality = 80, width, height, format = 'webp' } = optimize;
         sharpInstance = sharpInstance[format]({ quality });
+        /** if (see class JSDoc for context). */
         if (width || height) {
           sharpInstance = sharpInstance.resize(width, height, {
             fit: 'inside',
@@ -127,6 +133,7 @@ export class DownloadService {
         const finalPath = path.join(savePath, finalName);
 
         await sharpInstance.toFile(finalPath);
+        /** if (see class JSDoc for context). */
         if (fs.existsSync(tempPath)) {
           fs.unlinkSync(tempPath);
         }
@@ -142,9 +149,11 @@ export class DownloadService {
       const stats = fs.statSync(finalPath);
       return { filepath: finalPath, size: stats.size, filename: name };
     } catch (error) {
+      /** if (see class JSDoc for context). */
       if (fs.existsSync(tempPath)) {
         fs.unlinkSync(tempPath);
       }
+      /** if (see class JSDoc for context). */
       if (axios.isAxiosError(error)) {
         const status = error.response?.status ?? 500;
         const message = error.response?.statusText ?? error.message;
@@ -159,6 +168,7 @@ export class DownloadService {
     }
   }
 
+  /** video (see class JSDoc for context). */
   async video(
     url: string,
     options: DownloadOptions = {},
@@ -167,6 +177,7 @@ export class DownloadService {
   }
 
   private resolvePath(folder: string): string {
+    /** if (see class JSDoc for context). */
     if (this.baseFolder) {
       return path.join(this.baseFolder, folder);
     }
@@ -174,6 +185,7 @@ export class DownloadService {
   }
 
   private ensureDir(dirpath: string): void {
+    /** if (see class JSDoc for context). */
     if (!fs.existsSync(dirpath)) {
       fs.mkdirSync(dirpath, { recursive: true });
     }

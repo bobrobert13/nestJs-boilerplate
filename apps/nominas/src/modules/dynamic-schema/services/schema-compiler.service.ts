@@ -71,6 +71,7 @@ export class SchemaCompilerService {
     /**
      * if method.
      */
+    /** if (see class JSDoc for context). */
     if (this.legacyMode) {
       this.logger.warn(
         'DYNAMIC_SCHEMA_LEGACY=true: schema will NOT be registered. Rollback only.',
@@ -80,6 +81,7 @@ export class SchemaCompilerService {
   /**
    * compileOnly method.
    */
+  /** compileOnly (see class JSDoc for context). */
   compileOnly(schema: GeneratedSchema, collectionName: string): CompileResult {
     return this.compileAndRegister(schema, collectionName, { dryRun: true });
   }
@@ -87,6 +89,7 @@ export class SchemaCompilerService {
   /**
    * compileAndRegister method.
    */
+  /** compileAndRegister (see class JSDoc for context). */
   compileAndRegister(
     schema: GeneratedSchema,
     collectionName: string,
@@ -97,6 +100,7 @@ export class SchemaCompilerService {
     /**
      * if method.
      */
+    /** if (see class JSDoc for context). */
     if (!nameResult.valid)
       errors.push(
         ...nameResult.errors.map((e) => 'SCHEMA_VALIDATION_ERROR: ' + e),
@@ -105,6 +109,7 @@ export class SchemaCompilerService {
     /**
      * if method.
      */
+    /** if (see class JSDoc for context). */
     if (!fieldsResult.valid)
       errors.push(
         ...fieldsResult.errors.map((e) => 'SCHEMA_VALIDATION_ERROR: ' + e),
@@ -112,6 +117,7 @@ export class SchemaCompilerService {
     /**
      * if method.
      */
+    /** if (see class JSDoc for context). */
     if (errors.length > 0)
       return { success: false, collectionName, fieldsHash: '', errors };
 
@@ -125,11 +131,13 @@ export class SchemaCompilerService {
     /**
      * if method.
      */
+    /** if (see class JSDoc for context). */
     if (this.isCollectionRegistered(collectionName)) {
       const existingHash = this.hashByCollection.get(collectionName);
       /**
        * if method.
        */
+      /** if (see class JSDoc for context). */
       if (existingHash === fieldsHash) {
         this.logger.log(
           'compileAndRegister: idempotent hit for ' + collectionName,
@@ -147,6 +155,7 @@ export class SchemaCompilerService {
     try {
       // PR5 / H7 — validate every `ref` against the allow-list before
       // we touch the Mongoose definition.
+      /** for (see class JSDoc for context). */
       for (const f of normalized.fields) {
         assertRefAllowed(f.ref);
       }
@@ -164,6 +173,7 @@ export class SchemaCompilerService {
     /**
      * if method.
      */
+    /** if (see class JSDoc for context). */
     if (!options.dryRun && !this.legacyMode) {
       try {
         this._connection.model(collectionName, mongooseSchema);
@@ -198,6 +208,7 @@ export class SchemaCompilerService {
     /**
      * for method.
      */
+    /** for (see class JSDoc for context). */
     for (const field of generated.fields) {
       definition[field.name] = this.buildFieldDefinition(field);
     }
@@ -207,16 +218,19 @@ export class SchemaCompilerService {
     /**
      * if method.
      */
+    /** if (see class JSDoc for context). */
     if (generated.options?.strict !== undefined)
       opts.strict = generated.options.strict;
     /**
      * if method.
      */
+    /** if (see class JSDoc for context). */
     if (generated.options?.versionKey !== undefined)
       opts.versionKey = generated.options.versionKey;
     /**
      * if method.
      */
+    /** if (see class JSDoc for context). */
     if (generated.options?.minimize !== undefined)
       opts.minimize = generated.options.minimize;
     return new Schema(definition, opts);
@@ -229,6 +243,7 @@ export class SchemaCompilerService {
     /**
      * if method.
      */
+    /** if (see class JSDoc for context). */
     if (field.required) def.required = true;
     /**
      * if method.
@@ -263,11 +278,13 @@ export class SchemaCompilerService {
     /**
      * if method.
      */
+    /** if (see class JSDoc for context). */
     if (field.type === 'object' && field.properties) {
       const nested: Record<string, unknown> = {};
       /**
        * for method.
        */
+      /** for (see class JSDoc for context). */
       for (const [propName, propDef] of Object.entries(field.properties)) {
         nested[propName] = this.buildFieldDefinition({
           ...propDef,
@@ -297,6 +314,7 @@ export class SchemaCompilerService {
   /**
    * isCollectionRegistered method.
    */
+  /** isCollectionRegistered (see class JSDoc for context). */
   isCollectionRegistered(collectionName: string): boolean {
     /**
      * if method.
@@ -308,12 +326,14 @@ export class SchemaCompilerService {
   /**
    * unregister method.
    */
+  /** unregister (see class JSDoc for context). */
   unregister(collectionName: string): boolean {
     this.compiledSchemas.delete(collectionName);
     this.hashByCollection.delete(collectionName);
     /**
      * if method.
      */
+    /** if (see class JSDoc for context). */
     if (!this.legacyMode) {
       try {
         this._connection.deleteModel(collectionName);
@@ -333,6 +353,7 @@ export class SchemaCompilerService {
   /**
    * getCompiledSchema method.
    */
+  /** getCompiledSchema (see class JSDoc for context). */
   getCompiledSchema(collectionName: string): Schema | undefined {
     return this.compiledSchemas.get(collectionName);
   }
@@ -344,6 +365,7 @@ export class SchemaCompilerService {
   /**
    * rehydrate method.
    */
+  /** rehydrate (see class JSDoc for context). */
   rehydrate(metadata: { collectionName: string; schemaDefinition: string }): {
     ok: boolean;
     error?: string;
@@ -370,6 +392,7 @@ function computeFieldsHash(fields: SchemaFieldDefinition[]): string {
   /**
    * for method.
    */
+  /** for (see class JSDoc for context). */
   for (let i = 0; i < json.length; i++) {
     hash ^= json.charCodeAt(i);
     hash = Math.imul(hash, 0x01000193);
@@ -377,5 +400,6 @@ function computeFieldsHash(fields: SchemaFieldDefinition[]): string {
   /**
    * return method.
    */
+  /** return (see class JSDoc for context). */
   return (hash >>> 0).toString(16).padStart(8, '0');
 }

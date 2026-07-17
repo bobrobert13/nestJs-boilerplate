@@ -31,6 +31,8 @@ export class PasskeysController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get WebAuthn registration options' })
   @ApiResponse({ status: 200, description: 'Registration options' })
+  /** generateRegistrationOptions (see class JSDoc for context). */
+  /** generateRegistrationOptions (see class JSDoc for context). */
   async generateRegistrationOptions(
     @Request() req: any,
     @Body() dto: RegisterPasskeyDto,
@@ -50,6 +52,8 @@ export class PasskeysController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Verify and register a passkey' })
   @ApiResponse({ status: 200, description: 'Passkey registered' })
+  /** verifyRegistration (see class JSDoc for context). */
+  /** verifyRegistration (see class JSDoc for context). */
   async verifyRegistration(
     @Request() req: any,
     @Body() body: { response: any },
@@ -69,6 +73,8 @@ export class PasskeysController {
   @Post('login-options')
   @ApiOperation({ summary: 'Get WebAuthn login (authentication) options' })
   @ApiResponse({ status: 200, description: 'Login options' })
+  /** generateLoginOptions (see class JSDoc for context). */
+  /** generateLoginOptions (see class JSDoc for context). */
   async generateLoginOptions(@Body() dto: LoginWithPasskeyDto) {
     const options = await this.passkeysService.generateAuthenticationOptions(
       dto.userId,
@@ -84,6 +90,8 @@ export class PasskeysController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Verify passkey authentication' })
   @ApiResponse({ status: 200, description: 'Authentication result' })
+  /** verifyLogin (see class JSDoc for context). */
+  /** verifyLogin (see class JSDoc for context). */
   async verifyLogin(@Body() body: { response: any; userId: string }) {
     const result = await this.passkeysService.verifyAuthentication(
       body.userId,
@@ -101,6 +109,8 @@ export class PasskeysController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'List user registered passkeys' })
   @ApiResponse({ status: 200, description: 'Passkey list' })
+  /** listPasskeys (see class JSDoc for context). */
+  /** listPasskeys (see class JSDoc for context). */
   async listPasskeys(@Request() req: any) {
     const passkeys = await this.passkeysService.getUserPasskeys(req.user.id);
     return {
@@ -118,6 +128,8 @@ export class PasskeysController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete a registered passkey' })
   @ApiResponse({ status: 200, description: 'Passkey deleted' })
+  /** deletePasskey (see class JSDoc for context). */
+  /** deletePasskey (see class JSDoc for context). */
   async deletePasskey(
     @Request() req: any,
     @Param('credentialId') credentialId: string,

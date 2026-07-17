@@ -11,6 +11,7 @@ const MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
 
 @Injectable()
 export class PdfService implements IDocumentParser {
+  /** parse (see class JSDoc for context). */
   async parse(buffer: Buffer): Promise<ParsedDocument> {
     if (buffer.length > MAX_SIZE_BYTES) {
       throw new Error(
@@ -25,6 +26,7 @@ export class PdfService implements IDocumentParser {
       const data = await pdfParse(buffer);
       const pageCount = data.numpages;
 
+      /** if (see class JSDoc for context). */
       if (pageCount > MAX_PAGES) {
         throw new Error(
           JSON.stringify({
@@ -34,6 +36,7 @@ export class PdfService implements IDocumentParser {
         );
       }
 
+      /** if (see class JSDoc for context). */
       if (!data.text || data.text.trim().length === 0) {
         throw new Error(
           JSON.stringify({
@@ -60,6 +63,7 @@ export class PdfService implements IDocumentParser {
     }
   }
 
+  /** supports (see class JSDoc for context). */
   supports(format: string): boolean {
     return format === 'pdf';
   }

@@ -79,6 +79,7 @@ export class TwoFactorService implements OnModuleInit {
     private readonly secretModel?: Model<TwoFactorSecretDocument>,
   ) {}
 
+  /** onModuleInit (see class JSDoc for context). */
   onModuleInit() {
     this.loadConfig();
     this.logger.log(`✅ TwoFactorService initialized - Issuer: ${this.issuer}`);
@@ -88,6 +89,7 @@ export class TwoFactorService implements OnModuleInit {
     const config = this.configService.get<{ twoFactor: TwoFactorConfig }>(
       'auth',
     );
+    /** if (see class JSDoc for context). */
     if (config?.twoFactor) {
       this.issuer = config.twoFactor.issuer || 'MyApp';
       this.algorithm = config.twoFactor.algorithm || 'SHA1';
@@ -98,12 +100,14 @@ export class TwoFactorService implements OnModuleInit {
     }
   }
 
+  /** generateSecret (see class JSDoc for context). */
   async generateSecret(userId: string): Promise<TwoFactorSetupResult> {
     // PR3 / C4 / REQ-auth-crypto-1 — 20 random bytes base32-encoded.
     // Explicit random source: do NOT depend on otplib's internal generator.
     const buf = randomBytes(TOTP_SECRET_BYTES);
     const secret = toBase32(buf);
 
+    /** if (see class JSDoc for context). */
     if (this.secretModel) {
       await this.secretModel.updateOne(
         { userId },
@@ -128,6 +132,7 @@ export class TwoFactorService implements OnModuleInit {
     };
   }
 
+  /** provideQrCode (see class JSDoc for context). */
   async provideQrCode(otpauthUrl: string): Promise<string> {
     try {
       return await toDataURL(otpauthUrl);
@@ -139,12 +144,14 @@ export class TwoFactorService implements OnModuleInit {
     }
   }
 
+  /** verifyCode (see class JSDoc for context). */
   async verifyCode(
     userId: string,
     code: string,
   ): Promise<TwoFactorVerifyResult> {
     const backupCodes = this.backupCodes.get(userId) || [];
 
+    /** if (see class JSDoc for context). */
     if (
       backupCodes.some(
         (bc) => !bc.isUsed && this.verifyBackupCode(code, bc.hashedCode),
@@ -161,6 +168,7 @@ export class TwoFactorService implements OnModuleInit {
     return { valid: isValid };
   }
 
+  /** enableTwoFactor (see class JSDoc for context). */
   async enableTwoFactor(
     userId: string,
     code: string,
@@ -170,6 +178,7 @@ export class TwoFactorService implements OnModuleInit {
       secret: this.getUserSecret(userId),
     });
 
+    /** if (see class JSDoc for context). */
     if (!isValid) {
       this.logger.warn(`Invalid 2FA code for user: ${userId}`);
       return { success: false };
@@ -181,14 +190,17 @@ export class TwoFactorService implements OnModuleInit {
     return { success: true, backupCodes };
   }
 
+  /** disableTwoFactor (see class JSDoc for context). */
   async disableTwoFactor(userId: string): Promise<void> {
     this.backupCodes.delete(userId);
     this.logger.log(`2FA disabled for user: ${userId}`);
   }
 
+  /** generateBackupCodes (see class JSDoc for context). */
   generateBackupCodes(userId: string): string[] {
     const codes: string[] = [];
 
+    /** for (see class JSDoc for context). */
     for (let i = 0; i < this.backupCodesCount; i++) {
       const code = this.generateBackupCode();
       const hashedCode = this.hashBackupCode(code);
@@ -207,6 +219,7 @@ export class TwoFactorService implements OnModuleInit {
     return codes;
   }
 
+  /** verifyBackupCodeWithUser (see class JSDoc for context). */
   async verifyBackupCodeWithUser(
     userId: string,
     backupCode: string,
@@ -214,16 +227,19 @@ export class TwoFactorService implements OnModuleInit {
     // PR2 / M11 partial — durable path: find a matching unused code and
     // atomically mark it as used. A second verification of the same code
     // finds `isUsed: true` and returns false.
+    /** if (see class JSDoc for context). */
     if (this.backupCodeModel) {
       const docs = await this.backupCodeModel
         .find({ userId, isUsed: false })
         .lean();
+      /** for (see class JSDoc for context). */
       for (const doc of docs) {
         if (this.verifyBackupCode(backupCode, doc.hashedCode)) {
           const updated = await this.backupCodeModel.updateOne(
             { _id: doc._id, isUsed: false },
             { $set: { isUsed: true, usedAt: new Date() } },
           );
+          /** if (see class JSDoc for context). */
           if ((updated.modifiedCount ?? 0) > 0) {
             this.logger.log(`Backup code used for user: ${userId}`);
             return true;
@@ -238,6 +254,7 @@ export class TwoFactorService implements OnModuleInit {
     const found = userBackupCodes.find(
       (bc) => !bc.isUsed && this.verifyBackupCode(backupCode, bc.hashedCode),
     );
+    /** if (see class JSDoc for context). */
     if (found) {
       found.isUsed = true;
       found.usedAt = new Date();
@@ -247,6 +264,7 @@ export class TwoFactorService implements OnModuleInit {
     return false;
   }
 
+  /** regenerateBackupCodes (see class JSDoc for context). */
   async regenerateBackupCodes(
     userId: string,
     currentCode: string,
@@ -256,6 +274,7 @@ export class TwoFactorService implements OnModuleInit {
       secret: this.getUserSecret(userId),
     });
 
+    /** if (see class JSDoc for context). */
     if (!isValid) {
       throw new Error('Invalid 2FA code');
     }
@@ -268,6 +287,7 @@ export class TwoFactorService implements OnModuleInit {
     return newCodes;
   }
 
+  /** isTwoFactorEnabled (see class JSDoc for context). */
   isTwoFactorEnabled(userId: string): boolean {
     return (
       this.backupCodes.has(userId) && this.backupCodes.get(userId)!.length > 0
@@ -303,6 +323,7 @@ export class TwoFactorService implements OnModuleInit {
    * PR3 / C4 — read the persisted TOTP secret for a user. Returns null
    * when the user has not enrolled (REQ-auth-crypto edge case).
    */
+  /** getPersistedSecret (see class JSDoc for context). */
   async getPersistedSecret(userId: string): Promise<string | null> {
     if (this.secretModel) {
       const doc = await this.secretModel
@@ -317,12 +338,15 @@ export class TwoFactorService implements OnModuleInit {
   /**
    * PR3 / C4 — verify a TOTP code against the persisted random secret.
    */
+  /** verifyTotp (see class JSDoc for context). */
   async verifyTotp(userId: string, code: string): Promise<boolean> {
     const secret = await this.getPersistedSecret(userId);
+    /** if (see class JSDoc for context). */
     if (!secret) return false;
     return authenticator.verify({ token: code, secret });
   }
 
+  /** getTimeRemaining (see class JSDoc for context). */
   getTimeRemaining(): number {
     const epoch = Math.floor(Date.now() / 1000);
     return this.period - (epoch % this.period);

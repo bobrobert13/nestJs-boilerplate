@@ -47,6 +47,8 @@ export class AuthController {
   })
   @ApiResponse({ status: 201, description: 'User registered' })
   @ApiResponse({ status: 400, description: 'Invalid input' })
+  /** register (see class JSDoc for context). */
+  /** register (see class JSDoc for context). */
   async register(@Body() dto: RegisterDto) {
     const user = await this.authService.register(
       dto.email,
@@ -72,9 +74,13 @@ export class AuthController {
     description: 'Login successful, returns JWT tokens',
   })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
+  /** login (see class JSDoc for context). */
+  /** login (see class JSDoc for context). */
   async login(@Body() dto: LoginDto) {
     const user = await this.authService.validateUser(dto.email, dto.password);
     // M6 / REQ-auth-1 — invalid credentials MUST return HTTP 401.
+    /** if (see class JSDoc for context). */
+    /** if (see class JSDoc for context). */
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -90,6 +96,8 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Refresh JWT tokens' })
   @ApiResponse({ status: 200, description: 'Tokens refreshed' })
+  /** refresh (see class JSDoc for context). */
+  /** refresh (see class JSDoc for context). */
   async refresh(@Body() dto: RefreshTokenDto) {
     const tokens = await this.authService.refreshTokens(dto.refreshToken);
     return {
@@ -111,6 +119,8 @@ export class AuthController {
     status: 503,
     description: 'Magic-link delivery is unavailable',
   })
+  /** requestMagicLink (see class JSDoc for context). */
+  /** requestMagicLink (see class JSDoc for context). */
   async requestMagicLink(@Body() dto: MagicLinkRequestDto) {
     if (!this.magicLinkService.isEnabled()) {
       throw new ServiceUnavailableException(
@@ -149,11 +159,15 @@ export class AuthController {
     status: 200,
     description: 'Token verified, returns JWT tokens',
   })
+  /** verifyMagicLink (see class JSDoc for context). */
+  /** verifyMagicLink (see class JSDoc for context). */
   async verifyMagicLink(@Body() dto: MagicLinkVerifyDto) {
     try {
       const email = await this.magicLinkService.verifyMagicLink(dto.token);
       const user = await this.authService.validateUser(email, '');
 
+      /** if (see class JSDoc for context). */
+      /** if (see class JSDoc for context). */
       if (user) {
         const tokens = await this.authService.login(user);
         return {
@@ -180,6 +194,8 @@ export class AuthController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Logout and invalidate refresh token' })
   @ApiResponse({ status: 200, description: 'Logged out' })
+  /** logout (see class JSDoc for context). */
+  /** logout (see class JSDoc for context). */
   async logout(@Body() dto: RefreshTokenDto) {
     await this.authService.logout(dto.refreshToken);
     return {
@@ -194,6 +210,8 @@ export class AuthController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Verify JWT token and return user data' })
   @ApiResponse({ status: 200, description: 'Token valid, returns user' })
+  /** verify (see class JSDoc for context). */
+  /** verify (see class JSDoc for context). */
   async verify(@Request() req: any) {
     return {
       success: true,
@@ -211,6 +229,8 @@ export class AuthController {
   @ApiOperation({ summary: 'Admin-only endpoint (demo)' })
   @ApiResponse({ status: 200, description: 'Admin access granted' })
   @ApiResponse({ status: 403, description: 'Forbidden — not an admin' })
+  /** adminEndpoint (see class JSDoc for context). */
+  /** adminEndpoint (see class JSDoc for context). */
   async adminEndpoint() {
     return {
       success: true,

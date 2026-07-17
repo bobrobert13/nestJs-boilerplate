@@ -19,12 +19,14 @@ export class MagicLinkService implements OnModuleInit {
 
   constructor(private readonly configService: ConfigService) {}
 
+  /** onModuleInit (see class JSDoc for context). */
   onModuleInit() {
     const config = this.configService.get<{ magicLink: MagicLinkConfig }>(
       'auth',
     );
     const isEnabled = config?.magicLink?.enabled || false;
 
+    /** if (see class JSDoc for context). */
     if (isEnabled) {
       this.logger.log('✅ MagicLinkService initialized - Magic links ENABLED');
     } else {
@@ -34,11 +36,13 @@ export class MagicLinkService implements OnModuleInit {
     }
   }
 
+  /** generateMagicLink (see class JSDoc for context). */
   async generateMagicLink(email: string): Promise<string> {
     const config = this.configService.get<{ magicLink: MagicLinkConfig }>(
       'auth',
     );
 
+    /** if (see class JSDoc for context). */
     if (!config?.magicLink?.enabled) {
       this.logger.warn('Magic link is disabled');
       throw new Error('Magic link authentication is disabled');
@@ -57,13 +61,16 @@ export class MagicLinkService implements OnModuleInit {
     return token;
   }
 
+  /** verifyMagicLink (see class JSDoc for context). */
   async verifyMagicLink(token: string): Promise<string> {
     const data = this.tokens.get(token);
 
+    /** if (see class JSDoc for context). */
     if (!data) {
       throw new Error('Invalid magic link token');
     }
 
+    /** if (see class JSDoc for context). */
     if (new Date() > data.expiresAt) {
       this.tokens.delete(token);
       throw new Error('Magic link token expired');
@@ -76,10 +83,12 @@ export class MagicLinkService implements OnModuleInit {
     return email;
   }
 
+  /** resendMagicLink (see class JSDoc for context). */
   async resendMagicLink(email: string): Promise<string> {
     return this.generateMagicLink(email);
   }
 
+  /** isEnabled (see class JSDoc for context). */
   isEnabled(): boolean {
     const config = this.configService.get<{ magicLink: MagicLinkConfig }>(
       'auth',
@@ -91,6 +100,7 @@ export class MagicLinkService implements OnModuleInit {
    * Return the magic-link config block. Used by callers that need the TTL
    * without exposing the entire auth config.
    */
+  /** getConfig (see class JSDoc for context). */
   getConfig(): MagicLinkConfig | null {
     const config = this.configService.get<{ magicLink: MagicLinkConfig }>(
       'auth',
@@ -102,6 +112,7 @@ export class MagicLinkService implements OnModuleInit {
    * Remove a previously-issued token. Used when delivery fails so a failed
    * Resend call cannot leak a valid token via the email channel.
    */
+  /** invalidateToken (see class JSDoc for context). */
   async invalidateToken(token: string): Promise<void> {
     this.tokens.delete(token);
   }

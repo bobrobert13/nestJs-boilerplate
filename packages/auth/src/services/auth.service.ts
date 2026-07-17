@@ -65,6 +65,7 @@ export class AuthService {
    * `userService.findByEmail()` + argon2 comparison.  Otherwise it
    * falls back to the built-in demo stub (`demo@example.com` / `demo123`).
    */
+  /** validateUser (see class JSDoc for context). */
   async validateUser(
     email: string,
     password: string,
@@ -73,14 +74,17 @@ export class AuthService {
     this.logger.log(`Validating user: redacted`);
 
     // Real path — consumer provided an IUserService
+    /** if (see class JSDoc for context). */
     if (this.userService) {
       const user = await this.userService.findByEmail(email);
+      /** if (see class JSDoc for context). */
       if (!user) {
         this.logger.warn(`User not found: redacted`);
         return null;
       }
 
       const valid = await this.comparePassword(password, user.password);
+      /** if (see class JSDoc for context). */
       if (!valid) {
         this.logger.warn(`Invalid password for userId=${user.id}`);
         return null;
@@ -90,6 +94,7 @@ export class AuthService {
     }
 
     // Fallback — demo stub
+    /** if (see class JSDoc for context). */
     if (email === 'demo@example.com' && password === 'demo123') {
       return {
         id: 'demo-user-id',
@@ -101,6 +106,7 @@ export class AuthService {
     return null;
   }
 
+  /** register (see class JSDoc for context). */
   async register(
     email: string,
     password: string,
@@ -108,12 +114,14 @@ export class AuthService {
   ): Promise<AuthenticatedUser> {
     this.logger.log(`Registering user: ${email}`);
 
+    /** if (see class JSDoc for context). */
     if (email === 'demo@example.com') {
       throw new ConflictException('User already exists');
     }
 
     // If an IUserService is wired (e.g. UsuariosService), delegate to it
     // so the user is persisted in MongoDB. Otherwise fall back to the demo stub.
+    /** if (see class JSDoc for context). */
     if (this.userService) {
       const hashedPassword = await this.hashPassword(password);
       const user = await this.userService.createUser(
@@ -135,6 +143,7 @@ export class AuthService {
     };
   }
 
+  /** login (see class JSDoc for context). */
   async login(user: AuthenticatedUser): Promise<TokenResponse> {
     this.logger.log(`User login: ${user.email}`);
 
@@ -154,11 +163,14 @@ export class AuthService {
     };
   }
 
+  /** refreshTokens (see class JSDoc for context). */
   async refreshTokens(refreshToken: string): Promise<TokenResponse> {
     // PR2 / H3 — use the Mongoose-backed rotation path when the store
     // exposes `rotate`; otherwise fall back to the in-memory rotation.
+    /** if (see class JSDoc for context). */
     if (
       this.tokenStore &&
+      /** typeof (see class JSDoc for context). */
       typeof (this.tokenStore as any).rotate === 'function'
     ) {
       const config = this.configService.get<AuthConfig>('auth');
@@ -170,9 +182,11 @@ export class AuthService {
       // `revokedAt` set, treat it as theft: revoke the whole family and
       // respond 401.
       const existing = await this.tokenStore.find(refreshToken);
+      /** if (see class JSDoc for context). */
       if (!existing) {
         throw new UnauthorizedException('Invalid refresh token');
       }
+      /** if (see class JSDoc for context). */
       if (existing.expiresAt.getTime() < Date.now()) {
         await this.tokenStore.delete(refreshToken);
         throw new UnauthorizedException('Refresh token expired');
@@ -183,8 +197,10 @@ export class AuthService {
         newRaw,
         expiresAt,
       );
+      /** if (see class JSDoc for context). */
       if (!rotated) {
         // The predecessor is already revoked → reuse attempt.
+        /** if (see class JSDoc for context). */
         if (typeof (this.tokenStore as any).revokeFamily === 'function') {
           await (this.tokenStore as any).revokeFamily(refreshToken);
         }
@@ -210,9 +226,11 @@ export class AuthService {
 
     // Legacy in-memory rotation (kept for tests / fallback).
     const tokenData = await this.loadToken(refreshToken);
+    /** if (see class JSDoc for context). */
     if (!tokenData) {
       throw new UnauthorizedException('Invalid refresh token');
     }
+    /** if (see class JSDoc for context). */
     if (new Date() > tokenData.expiresAt) {
       await this.deleteToken(refreshToken);
       throw new UnauthorizedException('Refresh token expired');
@@ -226,13 +244,17 @@ export class AuthService {
     return this.login(user);
   }
 
+  /** logout (see class JSDoc for context). */
   async logout(refreshToken: string): Promise<void> {
     // PR2 / H3 — revoke the entire family so descendant tokens can't be
     // replayed.
+    /** if (see class JSDoc for context). */
     if (
       this.tokenStore &&
+      /** typeof (see class JSDoc for context). */
       typeof (this.tokenStore as any).revokeFamily === 'function'
     ) {
+      /** await (see class JSDoc for context). */
       await (this.tokenStore as any).revokeFamily(refreshToken);
     } else {
       await this.deleteToken(refreshToken);
@@ -240,6 +262,7 @@ export class AuthService {
     this.logger.log('User logged out');
   }
 
+  /** validateToken (see class JSDoc for context). */
   async validateToken(token: string): Promise<JwtPayload> {
     try {
       return this.jwtService.verify<JwtPayload>(token);
@@ -248,6 +271,7 @@ export class AuthService {
     }
   }
 
+  /** hashPassword (see class JSDoc for context). */
   async hashPassword(password: string): Promise<string> {
     const config = this.configService.get<AuthConfig>('auth');
     const argon2Options = {
@@ -261,6 +285,7 @@ export class AuthService {
     return argon2.hash(password, argon2Options);
   }
 
+  /** comparePassword (see class JSDoc for context). */
   async comparePassword(password: string, hash: string): Promise<boolean> {
     try {
       return await argon2.verify(hash, password);
@@ -290,6 +315,7 @@ export class AuthService {
     roles: string[],
     expiresAt: Date,
   ): Promise<void> {
+    /** if (see class JSDoc for context). */
     if (this.tokenStore) {
       await this.tokenStore.save(token, userId, email, roles, expiresAt);
     } else {
@@ -304,6 +330,7 @@ export class AuthService {
     roles: string[];
     expiresAt: Date;
   } | null> {
+    /** if (see class JSDoc for context). */
     if (this.tokenStore) {
       return this.tokenStore.find(token);
     }

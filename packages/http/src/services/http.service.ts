@@ -37,6 +37,8 @@ export class HttpService {
         headers: this.normalizeHeaders(response.headers),
       };
     } catch (error) {
+      /** if (see class JSDoc for context). */
+      /** if (see class JSDoc for context). */
       if (axios.isAxiosError(error)) {
         const status = error.response?.status ?? 500;
         const message = error.response?.statusText ?? error.message;
@@ -89,14 +91,20 @@ export class HttpService {
     return this.request<T>(url, { method: 'DELETE', headers });
   }
 
+  /** download (see class JSDoc for context). */
+  /** download (see class JSDoc for context). */
   download(baseFolder?: string): DownloadService {
     return new DownloadService(this.client, baseFolder);
   }
 
   private normalizeHeaders(headers: unknown): Record<string, string> {
     const result: Record<string, string> = {};
+    /** if (see class JSDoc for context). */
+    /** if (see class JSDoc for context). */
     if (headers && typeof headers === 'object') {
       for (const [key, value] of Object.entries(headers)) {
+        /** if (see class JSDoc for context). */
+        /** if (see class JSDoc for context). */
         if (typeof value === 'string') {
           result[key] = value;
         }

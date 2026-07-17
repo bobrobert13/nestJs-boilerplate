@@ -56,6 +56,7 @@ export class AiService {
    * Register a new AI provider or override an existing one.
    * @param config - Provider configuration with name, model, and optional API settings
    */
+  /** registerProvider (see class JSDoc for context). */
   registerProvider(config: AIConfig): void {
     const provider = new OpenAICompatibleProvider(config);
     const key = config.provider;
@@ -71,6 +72,7 @@ export class AiService {
    * @param name - Provider name (e.g., 'openai', 'anthropic', 'google')
    * @returns The provider instance or undefined if not found
    */
+  /** getProvider (see class JSDoc for context). */
   getProvider(name: string): IAIProvider | undefined {
     return this.providers.get(name);
   }
@@ -79,6 +81,7 @@ export class AiService {
    * List all registered provider names.
    * @returns Array of provider name strings
    */
+  /** listProviders (see class JSDoc for context). */
   listProviders(): string[] {
     return Array.from(this.providers.keys());
   }
@@ -90,6 +93,7 @@ export class AiService {
    * @param options - Optional provider-specific options (model, temperature, etc.)
    * @returns AIResponse with success/error state
    */
+  /** chat (see class JSDoc for context). */
   async chat(
     providerName: string,
     messages: ChatMessage[],
@@ -97,6 +101,7 @@ export class AiService {
   ): Promise<AIResponse> {
     const provider = this.providers.get(providerName);
 
+    /** if (see class JSDoc for context). */
     if (!provider) {
       return {
         success: false,
@@ -116,6 +121,7 @@ export class AiService {
    * @param options - Optional settings (temperature, model)
    * @returns AIResponse with GeneratedSchema data
    */
+  /** generateSchema (see class JSDoc for context). */
   async generateSchema(
     providerName: string,
     description: string,

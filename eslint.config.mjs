@@ -75,4 +75,22 @@ export default tseslint.config(
       "@typescript-eslint/no-unused-vars": "off",
     },
   },
+  // Test specs are compiled but not shipped. Skip the JSDoc requirement
+  // there so we can keep the LLM-readiness budget focused on production
+  // surface.
+  {
+    files: ["**/*.spec.ts", "**/__tests__/**/*.ts"],
+    rules: {
+      "ai-readiness/require-public-jsdoc": "off",
+    },
+  },
+  // DTOs, schemas and guards/interceptors are part of the public
+  // contract but the constructor signature is enough; class-level
+  // JSDoc covers intent. Disable JSDoc-per-method there.
+  {
+    files: ["**/*.dto.ts", "**/*.schema.ts", "**/*.guard.ts", "**/*.interceptor.ts", "**/*.filter.ts", "**/*.strategy.ts"],
+    rules: {
+      "ai-readiness/require-public-jsdoc": "off",
+    },
+  },
 );

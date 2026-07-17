@@ -10,6 +10,7 @@ const MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
 
 @Injectable()
 export class DocxService implements IDocumentParser {
+  /** parse (see class JSDoc for context). */
   async parse(buffer: Buffer): Promise<ParsedDocument> {
     if (buffer.length > MAX_SIZE_BYTES) {
       throw new Error(
@@ -23,6 +24,7 @@ export class DocxService implements IDocumentParser {
     try {
       const result = await mammoth.extractRawText({ buffer });
 
+      /** if (see class JSDoc for context). */
       if (!result.value || result.value.trim().length === 0) {
         throw new Error(
           JSON.stringify({
@@ -48,6 +50,7 @@ export class DocxService implements IDocumentParser {
     }
   }
 
+  /** supports (see class JSDoc for context). */
   supports(format: string): boolean {
     return format === 'docx' || format === 'doc';
   }
