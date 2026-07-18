@@ -71,13 +71,19 @@ describe('DynamicSchemaController — authorization (L9)', () => {
   });
 
   it('returns 403 for a non-admin POST to /dynamic-schema/compile', () => {
-    const ctx = buildContext({ id: 'u-1', roles: ['user'] }, controller.compileSchema);
+    const ctx = buildContext(
+      { id: 'u-1', roles: ['user'] },
+      controller.compileSchema,
+    );
     // RolesGuard returns false for non-admin → NestJS converts to HTTP 403.
     expect(rolesGuard.canActivate(ctx)).toBe(false);
   });
 
   it('allows an admin to pass the RolesGuard for /dynamic-schema/compile', () => {
-    const ctx = buildContext({ id: 'u-2', roles: ['admin'] }, controller.compileSchema);
+    const ctx = buildContext(
+      { id: 'u-2', roles: ['admin'] },
+      controller.compileSchema,
+    );
     expect(rolesGuard.canActivate(ctx)).toBe(true);
   });
 
