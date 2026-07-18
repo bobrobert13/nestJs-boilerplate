@@ -7,13 +7,13 @@ set -e
 
 echo "🚀 Starting NestJS Boilerplate Service..."
 
-# Validate that the app is built
-if [ ! -f "dist/apps/nominas/main" ]; then
+# Validate that the app is built (Nest webpack output emits main.js)
+if [ ! -f "dist/apps/nominas/main.js" ]; then
     echo "❌ ERROR: Application not built. Run 'npm run build' first."
-    echo "   Expected: dist/apps/nominas/main"
+    echo "   Expected: dist/apps/nominas/main.js"
     exit 1
 fi
-echo "✅ Application binary found: dist/apps/nominas/main"
+echo "✅ Application binary found: dist/apps/nominas/main.js"
 
 # Set default browsers path if not provided
 export PLAYWRIGHT_BROWSERS_PATH="${PLAYWRIGHT_BROWSERS_PATH:-/opt/playwright/browsers}"

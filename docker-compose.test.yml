@@ -1,0 +1,24 @@
+# =============================================================================
+# docker-compose.test.yml
+# =============================================================================
+# Override used by docker-test.sh for ephemeral test stacks.
+#
+# Differences vs docker-compose.yml:
+#   - Mongo: disable auth (a single-node replica set without keyFile cannot
+#     start with authorization enabled on Mongo 7+)
+#   - Service: bind MONGODB_URI without credentials
+# =============================================================================
+
+services:
+  mongodb:
+    environment:
+      # Clear root credentials so Mongo starts in open mode (no keyFile needed).
+      MONGO_INITDB_ROOT_USERNAME: ""
+      MONGO_INITDB_ROOT_PASSWORD: ""
+      MONGO_INITDB_DATABASE: boilerplate_db_test
+
+  boilerplate-service:
+    environment:
+      # Match the open Mongo URI from above.
+      - MONGODB_URI=mongodb://mongodb:27017/boilerplate_db_test?replicaSet=rs0
+      - NODE_ENV=test

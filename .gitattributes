@@ -1,0 +1,30 @@
+# =============================================================================
+# .gitattributes — enforce LF line endings on shell/config files
+# =============================================================================
+# Windows + Docker is a known minefield: any .sh file copied into a Linux image
+# with CRLF will break shebang parsing and produce "no such file or directory"
+# at exec time. These rules guarantee that Git stores and checks out LF for
+# anything that ends up mounted into a container or executed by one.
+# =============================================================================
+
+# Shell scripts — MUST be LF
+*.sh           text eol=lf
+*.bash         text eol=lf
+Dockerfile     text eol=lf
+.dockerignore  text eol=lf
+
+# Compose / YAML
+*.yml          text eol=lf
+*.yaml         text eol=lf
+
+# NestJS / JS / TS configs
+*.json         text eol=lf
+*.jsonc        text eol=lf
+.env           text eol=lf
+.env.*         text eol=lf
+
+# Scripts that are executed on the host (e.g. docker-test.sh)
+docker-test*.sh text eol=lf
+
+# Default behavior — let Git decide per file type
+*              text=auto
