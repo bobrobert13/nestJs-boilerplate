@@ -301,16 +301,20 @@ npm run test:e2e          # End-to-end
 
 ```bash
 # Production
-docker-compose up -d
+docker compose up -d
 
 # Development (hot-reload)
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+
+# End-to-end test harness (build + up + health-check + cleanup)
+./docker-test.sh             # cross-platform (any bash + docker compose)
+./docker-test-ubuntu.sh      # Ubuntu: apt-installs docker + compose plugin if missing
 ```
 
 | Service | Image | Port |
 |---------|-------|------|
 | **boilerplate-service** | Node 22-slim | `3000` |
-| **mongodb** | MongoDB 7.0 | `27017` |
+| **mongodb** | MongoDB 7.0 (ReplicaSet `rs0`) | `27017` |
 
 > See [`README.Docker.md`](./README.Docker.md) for complete guide.
 

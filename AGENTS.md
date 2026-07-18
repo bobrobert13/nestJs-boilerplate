@@ -97,7 +97,7 @@ graph LR
     DOCKER_COMPOSE --> MONGODB
     DOCKER_COMPOSE --> SERVICE
     SERVICE --> MONGODB
-    SERVICE --> |healthcheck| HEALTH["GET /api/usuarios"]
+    SERVICE --> |healthcheck| HEALTH["GET /api/health"]
     SERVICE --> |swagger| SWAGGER["GET /api"]
 ```
 
@@ -476,16 +476,25 @@ Agrupadas por paquete:
 ```bash
 # Build + Run
 docker build -t boilerplate-service .
-docker-compose up -d
+docker compose up -d
 
 # Dev con hot-reload
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 
-# Test automático
+# Test automático (wrapper de docker compose con health-check)
 ./docker-test.sh
+./docker-test-ubuntu.sh   # Ubuntu: auto-instala docker + compose plugin si faltan
+
+# Test con override custom
+COMPOSE_OVERRIDE=mi-override.yml ./docker-test.sh
+APP_PORT=4000 MONGO_PORT=28018 ./docker-test.sh
 ```
 
-**Ver:** `README.Docker.md` para documentación completa.
+> El `docker compose up` a secas asume credenciales en `.env`. Para tests
+> locales sin auth, `docker-test.sh` aplica `docker-compose.test.yml` (que
+> deshabilita auth en Mongo y usa la URI sin credenciales).
+
+**Ver:** `README.Docker.md` para documentación completa de Docker.
 
 ### Endpoints en Producción
 
@@ -493,7 +502,7 @@ docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 |----------|-----|
 | API Base | `http://localhost:3000/api` |
 | Swagger | `http://localhost:3000/api` |
-| Health Check | `http://localhost:3000/api/usuarios` |
+| Health Check | `http://localhost:3000/api/health` |
 
 ### Checklist de Producción
 
@@ -629,11 +638,20 @@ docs(@common/<name>): qué se documentó
 | `AGENTS.md` | Este archivo — índice maestro |
 | `DOCUMENTATION-CONVENTION.md` | Convención de documentación IA-friendly |
 | `README.Docker.md` | Documentación completa de Docker |
+| `Dockerfile` | Imagen de producción multi-stage (Node.js 22.18.0-slim) |
+| `docker-compose.yml` | Orquestación Mongo + Boilerplate (ReplicaSet `rs0`) |
+| `docker-compose.dev.yml` | Override para desarrollo (hot-reload) |
+| `docker-compose.test.yml` | Override para tests efímeros (Mongo sin auth, URI sin credenciales) |
+| `docker-test.sh` | Wrapper de `docker compose`: pre-flight, build, up, health-check, cleanup |
+| `docker-test-ubuntu.sh` | Wrapper Ubuntu-only: apt-install de docker + compose plugin si faltan |
+| `.dockerignore` | Exclusiones del contexto de build |
+| `.gitattributes` | Fuerza LF en scripts/configs (evita shebang `\r\n` roto en Docker) |
 | `nest-cli.json` | Configuración del monorepo |
 | `packages/*/README.md` | Documentación individual por paquete |
 | `apps/nominas/PATTERNS.md` | Patrones de diseño para módulos de negocio |
 | `apps/nominas/CONTRIBUTING.md` | Guía para agregar nuevos módulos |
 | `apps/nominas/src/modules/*/README.md` | Docs de módulos de la app |
+| `apps/nominas/entrypoint.sh` | Script de arranque del contenedor (Playwright perms, Playwright browsers path) |
 | `docs/JSDOC-MIGRATION-PLAN.md` | Plan para Fase 3 (JSDoc asistida) |
 | `openspec/config.yaml` | Configuración SDD del proyecto |
 | `openspec/specs/*/spec.md` | Especificaciones por dominio |

@@ -1,5 +1,29 @@
 # Changelog
 
+## fix-docker-local-stack — 2026-07-17
+
+Single commit `b1ea11e` (`fix(docker): unblock local docker stack + add
+reproducible test harness`) that makes `./docker-test.sh` succeed end-to-end
+and unblocks follow-up E-2 (live-Mongo e2e gate).
+
+### Files
+- `docker-test.sh` — rewritten as a thin wrapper of `docker compose`
+  with pre-flight, auto-bump, `rs.initiate`, health-check, `down -v`.
+- `docker-test-ubuntu.sh` — Ubuntu-only wrapper that `apt install`s
+  docker.io + docker-compose-plugin if missing.
+- `docker-compose.test.yml` — override used by the test scripts
+  (Mongo without auth, MONGODB_URI without credentials).
+- `.gitattributes` — forces LF on `*.sh`, `Dockerfile`, `*.yml`, etc.,
+  preventing the CRLF regression that broke the entrypoint.
+- `.dockerignore` — removed `package-lock.json` (required by `npm ci`).
+- `apps/nominas/entrypoint.sh` — CRLF → LF; validates `main.js` instead of
+  the non-existent `main`.
+
+### Unblocked follow-ups
+- **E-2** (live-Mongo e2e gate): no longer deferred. `./docker-test.sh` brings
+  up Mongo (ReplicaSet `rs0`) + service and exposes `/api/health` for a
+  subsequent Jest e2e to hit. `down -v` cleans the stack after.
+
 ## hardening-medium-low — 2026-07-16
 
 5 stacked-to-main PRs implementing the deferred MEDIUM/LOW findings from the
@@ -47,8 +71,10 @@
   before re-registering, so `connection.model(name)` returns the new model.
 
 ### Known follow-ups
-- E-2 (live-Mongo e2e gate) deferred: requires `docker-compose up -d`
-  which is not available in the dev environment.
+- E-2 (live-Mongo e2e gate): **resolved** on 2026-07-17 by
+  `fix(docker): unblock local docker stack + add reproducible test harness`
+  (commit `b1ea11e`). `./docker-test.sh` brings up Mongo (ReplicaSet `rs0`)
+  + service and exposes `/api/health`; `down -v` cleans the stack.
 - E-3 (release commit count reconciliation) addressed via per-PR commit subjects.
 - E-4 (AppLogger/useLogger wiring): `main.ts` does not call `app.useLogger()`
   because `BootstrapLogger` writes to `console.*` directly. Documented here.
