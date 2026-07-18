@@ -4,6 +4,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { DatabaseModule } from '@common/database';
 import { PlaywrightModule } from '@common/playwright';
 import { AuthModule, JwtAuthGuard, RolesGuard } from '@common/auth';
+import { ResendModule } from '@common/resend';
 import { BootstrapLogger, ThrottlerGuard } from '@common/common';
 import { UsuariosModule } from './modules/usuarios/usuarios.module';
 import { DynamicSchemaModule } from './modules/dynamic-schema/dynamic-schema.module';
@@ -22,6 +23,7 @@ import { CronModule } from './common/cron/cron.module';
     DatabaseModule,
     PlaywrightModule,
     AuthModule,
+    ResendModule,
     UsuariosModule,
     DynamicSchemaModule,
     HealthModule,
