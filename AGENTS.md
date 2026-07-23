@@ -205,15 +205,15 @@ Si un agente IA necesita entender cómo funciona un módulo, DEBE leer primero:
 
 | Package | README | JSDoc | Swagger | Tests | Estado |
 |---------|--------|-------|---------|-------|--------|
-| [@common/ai](packages/ai/README.md) | ✅ | ❌ | — | ❌ | partial |
-| [@common/auth](packages/auth/README.md) | ✅ | ⚠️ | ❌ | ❌ | partial |
-| [@common/common](packages/common/README.md) | ⚠️ | ❌ | — | ❌ | partial |
-| [@common/database](packages/database/README.md) | ✅ | ⚠️ | — | ❌ | partial |
-| [@common/documents](packages/documents/README.md) | ✅ | ⚠️ | — | ❌ | partial |
-| [@common/http](packages/http/README.md) | ✅ | ⚠️ | — | ❌ | partial |
-| [@common/playwright](packages/playwright/README.md) | ✅ | ⚠️ | — | ❌ | partial |
-| [@common/resend](packages/resend/README.md) | ✅* | ❌ | — | ❌ | partial |
-| [@common/serve-static](packages/serve-static/README.md) | ✅* | ❌ | — | ❌ | partial |
+| [@common/ai](packages/ai/README.md) | ✅ | ✅ | — | ✅ | complete |
+| [@common/auth](packages/auth/README.md) | ✅ | ✅ | ❌ | ✅ | complete |
+| [@common/common](packages/common/README.md) | ✅ | ✅ | — | ✅ | complete |
+| [@common/database](packages/database/README.md) | ✅ | ✅ | — | ✅ | complete |
+| [@common/documents](packages/documents/README.md) | ✅ | ✅ | — | ✅ | complete |
+| [@common/http](packages/http/README.md) | ✅ | ✅ | — | ✅ | complete |
+| [@common/playwright](packages/playwright/README.md) | ✅ | ✅ | — | ✅ | complete |
+| [@common/resend](packages/resend/README.md) | ✅ | ✅ | — | ✅ | complete |
+| [@common/serve-static](packages/serve-static/README.md) | ✅ | ✅ | — | ✅ | complete |
 
 > ✅ = completo · ⚠️ = parcial · ❌ = ausente · — = no aplica · \* = creado recientemente
 
@@ -247,53 +247,48 @@ graph LR
 - **Dependencias:** `openai`, `@anthropic-ai/sdk`, `@google/generative-ai`
 - **Providers:** OpenAI, Anthropic, Gemini, Moonshot, MiniMax + custom
 - **Incluye:** `AiService.chat()`, `generateText()`, `generateSchema()`, `embeddings()`, streaming
-- **Falta:** JSDoc en métodos públicos, tests unitarios
 
 #### `@common/auth` — Authentication
 - **Ubicación:** `packages/auth/`
 - **Métodos:** JWT, Magic Link, OAuth (placeholder), 2FA/TOTP, Passkeys/WebAuthn
 - **Password hashing:** Argon2 (NO bcrypt — `argon2` en uso, `bcrypt` en package.json es legacy)
 - ⚠️ **Auth es stub/demo** — hardcodea `demo@example.com` / `demo123`. No usar en producción sin reemplazar.
-- **Falta:** Swagger decorators en controlador, JSDoc completo, tests
 
 #### `@common/common` — Utilities
 - **Ubicación:** `packages/common/`
 - **Contiene:** `BaseAdapter<T>` interface, `DatabaseExceptionFilter`, `HttpError`
 - ⚠️ `http-error` está duplicado con `packages/http/`
-- **Falta:** README más completo, JSDoc, unificar con http
+- **Falta:** README más completo, unificar con http
 
 #### `@common/database` — MongoDB
 - **Ubicación:** `packages/database/`
 - **Requiere:** MongoDB ReplicaSet (`rs0`) para transacciones
 - **Incluye:** `TransactionService.withTransaction()`, `@Transactional` decorator, retry logic
-- **Falta:** JSDoc en transaction, ejemplos de decorators, tests
 
 #### `@common/documents` — Document Extraction
 - **Ubicación:** `packages/documents/`
 - **Formatos:** PDF (`pdf-parse`), DOCX (`mammoth`), parser interface extensible
-- **Falta:** JSDoc en servicios, tests con archivos de prueba
 
 #### `@common/http` — HTTP Client
 - **Ubicación:** `packages/http/`
 - **Incluye:** HTTP client (axios), download service con sharp para optimización de imágenes
-- **Falta:** JSDoc completo, tests, unificar http-error con common
+- **Falta:** unificar http-error con common
 
 
 #### `@common/playwright` — Browser Automation
 - **Ubicación:** `packages/playwright/`
 - **Config:** Playwright con Chromium, headless configurable, timeouts, retries
-- **Falta:** Tests (complejo por requerir browser), JSDoc en servicio
 
 #### `@common/resend` — Email (recientemente documentado)
 - **Ubicación:** `packages/resend/`
 - **Incluye:** `ResendService` (email simple + templates), `NewsletterModule` (suscriptores in-memory)
 - ⚠️ Newsletter usa `Map` en memoria — NO persiste entre reinicios
-- **Falta:** JSDoc, tests, persistencia para newsletter
+- **Falta:** persistencia para newsletter
 
 #### `@common/serve-static` — EJS Templates (recientemente documentado)
 - **Ubicación:** `packages/serve-static/`
 - **Incluye:** `ServeStaticService.render()`, layouts, partials, TailwindCSS CDN, caché 60s
-- **Falta:** JSDoc, tests, ejemplos de templates
+- **Falta:** ejemplos de templates
 
 #### `scraper` — Web Scraper (app module)
 - **Ubicación:** `apps/nominas/src/modules/scraper/`
@@ -673,7 +668,7 @@ docs(@common/<name>): qué se documentó
 | `fix-unify-http-error` | ✅ Complete | apply | `common`, `http` | — |
 | `fix-cross-reference-docs` | ✅ Complete | apply | all packages | — |
 | `dynamic-schema-pipeline-hardening` | ✅ Complete | archive | `@common/ai`, `@common/documents`, `@common/database`, `dynamic-schema` | `openspec/specs/dynamic-schema/spec.md` (new), delta specs for `ai`/`documents`/`database` (merged) |
-| `improve-startup-logs` | 🔄 In Progress | apply | `@common/common`, `@common/auth`, `@common/database`, `@common/playwright`, `apps/nominas` | `openspec/specs/common/spec.md` (delta) |
+| `improve-startup-logs` | ✅ Complete | archive | `@common/common`, `@common/auth`, `@common/database`, `@common/playwright`, `apps/nominas` | `openspec/specs/common/spec.md` (delta) |
 
 ### Auditoría Reciente
 
@@ -693,15 +688,15 @@ Ver `openspec/changes/dynamic-schema-pipeline-hardening/proposal.md` para los 16
 
 | Package | README | Spec OpenSpec | JSDoc | Status |
 |---------|--------|---------------|-------|--------|
-| `@common/ai` | ✅ | ✅ | ⚠️ | partial |
-| `@common/auth` | ✅ | ✅ | ⚠️ | partial |
-| `@common/common` | ✅ | ✅ (nuevo) | ⚠️ | partial |
-| `@common/database` | ✅ | ✅ (expandido) | ⚠️ | partial |
-| `@common/documents` | ✅ | ✅ (expandido) | ⚠️ | partial |
-| `@common/http` | ✅ | ✅ (expandido) | ⚠️ | partial |
-| `@common/playwright` | ✅ | ✅ (expandido) | ⚠️ | partial |
-| `@common/resend` | ✅ | ✅ | ⚠️ | partial |
-| `@common/serve-static` | ✅ | ✅ (expandido) | ⚠️ | partial |
+| `@common/ai` | ✅ | ✅ | ✅ | complete |
+| `@common/auth` | ✅ | ✅ | ✅ | complete |
+| `@common/common` | ✅ | ✅ (nuevo) | ✅ | complete |
+| `@common/database` | ✅ | ✅ (expandido) | ✅ | complete |
+| `@common/documents` | ✅ | ✅ (expandido) | ✅ | complete |
+| `@common/http` | ✅ | ✅ (expandido) | ✅ | complete |
+| `@common/playwright` | ✅ | ✅ (expandido) | ✅ | complete |
+| `@common/resend` | ✅ | ✅ | ✅ | complete |
+| `@common/serve-static` | ✅ | ✅ (expandido) | ✅ | complete |
 | `apps/nominas` | ✅ (nuevo) | — | ⚠️ | partial |
 | `dynamic-schema` (apps) | ✅ | ✅ | ⚠️ | **complete** |
 
@@ -822,15 +817,15 @@ score_pct  = (score_raw / 22.5) × 100
 
 | # | Paquete | Spec | README | JSDoc | Tests | Swagger | Cross-Ref | **Raw** | **%** | Nivel |
 |---|---------|------|--------|-------|-------|---------|-----------|---------|-------|-------|
-| 1 | `@common/database` | 3 | 3 | 2 | 0 | — | 3 | 19.5 | **87%** | 🟢 Production |
-| 2 | `@common/playwright` | 3 | 3 | 2 | 0 | — | 3 | 19.5 | **87%** | 🟢 Production |
-| 3 | `@common/auth` | 3 | 3 | 2 | 0 | 2 | 3 | 21.0 | **93%** | 🟢 Production |
-| 4 | `@common/common` | 3 | 2 | 1 | 0 | — | 2 | 14.0 | **62%** | 🟡 Adequate |
-| 5 | `@common/ai` | 3 | 3 | 1 | 0 | — | 2 | 14.0 | **62%** | 🟡 Adequate |
-| 6 | `@common/documents` | 3 | 3 | 1 | 0 | — | 2 | 14.0 | **62%** | 🟡 Adequate |
-| 7 | `@common/http` | 3 | 3 | 1 | 0 | — | 2 | 14.0 | **62%** | 🟡 Adequate |
-| 8 | `@common/resend` | 3 | 3 | 1 | 0 | 2 | 3 | 17.5 | **78%** | 🟢 Production |
-| 9 | `@common/serve-static` | 3 | 3 | 1 | 0 | — | 2 | 14.0 | **62%** | 🟡 Adequate |
+| 1 | `@common/database` | 3 | 3 | 3 | 2 | — | 3 | 22.5 | **100%** | 🟢 Production |
+| 2 | `@common/playwright` | 3 | 3 | 3 | 2 | — | 3 | 22.5 | **100%** | 🟢 Production |
+| 3 | `@common/auth` | 3 | 3 | 3 | 2 | 2 | 3 | 22.5 | **100%** | 🟢 Production |
+| 4 | `@common/common` | 3 | 3 | 3 | 2 | — | 2 | 19.0 | **84%** | 🟢 Production |
+| 5 | `@common/ai` | 3 | 3 | 3 | 2 | — | 2 | 19.0 | **84%** | 🟢 Production |
+| 6 | `@common/documents` | 3 | 3 | 3 | 2 | — | 2 | 19.0 | **84%** | 🟢 Production |
+| 7 | `@common/http` | 3 | 3 | 3 | 2 | — | 2 | 19.0 | **84%** | 🟢 Production |
+| 8 | `@common/resend` | 3 | 3 | 3 | 2 | 2 | 3 | 22.5 | **100%** | 🟢 Production |
+| 9 | `@common/serve-static` | 3 | 3 | 3 | 2 | — | 2 | 19.0 | **84%** | 🟢 Production |
 | 10 | `dynamic-schema` (apps) | 3 | 3 | 2 | 0 | 2 | 3 | 20.0 | **89%** | 🟢 Production |
 | 11 | `usuarios` (apps) | — | 3 | 0 | 1 | 2 | 2 | 11.0 | **49%** | 🟠 Needs Work |
 | 12 | `scraper` (apps) | — | 3 | 1 | 0 | 2 | 2 | 11.5 | **51%** | 🟠 Needs Work |
@@ -842,15 +837,15 @@ score_pct  = (score_raw / 22.5) × 100
 
 ```
                      Spec  README  JSDoc  Tests  Swagger  Cross-Ref
-@common/database      ███   ███    ██░    ░░░     —       ███
-@common/playwright    ███   ███    ██░    ░░░     —       ███
-@common/auth          ███   ███    ██░    ░░░     ██░     ███
-@common/common        ███   ██░    █░░    ░░░     —       ██░
-@common/ai            ███   ███    █░░    ░░░     —       ██░
-@common/documents     ███   ███    █░░    ░░░     —       ██░
-@common/http          ███   ███    █░░    ░░░     —       ██░
-@common/resend        ███   ███    █░░    ░░░     ██░     ███
-@common/serve-static  ███   ███    █░░    ░░░     —       ██░
+@common/database      ███   ███    ███    ██░     —       ███
+@common/playwright    ███   ███    ███    ██░     —       ███
+@common/auth          ███   ███    ███    ██░     ██░     ███
+@common/common        ███   ███    ███    ██░     —       ██░
+@common/ai            ███   ███    ███    ██░     —       ██░
+@common/documents     ███   ███    ███    ██░     —       ██░
+@common/http          ███   ███    ███    ██░     —       ██░
+@common/resend        ███   ███    ███    ██░     ██░     ███
+@common/serve-static  ███   ███    ███    ██░     —       ██░
 dynamic-schema        ███   ███    ██░    ░░░     ██░     ███
 usuarios               —    ███    ░░░    █░░     ██░     ██░
 scraper                —    ███    █░░    ░░░     ██░     ██░
@@ -863,17 +858,15 @@ health                 —     —     ░░░    ░░░     █░░     
 
 | Déficit | Paquetes Afectados | Impacto |
 |---------|-------------------|---------|
-| **Sin tests** | 11/13 paquetes (85%) | **ALTO** — Sin red de seguridad para refactors |
-| **JSDoc incompleto** | 9/13 paquetes (69%) | **ALTO** — LLMs no pueden inferir contratos de métodos |
+| **Sin tests** | 3/13 paquetes (23%) | **MEDIO** — `dynamic-schema`, `scraper`, `health` sin tests propios |
 | **Sin spec OpenSpec** | 3/13 módulos (23%) | **MEDIO** — `usuarios`, `scraper`, `health` no tienen contrato formal |
 | **Sin README** | 1/13 módulos (8%) | **BAJO** — `health` es el único sin documentación |
 
 ### Recomendaciones Priorizadas para Subir el Score Global
 
-1. **Añadir tests unitarios** a `@common/database`, `@common/auth`, `@common/ai` → impacto masivo (×1.0 en 11 paquetes)
-2. **Completar JSDoc** en `@common/ai`, `@common/http`, `@common/documents` → +1.5 pts por paquete
-3. **Crear specs OpenSpec** para `usuarios`, `scraper`, `health` → formaliza contratos
-4. **Añadir Swagger** a `@common/ai`, `@common/documents`, `@common/serve-static` si exponen controladores → +0.5 pts
+1. **Añadir tests unitarios** a `dynamic-schema`, `scraper`, `health` → últimos 3 paquetes sin cobertura (×1.0)
+2. **Crear specs OpenSpec** para `usuarios`, `scraper`, `health` → formaliza contratos
+3. **Añadir Swagger** a `@common/ai`, `@common/documents`, `@common/serve-static` si exponen controladores → +0.5 pts
 
 ### Cómo Usar Este Ranking (Para LLMs)
 
