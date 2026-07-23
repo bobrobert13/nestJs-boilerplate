@@ -1,3 +1,4 @@
+/** Supported AI provider identifiers. Extensible via custom string. */
 export type AIProvider =
   | 'openai'
   | 'anthropic'
@@ -41,6 +42,10 @@ export type MessageContentPart =
     }
   | { type: 'inline_data'; inline_data: { mime_type: string; data: string } };
 
+/**
+ * Options for chat completion requests.
+ * All fields except messages are optional and provider-dependent.
+ */
 export interface ChatCompletionOptions {
   model?: string;
   messages: ChatMessage[];
@@ -59,6 +64,10 @@ export interface ChatCompletionOptions {
   responseFormat?: 'json_object';
 }
 
+/**
+ * Options for embedding generation requests.
+ * @param input - Single text or array of texts to embed
+ */
 export interface EmbeddingOptions {
   model?: string;
   input: string | string[];
@@ -66,6 +75,10 @@ export interface EmbeddingOptions {
   dimensions?: number;
 }
 
+/**
+ * Standardized response wrapper for all AI operations.
+ * Generic type T represents the shape of the data payload.
+ */
 export interface AIResponse<T = unknown> {
   success: boolean;
   data?: T;
@@ -80,6 +93,10 @@ export interface AIResponse<T = unknown> {
   metadata?: Record<string, unknown>;
 }
 
+/**
+ * Feature flags indicating what capabilities a provider supports.
+ * Used for early rejection of unsupported operations (e.g., vision).
+ */
 export interface ProviderCapability {
   chat: boolean;
   embeddings: boolean;
@@ -88,7 +105,7 @@ export interface ProviderCapability {
   functionCalling: boolean;
 }
 
-// Schema generation types
+/** Supported Mongoose schema field types for dynamic schema generation. */
 export type SchemaFieldType =
   | 'string'
   | 'number'
@@ -112,6 +129,10 @@ export type SchemaSource =
   | 'dsl'
   | 'inference';
 
+/**
+ * Definition of a single field in a generated Mongoose schema.
+ * Supports nested types via items (arrays) and properties (objects).
+ */
 export interface SchemaFieldDefinition {
   name: string;
   type: SchemaFieldType;
@@ -128,6 +149,10 @@ export interface SchemaFieldDefinition {
   properties?: Record<string, SchemaFieldDefinition>;
 }
 
+/**
+ * Complete generated Mongoose schema definition.
+ * Produced by AI schema generation from text, images, or documents.
+ */
 export interface GeneratedSchema {
   fields: SchemaFieldDefinition[];
   collectionName: string;
@@ -144,6 +169,7 @@ export interface GeneratedSchema {
   };
 }
 
+/** Optional parameters for schema generation requests. */
 export interface SchemaGenerationOptions {
   temperature?: number;
   model?: string;

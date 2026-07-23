@@ -56,7 +56,6 @@ export class AiService {
    * Register a new AI provider or override an existing one.
    * @param config - Provider configuration with name, model, and optional API settings
    */
-  /** registerProvider (see class JSDoc for context). */
   registerProvider(config: AIConfig): void {
     const provider = new OpenAICompatibleProvider(config);
     const key = config.provider;
@@ -72,7 +71,6 @@ export class AiService {
    * @param name - Provider name (e.g., 'openai', 'anthropic', 'google')
    * @returns The provider instance or undefined if not found
    */
-  /** getProvider (see class JSDoc for context). */
   getProvider(name: string): IAIProvider | undefined {
     return this.providers.get(name);
   }
@@ -81,7 +79,6 @@ export class AiService {
    * List all registered provider names.
    * @returns Array of provider name strings
    */
-  /** listProviders (see class JSDoc for context). */
   listProviders(): string[] {
     return Array.from(this.providers.keys());
   }
@@ -93,7 +90,6 @@ export class AiService {
    * @param options - Optional provider-specific options (model, temperature, etc.)
    * @returns AIResponse with success/error state
    */
-  /** chat (see class JSDoc for context). */
   async chat(
     providerName: string,
     messages: ChatMessage[],
@@ -101,7 +97,6 @@ export class AiService {
   ): Promise<AIResponse> {
     const provider = this.providers.get(providerName);
 
-    /** if (see class JSDoc for context). */
     if (!provider) {
       return {
         success: false,
@@ -121,7 +116,6 @@ export class AiService {
    * @param options - Optional settings (temperature, model)
    * @returns AIResponse with GeneratedSchema data
    */
-  /** generateSchema (see class JSDoc for context). */
   async generateSchema(
     providerName: string,
     description: string,
@@ -130,12 +124,12 @@ export class AiService {
       model?: string;
     },
   ): Promise<AIResponse> {
-    const systemPrompt = `Eres un experto en diseño de esquemas MongoDB/Mongoose. Genera un esquema Mongoose completo en TypeScript basado en la descripción proporcionada.
+    const systemPrompt = `Eres un experto en diseÃ±o de esquemas MongoDB/Mongoose. Genera un esquema Mongoose completo en TypeScript basado en la descripciÃ³n proporcionada.
 
-Responde SOLO con código TypeScript siguiendo este formato exacto:
+Responde SOLO con cÃ³digo TypeScript siguiendo este formato exacto:
 - Usa @Schema() y @Prop() de @nestjs/mongoose
 - Incluye tipos de TypeScript apropiados
-- Agrega validaciones básicas (@IsString, @IsOptional, etc.)
+- Agrega validaciones bÃ¡sicas (@IsString, @IsOptional, etc.)
 - Agrega timestamps: true
 
 Ejemplo de respuesta:
@@ -186,10 +180,10 @@ export const ProductSchema = SchemaFactory.createForClass(Product);
     },
   ): Promise<AIResponse> {
     const prompts: Record<string, string> = {
-      html: `Genera una plantilla HTML completa con TailwindCSS. Incluye todo el HTML necesario (doctype, head, body). La plantilla debe ser práctica y lista para usar. Responde SOLO con el código HTML.`,
-      email: `Genera una plantilla de email HTML responsive compatible con clientes de email. Usa estilos inline para máxima compatibilidad. Responde SOLO con el código HTML.`,
-      json: `Genera una estructura JSON completa y válida basada en la descripción. Responde SOLO con el JSON.`,
-      code: `Genera código fuente completo y funcional basado en la descripción. Especifica el lenguaje si no está claro. Responde SOLO con el código.`,
+      html: `Genera una plantilla HTML completa con TailwindCSS. Incluye todo el HTML necesario (doctype, head, body). La plantilla debe ser prÃ¡ctica y lista para usar. Responde SOLO con el cÃ³digo HTML.`,
+      email: `Genera una plantilla de email HTML responsive compatible con clientes de email. Usa estilos inline para mÃ¡xima compatibilidad. Responde SOLO con el cÃ³digo HTML.`,
+      json: `Genera una estructura JSON completa y vÃ¡lida basada en la descripciÃ³n. Responde SOLO con el JSON.`,
+      code: `Genera cÃ³digo fuente completo y funcional basado en la descripciÃ³n. Especifica el lenguaje si no estÃ¡ claro. Responde SOLO con el cÃ³digo.`,
     };
 
     return this.chat(
@@ -293,7 +287,7 @@ export const ProductSchema = SchemaFactory.createForClass(Product);
   }
 
   /**
-   * Streaming chat — calls onChunk callback for each response piece.
+   * Streaming chat â€” calls onChunk callback for each response piece.
    * @param providerName - AI provider to use
    * @param messages - Array of chat messages
    * @param onChunk - Callback invoked with each streaming chunk
@@ -320,6 +314,18 @@ export const ProductSchema = SchemaFactory.createForClass(Product);
     return provider.chatStream({ messages, ...options }, onChunk);
   }
 
+  /**
+   * Generate a Mongoose schema from a document image using vision AI.
+   * Sends the full image as multimodal content to a vision-capable provider.
+   * Includes automatic retry with temperature=0 and reinforced prompt if the
+   * first response is not valid JSON.
+   *
+   * @param providerName - AI provider to use (must support vision)
+   * @param imageData - Image URL or base64 data URI of the document
+   * @param options - Optional settings (temperature, model)
+   * @returns AIResponse with GeneratedSchema data including source='image'
+   * @throws Returns error response if provider not found or vision not supported
+   */
   async generateSchemaFromImage(
     providerName: string,
     imageData: string,
@@ -477,6 +483,17 @@ Rules:
       };
     }
   }
+  /**
+   * Generate a Mongoose schema from text content using AI.
+   * Analyzes text extracted from documents or descriptions and infers
+   * appropriate field names and types. Includes automatic retry with
+   * temperature=0 if the first response is not valid JSON.
+   *
+   * @param providerName - AI provider to use
+   * @param text - Text content to analyze for schema inference
+   * @param options - Optional settings (temperature, model)
+   * @returns AIResponse with GeneratedSchema data including source='text'
+   */
   async generateSchemaFromText(
     providerName: string,
     text: string,
