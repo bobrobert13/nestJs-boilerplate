@@ -17,6 +17,24 @@ interface CacheEntry {
   timestamp: number;
 }
 
+/**
+ * EJS template rendering service with layout support and TailwindCSS CDN integration.
+ * Provides server-side rendering for static pages with caching (60s TTL).
+ *
+ * Features:
+ * - Layout-based rendering (pages + layouts)
+ * - Template caching with configurable TTL
+ * - TailwindCSS CDN with SRI integrity hash
+ * - View name sanitization to prevent path traversal
+ *
+ * @example
+ * ```typescript
+ * const html = await this.serveStatic.render('home', {
+ *   title: 'Welcome',
+ *   description: 'Home page',
+ * });
+ * ```
+ */
 @Injectable()
 export class ServeStaticService {
   private readonly logger = new Logger(ServeStaticService.name);
@@ -93,6 +111,15 @@ export class ServeStaticService {
     return path.join(this.templatesPath, 'layouts', `${layout}.ejs`);
   }
 
+  /**
+   * Render a view template with a layout.
+   * Sanitizes view and layout names to prevent path traversal attacks.
+   *
+   * @param view - View name (without .ejs extension)
+   * @param options - Render options including title, description, layout, and custom data
+   * @returns Rendered HTML string
+   * @throws Error if view or layout not found, or view name is invalid
+   */
   async render(view: string, options: RenderOptions = {}): Promise<string> {
     const safeView = this.sanitizeViewName(view);
     const layout = (options.layout as string) || this.defaultLayout;
@@ -137,6 +164,14 @@ export class ServeStaticService {
     );
   }
 
+  /**
+   * Render an inline EJS template string with data.
+   * Useful for dynamic content without file-based templates.
+   *
+   * @param template - EJS template string
+   * @param data - Data object for template interpolation
+   * @returns Rendered HTML string
+   */
   async renderString(
     template: string,
     data: Record<string, unknown> = {},
@@ -148,6 +183,10 @@ export class ServeStaticService {
     return ejs.render(template, baseData, { strict: false });
   }
 
+  /**
+   * List all available partial template names.
+   * @returns Array of partial names (without .ejs extension)
+   */
   async getPartials(): Promise<string[]> {
     const partialsPath = path.join(this.templatesPath, 'partials');
     try {
@@ -160,6 +199,10 @@ export class ServeStaticService {
     }
   }
 
+  /**
+   * List all available page template names.
+   * @returns Array of page names (without .ejs extension)
+   */
   async getPages(): Promise<string[]> {
     const pagesPath = path.join(this.templatesPath, 'pages');
     try {
@@ -172,10 +215,18 @@ export class ServeStaticService {
     }
   }
 
+  /**
+   * Get the absolute path to the assets directory.
+   * @returns Path to templates/assets folder
+   */
   getAssetsPath(): string {
     return path.join(this.templatesPath, 'assets');
   }
 
+  /**
+   * Clear the template cache.
+   * Useful during development when templates change frequently.
+   */
   clearTemplateCache(): void {
     this.clearCache();
     this.logger.log('Template cache cleared');
