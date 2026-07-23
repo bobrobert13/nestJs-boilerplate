@@ -24,7 +24,6 @@ export class ResendService {
   constructor(private readonly configService: ConfigService) {
     const config = this.configService.get<ResendConfig>('resend');
 
-    /** if (see class JSDoc for context). */
     if (!config?.apiKey) {
       this.logger.warn(
         'Resend API key not configured. Email sending will be disabled.',
@@ -37,7 +36,6 @@ export class ResendService {
     this.replyTo = config?.replyTo;
   }
 
-  /** sendEmail (see class JSDoc for context). */
   async sendEmail(options: EmailOptions): Promise<SendEmailResult> {
     const { to, subject, text, html, from, replyTo, cc, bcc } = options;
 
@@ -47,13 +45,10 @@ export class ResendService {
       subject,
     };
 
-    /** if (see class JSDoc for context). */
     if (text) payload.text = text;
     if (html) payload.html = html;
-    /** if (see class JSDoc for context). */
     if (replyTo) payload.reply_to = replyTo;
     else if (this.replyTo) payload.reply_to = this.replyTo;
-    /** if (see class JSDoc for context). */
     if (cc) payload.cc = Array.isArray(cc) ? cc : [cc];
     if (bcc) payload.bcc = Array.isArray(bcc) ? bcc : [bcc];
 
@@ -81,7 +76,6 @@ export class ResendService {
     }
   }
 
-  /** sendEmailWithTemplate (see class JSDoc for context). */
   async sendEmailWithTemplate(
     to: string | string[],
     template: string,
@@ -98,10 +92,9 @@ export class ResendService {
   /**
    * Out-of-band delivery for a magic-link token.
    *
-   * The token NEVER reaches the caller of the auth API — it is only sent
+   * The token NEVER reaches the caller of the auth API â€” it is only sent
    * here to the user's email inbox (C3/REQ-auth-2).
    */
-  /** sendMagicLink (see class JSDoc for context). */
   async sendMagicLink(
     to: string,
     token: string,
@@ -119,7 +112,6 @@ export class ResendService {
 
   private renderTemplate(template: string, data: Record<string, any>): string {
     let rendered = template;
-    /** for (see class JSDoc for context). */
     for (const [key, value] of Object.entries(data)) {
       const regex = new RegExp(`{{${key}}}`, 'g');
       rendered = rendered.replace(regex, String(value));

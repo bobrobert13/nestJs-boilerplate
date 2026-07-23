@@ -24,7 +24,7 @@ export class NewsletterController {
   constructor(private readonly newsletterService: NewsletterService) {}
 
   /**
-   * PR5 / H6 / REQ-email-1,4 — throttled to 5 req / 60 s per IP.
+   * PR5 / H6 / REQ-email-1,4 â€” throttled to 5 req / 60 s per IP.
    */
   @Post('subscribe')
   @HttpCode(HttpStatus.OK)
@@ -36,8 +36,6 @@ export class NewsletterController {
   })
   @ApiResponse({ status: 200, description: 'Confirmation email queued' })
   @ApiResponse({ status: 429, description: 'Too many requests' })
-  /** subscribe (see class JSDoc for context). */
-  /** subscribe (see class JSDoc for context). */
   async subscribe(@Body() dto: SubscribeDto) {
     await this.newsletterService.subscribe(dto);
     return {
@@ -49,7 +47,7 @@ export class NewsletterController {
   }
 
   /**
-   * PR5 / H6 / REQ-email-2 — confirm via token; never echo the token in
+   * PR5 / H6 / REQ-email-2 â€” confirm via token; never echo the token in
    * the response.
    */
   @Get('confirm')
@@ -59,15 +57,11 @@ export class NewsletterController {
   })
   @ApiResponse({ status: 200, description: 'Confirmation result' })
   @ApiResponse({ status: 400, description: 'Invalid or expired token' })
-  /** confirm (see class JSDoc for context). */
-  /** confirm (see class JSDoc for context). */
   async confirm(@Query('token') token: string) {
     if (!token) {
       throw new BadRequestException('Missing confirmation token');
     }
     const result = await this.newsletterService.confirm(token);
-    /** if (see class JSDoc for context). */
-    /** if (see class JSDoc for context). */
     if (!result.ok) {
       throw new BadRequestException(result.message);
     }
@@ -77,8 +71,6 @@ export class NewsletterController {
   @Post('unsubscribe')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Unsubscribe an email address' })
-  /** unsubscribe (see class JSDoc for context). */
-  /** unsubscribe (see class JSDoc for context). */
   async unsubscribe(@Body() dto: UnsubscribeDto) {
     await this.newsletterService.unsubscribe(dto);
     return { success: true, message: 'Unsubscribed successfully' };
@@ -86,8 +78,6 @@ export class NewsletterController {
 
   @Get('subscribers')
   @ApiOperation({ summary: 'List newsletter subscribers' })
-  /** getSubscribers (see class JSDoc for context). */
-  /** getSubscribers (see class JSDoc for context). */
   async getSubscribers() {
     const subscribers = await this.newsletterService.getSubscribers();
     return { success: true, data: subscribers, count: subscribers.length };
@@ -95,8 +85,6 @@ export class NewsletterController {
 
   @Get('stats')
   @ApiOperation({ summary: 'Get newsletter subscription statistics' })
-  /** getStats (see class JSDoc for context). */
-  /** getStats (see class JSDoc for context). */
   async getStats() {
     const active = await this.newsletterService.getSubscriberCount(true);
     const total = await this.newsletterService.getSubscriberCount(false);
@@ -106,8 +94,6 @@ export class NewsletterController {
   @Delete('subscribers/:email')
   @ApiOperation({ summary: 'Remove a subscriber' })
   @ApiParam({ name: 'email', type: String })
-  /** removeSubscriber (see class JSDoc for context). */
-  /** removeSubscriber (see class JSDoc for context). */
   async removeSubscriber(@Param('email') email: string) {
     await this.newsletterService.unsubscribe({
       email,
