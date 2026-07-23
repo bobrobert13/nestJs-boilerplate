@@ -29,7 +29,7 @@ interface AuditEntry {
 }
 
 /**
- * PR5 / H1 / REQ-usuarios-2 — admin-only role updates with audit.
+ * PR5 / H1 / REQ-usuarios-2 â€” admin-only role updates with audit.
  *
  * In-process audit log; production deployments MUST wire `AuditService`
  * for durable storage. This controller writes to the application logger
@@ -52,9 +52,7 @@ export class UsuariosRolesController {
   })
   @ApiResponse({ status: 200, description: 'Roles updated' })
   @ApiResponse({ status: 400, description: 'Invalid role value' })
-  @ApiResponse({ status: 403, description: 'Forbidden — not an admin' })
-  /** updateRoles (see class JSDoc for context). */
-  /** updateRoles (see class JSDoc for context). */
+  @ApiResponse({ status: 403, description: 'Forbidden â€” not an admin' })
   async updateRoles(
     @Param('id') id: string,
     @Body() dto: UpdateRolesDto,
@@ -62,8 +60,6 @@ export class UsuariosRolesController {
     // already enforces the shape via JwtAuthGuard.
     actor: { id: string; roles?: string[] },
   ) {
-    /** if (see class JSDoc for context). */
-    /** if (see class JSDoc for context). */
     if (!actor?.roles?.includes('admin')) {
       throw new ForbiddenException('Admin role required');
     }

@@ -35,7 +35,7 @@ import {
 import { GeneratedSchema } from '@common/ai';
 
 /**
- * PR5 / H2 / REQ-dynamic-schema-1 — class-level admin gate.
+ * PR5 / H2 / REQ-dynamic-schema-1 â€” class-level admin gate.
  * Non-admin callers receive HTTP 403 before any controller method runs.
  */
 @ApiTags('dynamic-schema')
@@ -49,7 +49,6 @@ export class DynamicSchemaController {
     private readonly _registry: SchemaRegistryService,
   ) {}
 
-  /** extractDocument (see class JSDoc for context). */
   @Post('extract')
   @ApiOperation({
     summary: 'Extract text content from a document (PDF/DOCX)',
@@ -74,7 +73,6 @@ export class DynamicSchemaController {
     return result;
   }
 
-  /** generateSchemaFromText (see class JSDoc for context). */
   @Post('generate-from-text')
   @ApiOperation({
     summary: 'Generate a Mongoose schema from plain-text description',
@@ -105,7 +103,6 @@ export class DynamicSchemaController {
     };
   }
 
-  /** generateSchemaFromImage (see class JSDoc for context). */
   @Post('generate-from-image')
   @ApiOperation({
     summary: 'Generate a Mongoose schema from image data',
@@ -136,7 +133,6 @@ export class DynamicSchemaController {
     };
   }
 
-  /** compileSchema (see class JSDoc for context). */
   @Post('compile')
   @ApiOperation({
     summary: 'Compile a GeneratedSchema and register the Mongoose model',
@@ -163,7 +159,6 @@ export class DynamicSchemaController {
     };
   }
 
-  /** fullPipeline (see class JSDoc for context). */
   @Post('pipeline')
   @ApiOperation({
     summary:
@@ -205,7 +200,6 @@ export class DynamicSchemaController {
 
   // -------- Lifecycle endpoints --------
 
-  /** listSchemas (see class JSDoc for context). */
   @Get('schemas')
   @ApiOperation({
     summary: 'List all registered dynamic schemas',
@@ -222,7 +216,6 @@ export class DynamicSchemaController {
     return { schemas };
   }
 
-  /** unregisterSchema (see class JSDoc for context). */
   @Delete('schemas/:collectionName')
   @ApiOperation({
     summary: 'Unregister a dynamic schema by collection name',
@@ -246,7 +239,6 @@ export class DynamicSchemaController {
     return { success: true, collectionName };
   }
 
-  /** compileDryRun (see class JSDoc for context). */
   @Post('compile/dry-run')
   @ApiOperation({
     summary: 'Validate a GeneratedSchema without registering it',
@@ -275,7 +267,6 @@ export class DynamicSchemaController {
     };
   }
 
-  /** compileFromJsonSchema (see class JSDoc for context). */
   @Post('compile-from-json-schema')
   @ApiOperation({
     summary: 'Compile from a JSON Schema draft-07 document',
@@ -307,7 +298,6 @@ export class DynamicSchemaController {
     };
   }
 
-  /** compileFromDsl (see class JSDoc for context). */
   @Post('compile-from-dsl')
   @ApiOperation({
     summary: 'Compile from a declarative DSL string',
@@ -338,7 +328,6 @@ export class DynamicSchemaController {
     };
   }
 
-  /** inferFromCollection (see class JSDoc for context). */
   @Post('infer-from-collection/:collectionName')
   @ApiOperation({
     summary: 'Infer a schema from an existing MongoDB collection',

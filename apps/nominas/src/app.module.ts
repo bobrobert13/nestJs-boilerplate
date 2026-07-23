@@ -43,18 +43,17 @@ import { CronModule } from './common/cron/cron.module';
 export class AppModule implements OnApplicationBootstrap {
   constructor(private readonly configService: ConfigService) {}
 
-  /** onApplicationBootstrap (see class JSDoc for context). */
   onApplicationBootstrap(): void {
     const features: Record<string, string> = {};
 
-    // MongoDB — check if database config is available
+    // MongoDB â€” check if database config is available
     const dbConfig = this.configService.get<{ uri: string }>('database');
     features['MongoDB'] = dbConfig?.uri ? 'connected' : 'not configured';
 
-    // Auth — always enabled via AuthModule
-    features['Auth'] = 'JWT · MagicLink · Roles';
+    // Auth â€” always enabled via AuthModule
+    features['Auth'] = 'JWT Â· MagicLink Â· Roles';
 
-    // Playwright — check if headless mode is configured
+    // Playwright â€” check if headless mode is configured
     const pw = this.configService.get<{ headless?: boolean }>('playwright');
     features['Playwright'] =
       pw?.headless != null
@@ -70,25 +69,20 @@ export class AppModule implements OnApplicationBootstrap {
     const legacy = this.configService.get<string>('DYNAMIC_SCHEMA_LEGACY');
     features['Dynamic Schema'] = legacy === 'true' ? 'legacy mode' : 'enabled';
 
-    // AI Providers — list configured ones
+    // AI Providers â€” list configured ones
     const aiProviders: string[] = [];
-    /** if (see class JSDoc for context). */
     if (this.configService.get<string>('OPENAI_API_KEY'))
       aiProviders.push('openai');
-    /** if (see class JSDoc for context). */
     if (this.configService.get<string>('ANTHROPIC_API_KEY'))
       aiProviders.push('anthropic');
-    /** if (see class JSDoc for context). */
     if (this.configService.get<string>('GEMINI_API_KEY'))
       aiProviders.push('gemini');
-    /** if (see class JSDoc for context). */
     if (this.configService.get<string>('MOONSHOT_API_KEY'))
       aiProviders.push('moonshot');
-    /** if (see class JSDoc for context). */
     if (this.configService.get<string>('MINIMAX_API_KEY'))
       aiProviders.push('minimax');
     features['AI Providers'] =
-      aiProviders.length > 0 ? aiProviders.join(' · ') : 'none configured';
+      aiProviders.length > 0 ? aiProviders.join(' Â· ') : 'none configured';
 
     BootstrapLogger.section('Feature Availability');
     BootstrapLogger.summary(features);
