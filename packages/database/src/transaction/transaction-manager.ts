@@ -19,7 +19,6 @@ export class TransactionManager {
     @Optional() private readonly injector?: any,
   ) {}
 
-  /** start (see class JSDoc for context). */
   async start(options: TransactionManagerOptions = {}): Promise<void> {
     if (this.session) {
       this.logger.warn('Transaction already started');
@@ -40,12 +39,10 @@ export class TransactionManager {
     this.logger.debug(`Transaction started (attempt ${attempt})`);
   }
 
-  /** commit (see class JSDoc for context). */
   async commit(): Promise<void> {
     if (!this.session) {
       throw new Error('No active transaction');
     }
-    /** if (see class JSDoc for context). */
     if (this.isCommitted || this.isAborted) {
       throw new Error('Transaction already finished');
     }
@@ -55,12 +52,10 @@ export class TransactionManager {
     this.logger.debug('Transaction committed');
   }
 
-  /** abort (see class JSDoc for context). */
   async abort(): Promise<void> {
     if (!this.session) {
       throw new Error('No active transaction');
     }
-    /** if (see class JSDoc for context). */
     if (this.isCommitted || this.isAborted) {
       throw new Error('Transaction already finished');
     }
@@ -70,7 +65,6 @@ export class TransactionManager {
     this.logger.debug('Transaction aborted');
   }
 
-  /** end (see class JSDoc for context). */
   async end(): Promise<void> {
     if (this.session) {
       await this.session.endSession();
@@ -78,7 +72,6 @@ export class TransactionManager {
     }
   }
 
-  /** getSession (see class JSDoc for context). */
   getSession(): ClientSession {
     if (!this.session) {
       throw new Error('No active transaction. Call start() first.');
@@ -86,12 +79,10 @@ export class TransactionManager {
     return this.session;
   }
 
-  /** isActive (see class JSDoc for context). */
   isActive(): boolean {
     return this.session !== null && !this.isCommitted && !this.isAborted;
   }
 
-  /** getSessionId (see class JSDoc for context). */
   getSessionId(): string | null {
     if (!this.session?.id) return null;
     return this.session.id.toString();

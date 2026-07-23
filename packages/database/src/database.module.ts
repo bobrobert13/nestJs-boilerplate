@@ -31,6 +31,11 @@ interface DatabaseConfig {
           uri:
             config?.uri ??
             'mongodb://localhost:27017/boilerplate_db?replicaSet=rs0',
+          // Forward connection options so Mongoose fails fast (5s)
+          // instead of the default 30s serverSelectionTimeoutMS.
+          serverSelectionTimeoutMS:
+            config?.options?.serverSelectionTimeoutMS ?? 5000,
+          socketTimeoutMS: config?.options?.socketTimeoutMS ?? 45000,
         };
       },
       inject: [ConfigService],

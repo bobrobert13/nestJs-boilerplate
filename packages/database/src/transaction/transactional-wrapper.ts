@@ -33,7 +33,6 @@ export class TransactionalWrapper {
     });
   }
 
-  /** getSession (see class JSDoc for context). */
   getSession(): Promise<ClientSession> {
     return this.connection.startSession();
   }
