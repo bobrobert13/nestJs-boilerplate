@@ -1,0 +1,42 @@
+# State DAG for change: auth-e2e-hardening
+# Auto-managed by /sdd-continue. Do not edit manually.
+
+change: auth-e2e-hardening
+createdAt: 2026-07-22
+
+phases:
+  proposal:
+    status: done
+    completedAt: 2026-07-22
+  specs:
+    status: done
+    completedAt: 2026-07-22
+    children:
+      - specs/auth/spec.md (delta)
+  design:
+    status: done
+    completedAt: 2026-07-22
+    dependsOn: [proposal]
+  tasks:
+    status: done
+    completedAt: 2026-07-22
+    dependsOn: [specs, design]
+  apply:
+    status: pending
+    completedAt: null
+    dependsOn: [tasks]
+  verify:
+    status: pending
+    completedAt: null
+    dependsOn: [apply]
+  archive:
+    status: pending
+    completedAt: null
+    dependsOn: [verify]
+
+affectedDomains:
+  - auth
+
+affectedPackages:
+  - '@common/auth'
+  - 'apps/nominas/usuarios'

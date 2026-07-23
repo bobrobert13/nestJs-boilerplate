@@ -100,3 +100,31 @@ The system MUST provide hierarchical HTTP error classes with predefined status c
 - `packages/common/README.md`
 - `AGENTS.md` — section 4 (Packages Index)
 - `openspec/specs/documentation/spec.md` (cross-cutting quality bar)
+
+
+### Logging — Startup Log Utilities
+
+> Merged from change `improve-startup-logs` (2026-07-22).
+
+The system MUST export `LogCategory` enum and `BootstrapLogger` class from `@common/common` for structured startup logging.
+
+#### Scenario: LogCategory enum provides domain categories
+
+- GIVEN the `LogCategory` enum from `@common/common`
+- WHEN a module needs to log a startup message
+- THEN it can use `LogCategory.BOOT`, `DB`, `AUTH`, `PLAYWRIGHT`, `FEATURE`, `CONFIG`, or `API`
+
+#### Scenario: BootstrapLogger emits formatted log lines
+
+- GIVEN `BootstrapLogger.log(LogCategory.DB, 'Connected', 'mongodb://...')` is called
+- WHEN `LOG_STYLE` is not `plain`
+- THEN the system emits a rich-formatted log line with category prefix
+- WHEN `LOG_STYLE=plain`
+- THEN the system emits `[DB] Connected — mongodb://...`
+
+#### Scenario: Feature availability summary at bootstrap
+
+- GIVEN the application completes bootstrap
+- WHEN `AppModule.onApplicationBootstrap()` fires
+- THEN the system emits a grouped summary of all feature availability (MongoDB, Playwright, Auth, Resend, AI, Dynamic Schema)
+

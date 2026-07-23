@@ -1,0 +1,53 @@
+# State DAG for change: testing-coverage-cicd
+# Auto-managed by /sdd-continue. Do not edit manually.
+
+change: testing-coverage-cicd
+createdAt: 2026-07-22
+
+phases:
+  proposal:
+    status: done
+    completedAt: 2026-07-22
+  specs:
+    status: done
+    completedAt: 2026-07-22
+    children:
+      - specs/testing/spec.md (new domain)
+  design:
+    status: done
+    completedAt: 2026-07-22
+    dependsOn: [proposal]
+  tasks:
+    status: done
+    completedAt: 2026-07-22
+    dependsOn: [specs, design]
+  apply:
+    status: pending
+    completedAt: null
+    dependsOn: [tasks]
+  verify:
+    status: pending
+    completedAt: null
+    dependsOn: [apply]
+  archive:
+    status: pending
+    completedAt: null
+    dependsOn: [verify]
+
+affectedDomains:
+  - testing
+  - database
+  - ai
+  - http
+  - documents
+  - resend
+  - serve-static
+
+affectedPackages:
+  - '@common/database'
+  - '@common/ai'
+  - '@common/http'
+  - '@common/documents'
+  - '@common/resend'
+  - '@common/serve-static'
+  - 'root (CI/CD)'

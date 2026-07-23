@@ -2,12 +2,12 @@
 schema: spec-driven
 change_name: improve-startup-logs
 created_at: 2026-07-14
-current_phase: apply
+current_phase: archive
 phases:
   proposal: complete
   specs: complete
   design: complete
   tasks: complete
   apply: complete
-  verify: pending
-  archive: pending
+  verify: complete
+  archive: complete
