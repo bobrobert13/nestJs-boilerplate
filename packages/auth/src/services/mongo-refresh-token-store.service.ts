@@ -12,7 +12,7 @@ import {
 } from '../schemas/refresh-token.schema';
 
 /**
- * PR2 / H3 / REQ-auth-persistence-1..3 — durable Mongoose-backed refresh-token store.
+ * PR2 / H3 / REQ-auth-persistence-1..3 â€” durable Mongoose-backed refresh-token store.
  *
  * Tokens are stored as SHA-256 hashes; raw tokens are NEVER persisted.
  * Rotation writes `replacedBy` + `revokedAt` on the predecessor and persists
@@ -28,7 +28,18 @@ export class MongoRefreshTokenStore implements IRefreshTokenStore {
     private readonly model: Model<RefreshTokenDocument>,
   ) {}
 
-  /** save (see class JSDoc for context). */
+  /**
+   * Save a new refresh token (stored as SHA-256 hash).
+   * Creates a new token family for rotation tracking.
+   *
+   * @param token - Raw refresh token (never persisted)
+   * @param userId - Owner user ID
+   * @param email - Owner email
+   * @param roles - Owner roles
+   * @param expiresAt - Token expiration date
+   * @param meta - Optional request metadata (IP, user agent)
+   * @returns Object containing the new familyId
+   */
   async save(
     token: string,
     userId: string,
@@ -53,11 +64,14 @@ export class MongoRefreshTokenStore implements IRefreshTokenStore {
     return { familyId };
   }
 
-  /** find (see class JSDoc for context). */
+  /**
+   * Find a refresh token record by its raw value.
+   * @param token - Raw refresh token to look up
+   * @returns RefreshTokenRecord or null if not found
+   */
   async find(token: string): Promise<RefreshTokenRecord | null> {
     const hash = RefreshToken.hash(token);
     const row = await this.model.findOne({ token: hash }).lean();
-    /** if (see class JSDoc for context). */
     if (!row) return null;
     return {
       userId: String(row.userId),
@@ -67,7 +81,10 @@ export class MongoRefreshTokenStore implements IRefreshTokenStore {
     };
   }
 
-  /** delete (see class JSDoc for context). */
+  /**
+   * Delete a refresh token record.
+   * @param token - Raw refresh token to delete
+   */
   async delete(token: string): Promise<void> {
     const hash = RefreshToken.hash(token);
     await this.model.deleteOne({ token: hash });
@@ -79,7 +96,6 @@ export class MongoRefreshTokenStore implements IRefreshTokenStore {
    * successor token carries (userId/email/roles) so the caller can issue
    * a new JWT pair without re-querying.
    */
-  /** rotate (see class JSDoc for context). */
   async rotate(
     oldToken: string,
     newToken: string,
@@ -89,7 +105,6 @@ export class MongoRefreshTokenStore implements IRefreshTokenStore {
     const newHash = RefreshToken.hash(newToken);
 
     const predecessor = await this.model.findOne({ token: oldHash });
-    /** if (see class JSDoc for context). */
     if (!predecessor || predecessor.revokedAt) {
       return null;
     }
@@ -121,11 +136,9 @@ export class MongoRefreshTokenStore implements IRefreshTokenStore {
    * Mark every non-revoked row in the family of `rawToken` as revoked.
    * Used when a token is reused after rotation.
    */
-  /** revokeFamily (see class JSDoc for context). */
   async revokeFamily(rawToken: string): Promise<number> {
     const hash = RefreshToken.hash(rawToken);
     const row = await this.model.findOne({ token: hash });
-    /** if (see class JSDoc for context). */
     if (!row) return 0;
     const result = await this.model.updateMany(
       { familyId: row.familyId, revokedAt: null },

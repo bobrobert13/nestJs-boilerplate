@@ -15,6 +15,13 @@ interface AuthConfig {
   };
 }
 
+/**
+ * Passport JWT strategy for token validation.
+ * Extracts Bearer token from Authorization header and verifies it
+ * against the configured JWT secret, issuer, and audience.
+ *
+ * Fails fast at startup if JWT_SECRET is missing or equals the dev fallback.
+ */
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   private static readonly logger = new Logger(JwtStrategy.name);
@@ -43,6 +50,14 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     });
   }
 
+  /**
+   * Validate the JWT payload and return the authenticated user.
+   * Called automatically by Passport after successful token verification.
+   *
+   * @param payload - Decoded JWT payload containing sub, email, roles
+   * @returns AuthenticatedUser attached to request.user
+   * @throws UnauthorizedException if payload is missing required fields
+   */
   async validate(payload: JwtPayload): Promise<AuthenticatedUser> {
     if (!payload.sub || !payload.email) {
       throw new UnauthorizedException('Invalid token payload');

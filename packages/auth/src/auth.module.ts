@@ -62,7 +62,7 @@ interface AuthConfig {
         const config = configService.get<AuthConfig>('auth');
         const secret = config?.jwt?.secret;
 
-        // C5 / REQ-auth-4 — fail-fast on missing secret at module wiring.
+        // C5 / REQ-auth-4 â€” fail-fast on missing secret at module wiring.
         if (!secret || secret === DEV_JWT_SECRET_FALLBACK) {
           throw new Error(
             'AuthModule: JWT secret missing or equal to dev fallback. ' +
@@ -104,16 +104,15 @@ interface AuthConfig {
 export class AuthModule implements OnModuleInit {
   private readonly logger = new Logger(AuthModule.name);
 
-  /** onModuleInit (see class JSDoc for context). */
   onModuleInit() {
-    this.logger.log('✅ AuthModule initialized successfully');
+    this.logger.log('âœ… AuthModule initialized successfully');
     this.logger.log('   - JWT authentication: enabled');
     this.logger.log('   - Magic Links: available');
     this.logger.log('   - Roles Guard: available');
 
     BootstrapLogger.log(
       LogCategory.AUTH,
-      'JWT · MagicLink · Roles Guard',
+      'JWT Â· MagicLink Â· Roles Guard',
       'enabled',
     );
   }

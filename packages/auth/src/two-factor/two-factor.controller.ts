@@ -34,8 +34,6 @@ export class TwoFactorController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Generate 2FA secret and QR code' })
   @ApiResponse({ status: 200, description: 'Secret and QR generated' })
-  /** generate (see class JSDoc for context). */
-  /** generate (see class JSDoc for context). */
   async generate(@Request() req: any) {
     const result = await this.twoFactorService.generateSecret(req.user.id);
     return {
@@ -54,16 +52,12 @@ export class TwoFactorController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Enable 2FA with TOTP code' })
   @ApiResponse({ status: 200, description: '2FA enabled' })
-  /** enable (see class JSDoc for context). */
-  /** enable (see class JSDoc for context). */
   async enable(@Request() req: any, @Body() dto: EnableTwoFactorDto) {
     const result = await this.twoFactorService.enableTwoFactor(
       req.user.id,
       dto.code,
     );
 
-    /** if (see class JSDoc for context). */
-    /** if (see class JSDoc for context). */
     if (!result.success) {
       return {
         success: false,
@@ -86,8 +80,6 @@ export class TwoFactorController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Verify a TOTP code' })
   @ApiResponse({ status: 200, description: 'Verification result' })
-  /** verify (see class JSDoc for context). */
-  /** verify (see class JSDoc for context). */
   async verify(@Request() req: any, @Body() dto: VerifyTwoFactorDto) {
     const result = await this.twoFactorService.verifyCode(
       req.user.id,
@@ -104,7 +96,7 @@ export class TwoFactorController {
 
   /**
    * C2 / REQ-auth-3: this endpoint MUST require a valid JWT and derive the
-   * userId from `req.user.id`. Body-supplied `userId` is ignored — the DTO
+   * userId from `req.user.id`. Body-supplied `userId` is ignored â€” the DTO
    * does not declare one. Anonymous requests are rejected with HTTP 401.
    */
   @UseGuards(JwtAuthGuard)
@@ -116,14 +108,10 @@ export class TwoFactorController {
   @ApiResponse({ status: 200, description: 'Backup code verification result' })
   @ApiResponse({
     status: 401,
-    description: 'Unauthorized — JWT required or backup code invalid',
+    description: 'Unauthorized â€” JWT required or backup code invalid',
   })
-  /** verifyBackup (see class JSDoc for context). */
-  /** verifyBackup (see class JSDoc for context). */
   async verifyBackup(@Request() req: any, @Body() dto: VerifyBackupCodeDto) {
     const userId = req?.user?.id;
-    /** if (see class JSDoc for context). */
-    /** if (see class JSDoc for context). */
     if (!userId) {
       throw new UnauthorizedException('Identity required');
     }
@@ -132,8 +120,6 @@ export class TwoFactorController {
       dto.backupCode,
     );
 
-    /** if (see class JSDoc for context). */
-    /** if (see class JSDoc for context). */
     if (!isValid) {
       throw new UnauthorizedException('Invalid backup code');
     }
@@ -151,8 +137,6 @@ export class TwoFactorController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Regenerate backup codes' })
   @ApiResponse({ status: 200, description: 'Backup codes regenerated' })
-  /** regenerateBackupCodes (see class JSDoc for context). */
-  /** regenerateBackupCodes (see class JSDoc for context). */
   async regenerateBackupCodes(
     @Request() req: any,
     @Body() dto: GenerateBackupCodesDto,
@@ -182,8 +166,6 @@ export class TwoFactorController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Disable 2FA' })
   @ApiResponse({ status: 200, description: '2FA disabled' })
-  /** disable (see class JSDoc for context). */
-  /** disable (see class JSDoc for context). */
   async disable(@Request() req: any) {
     await this.twoFactorService.disableTwoFactor(req.user.id);
     return {
@@ -197,8 +179,6 @@ export class TwoFactorController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get 2FA status and remaining time' })
   @ApiResponse({ status: 200, description: '2FA status' })
-  /** status (see class JSDoc for context). */
-  /** status (see class JSDoc for context). */
   async status(@Request() req: any) {
     const isEnabled = this.twoFactorService.isTwoFactorEnabled(req.user.id);
     const timeRemaining = this.twoFactorService.getTimeRemaining();

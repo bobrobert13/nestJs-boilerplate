@@ -54,6 +54,14 @@ export class MagicLinkService implements OnModuleInit {
     }
   }
 
+  /**
+   * Generate a single-use magic link token for passwordless login.
+   * Token is stored as SHA-256 hash in MongoDB (or in-memory fallback).
+   *
+   * @param email - User email to generate the link for
+   * @returns Raw token string (to be sent via email, never returned to client)
+   * @throws Error if magic link authentication is disabled
+   */
   async generateMagicLink(email: string): Promise<string> {
     const config = this.configService.get<{ magicLink: MagicLinkConfig }>(
       'auth',
@@ -82,6 +90,14 @@ export class MagicLinkService implements OnModuleInit {
     return token;
   }
 
+  /**
+   * Verify a magic link token and return the associated email.
+   * Marks the token as consumed (single-use). Throws on invalid, expired, or reused tokens.
+   *
+   * @param token - Raw magic link token to verify
+   * @returns Email address associated with the token
+   * @throws Error if token is invalid, expired, or already consumed
+   */
   async verifyMagicLink(token: string): Promise<string> {
     if (this.tokenModel) {
       const hash = MagicLinkToken.hash(token);
@@ -109,10 +125,19 @@ export class MagicLinkService implements OnModuleInit {
     return email;
   }
 
+  /**
+   * Regenerate a magic link for the given email (convenience wrapper).
+   * @param email - User email
+   * @returns New raw token string
+   */
   async resendMagicLink(email: string): Promise<string> {
     return this.generateMagicLink(email);
   }
 
+  /**
+   * Check if magic link authentication is enabled via configuration.
+   * @returns true if MAGIC_LINK_ENABLED is true
+   */
   isEnabled(): boolean {
     const config = this.configService.get<{ magicLink: MagicLinkConfig }>(
       'auth',
@@ -120,6 +145,10 @@ export class MagicLinkService implements OnModuleInit {
     return config?.magicLink?.enabled || false;
   }
 
+  /**
+   * Get the magic link configuration (enabled flag + TTL).
+   * @returns MagicLinkConfig or null if not configured
+   */
   getConfig(): MagicLinkConfig | null {
     const config = this.configService.get<{ magicLink: MagicLinkConfig }>(
       'auth',
@@ -127,6 +156,12 @@ export class MagicLinkService implements OnModuleInit {
     return config?.magicLink ?? null;
   }
 
+  /**
+   * Invalidate (delete) a magic link token before it is consumed.
+   * Used to roll back token creation when email delivery fails.
+   *
+   * @param token - Raw token to invalidate
+   */
   async invalidateToken(token: string): Promise<void> {
     if (this.tokenModel) {
       await this.tokenModel.deleteOne({
