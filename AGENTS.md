@@ -669,6 +669,7 @@ docs(@common/<name>): qué se documentó
 | `fix-cross-reference-docs` | ✅ Complete | apply | all packages | — |
 | `dynamic-schema-pipeline-hardening` | ✅ Complete | archive | `@common/ai`, `@common/documents`, `@common/database`, `dynamic-schema` | `openspec/specs/dynamic-schema/spec.md` (new), delta specs for `ai`/`documents`/`database` (merged) |
 | `improve-startup-logs` | ✅ Complete | archive | `@common/common`, `@common/auth`, `@common/database`, `@common/playwright`, `apps/nominas` | `openspec/specs/common/spec.md` (delta) |
+| `testing-coverage-cicd` | 🚧 In Progress | apply | todos los `@common/*`, `apps/nominas` | `openspec/changes/testing-coverage-cicd/specs/testing/spec.md` (new domain) — Fases 0–6 ✅ (unit + infra E2E), pendientes: E2E usuarios/auth (7), CI/CD (8), docs restantes (9.1–9.4) |
 
 ### Auditoría Reciente
 
