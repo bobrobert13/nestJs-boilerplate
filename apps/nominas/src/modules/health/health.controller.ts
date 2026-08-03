@@ -14,7 +14,9 @@ export class HealthController {
   @Public()
   @Get()
   /** Returns server health status for orchestrators and container probes. */
-  @ApiOperation({ summary: 'Health check â€” returns server uptime and status' })
+  @ApiOperation({
+    summary: 'Health check â€” returns server uptime and status',
+  })
   @ApiResponse({
     status: 200,
     description: 'Server is healthy',

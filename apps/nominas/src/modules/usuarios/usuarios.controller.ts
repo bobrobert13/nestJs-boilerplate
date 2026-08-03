@@ -57,7 +57,10 @@ export class UsuariosController {
     description: 'Paginated list of usuarios (data, total, page, limit)',
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden â€” requires admin role' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden â€” requires admin role',
+  })
   @ApiResponse({ status: 400, description: 'Invalid page/limit' })
   findAllPaged(@Query() query: FindUsuariosDto) {
     const page = query.page ?? 1;
@@ -72,7 +75,10 @@ export class UsuariosController {
   @ApiOperation({ summary: 'Get all usuarios (admin, deprecated)' })
   @ApiResponse({ status: 200, description: 'List of usuarios' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden â€” requires admin role' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden â€” requires admin role',
+  })
   findAll() {
     return this.usuariosService.findAll();
   }
@@ -82,7 +88,10 @@ export class UsuariosController {
   @ApiOperation({ summary: 'Get a usuario by ID (admin)' })
   @ApiResponse({ status: 200, description: 'Usuario found' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden â€” requires admin role' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden â€” requires admin role',
+  })
   @ApiResponse({ status: 404, description: 'Usuario not found' })
   findOne(@Param('id') id: string) {
     return this.usuariosService.findOne(id);
@@ -93,7 +102,10 @@ export class UsuariosController {
   @ApiOperation({ summary: 'Update a usuario (admin)' })
   @ApiResponse({ status: 200, description: 'Usuario updated' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden â€” requires admin role' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden â€” requires admin role',
+  })
   @ApiResponse({ status: 404, description: 'Usuario not found' })
   update(@Param('id') id: string, @Body() updateDto: UpdateUsuarioDto) {
     return this.usuariosService.update(id, updateDto);
@@ -105,7 +117,10 @@ export class UsuariosController {
   @ApiOperation({ summary: 'Delete a usuario (admin)' })
   @ApiResponse({ status: 204, description: 'Usuario deleted' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden â€” requires admin role' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden â€” requires admin role',
+  })
   @ApiResponse({ status: 404, description: 'Usuario not found' })
   remove(@Param('id') id: string) {
     return this.usuariosService.remove(id);
