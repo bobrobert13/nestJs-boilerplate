@@ -531,6 +531,7 @@ APP_PORT=4000 MONGO_PORT=28018 ./docker-test.sh
 2. **DOCUMENTAR mientras se escribe** — JSDoc en todo método público nuevo
 3. **SEGUIR las convenciones** — naming, imports, estructura de módulos (sección 4)
 4. **VERIFICAR después de escribir** — `npm run build` y `npm run lint` antes de dar por terminado
+5. **TESTEAR cada feature** — toda feature nueva o modificación de comportamiento incluye tests: unit co-located (`*.spec.ts` con mocks, sin I/O real) y E2E en `apps/nominas/test/` usando `createTestApp()` (ver `apps/nominas/test/utils.llm-context.md`). Verificar con `npm run test` y `npm run test:e2e`
 
 ### Reglas de Código
 
@@ -736,6 +737,7 @@ Cada spec de dominio referencia su documentación asociada:
 | scraper | — | `apps/nominas/src/modules/scraper/README.md` | `apps/nominas/src/modules/scraper/` |
 | health | — | — | `apps/nominas/src/modules/health/` |
 | usuarios | — | `apps/nominas/src/modules/usuarios/README.md` | `apps/nominas/src/modules/usuarios/` |
+| Testing | `openspec/changes/testing-coverage-cicd/specs/testing/spec.md` | `apps/nominas/test/utils.llm-context.md` | `apps/nominas/test/` + specs co-located en `packages/*/src/` |
 
 ### Cómo Buscar Documentación
 
@@ -747,6 +749,7 @@ Cada spec de dominio referencia su documentación asociada:
 4. **Ver historial** → `openspec/changes/archive/` (cambios completados)
 5. **Buscar env vars** → `AGENTS.md` sección 6 (todas las variables agrupadas)
 6. **Verificar documentación faltante** → `AGENTS.md` sección 12 (status dashboard)
+7. **Agregar/modificar tests de una feature** → `apps/nominas/test/utils.llm-context.md` (infra E2E: cómo usar `createTestApp()`, convenciones de envelope y teardown) + el spec `testing` (`openspec/changes/testing-coverage-cicd/specs/testing/spec.md`) para convenciones de naming, aislamiento y cobertura. Los unit tests van co-located (`*.spec.ts` junto a la fuente, dependencias mockeadas, sin I/O real)
 
 **Tags de estado en READMEs:**
 
