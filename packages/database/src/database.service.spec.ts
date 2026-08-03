@@ -11,6 +11,7 @@ jest.mock('mongoose', () => {
     disconnect: jest.fn(),
     connection: {
       on: jest.fn(),
+      removeListener: jest.fn(),
       readyState: 1,
     },
   };
@@ -185,6 +186,31 @@ describe('DatabaseService', () => {
       await service.connectWithRetry();
       await service.onApplicationShutdown('SIGTERM');
 
+      jest.advanceTimersByTime(10000);
+      await Promise.resolve();
+      expect(mongoose.connect).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('onModuleDestroy', () => {
+    it('disconnects and prevents reconnection on late disconnected events', async () => {
+      (mongoose.connect as jest.Mock).mockResolvedValue(mongoose);
+      (mongoose.disconnect as jest.Mock).mockResolvedValue(undefined);
+
+      await service.connectWithRetry();
+      await service.onModuleDestroy();
+
+      expect(mongoose.disconnect).toHaveBeenCalled();
+
+      // Even if a 'disconnected' listener fires after teardown started,
+      // no new connection attempt must happen.
+      const onMock = mongoose.connection.on as jest.Mock;
+      const disconnectedCalls = onMock.mock.calls.filter(
+        ([event]) => event === 'disconnected',
+      );
+      for (const [, handler] of disconnectedCalls) {
+        handler();
+      }
       jest.advanceTimersByTime(10000);
       await Promise.resolve();
       expect(mongoose.connect).toHaveBeenCalledTimes(1);

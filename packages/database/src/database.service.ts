@@ -2,6 +2,7 @@ import {
   Injectable,
   Logger,
   OnApplicationShutdown,
+  OnModuleDestroy,
   OnModuleInit,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -33,7 +34,9 @@ interface DatabaseConfig {
  * @see {@link TransactionService} for transactional operations.
  */
 @Injectable()
-export class DatabaseService implements OnModuleInit, OnApplicationShutdown {
+export class DatabaseService
+  implements OnModuleInit, OnModuleDestroy, OnApplicationShutdown
+{
   private readonly logger = new Logger(DatabaseService.name);
   private retryCount = 0;
 
@@ -44,6 +47,7 @@ export class DatabaseService implements OnModuleInit, OnApplicationShutdown {
    */
   private pendingRetry: ReturnType<typeof setTimeout> | null = null;
   private shuttingDown = false;
+  private removingListeners = false;
 
   constructor(private readonly configService: ConfigService) {}
 
@@ -69,6 +73,11 @@ export class DatabaseService implements OnModuleInit, OnApplicationShutdown {
    *          returns silently if all retries are exhausted.
    */
   async connectWithRetry(): Promise<void> {
+    // Shutdown guard: never start (or continue) a connection cycle once
+    // teardown has begun — otherwise a 'disconnected' event racing with
+    // module destroy keeps the event loop alive forever.
+    if (this.shuttingDown) return;
+
     const config = this.configService.get<DatabaseConfig>('database');
     if (!config) {
       this.logger.error('Database configuration is not available');
@@ -146,12 +155,9 @@ export class DatabaseService implements OnModuleInit, OnApplicationShutdown {
    */
   private setupEventListeners(): void {
     if (this.shuttingDown) return;
-    mongoose.connection.on('disconnected', () => {
-      if (this.shuttingDown) return;
-      this.logger.warn('MongoDB disconnected. Attempting to reconnect...');
-      this.retryCount = 0;
-      this.connectWithRetry();
-    });
+    // Guard against duplicate registration across reconnect cycles.
+    mongoose.connection.removeListener('disconnected', this.onDisconnected);
+    mongoose.connection.on('disconnected', this.onDisconnected);
     mongoose.connection.on('error', (err) => {
       const errorMessage = err instanceof Error ? err.message : String(err);
       this.logger.error(`MongoDB connection error: ${errorMessage}`);
@@ -162,17 +168,45 @@ export class DatabaseService implements OnModuleInit, OnApplicationShutdown {
   }
 
   /**
+   * 'disconnected' handler: reconnects automatically, unless the app is
+   * shutting down or the listeners are being removed (graceful close).
+   * Named (arrow) field so it can be deregistered on disconnect.
+   */
+  private onDisconnected = (): void => {
+    if (this.shuttingDown || this.removingListeners) return;
+    this.logger.warn('MongoDB disconnected. Attempting to reconnect...');
+    this.retryCount = 0;
+    void this.connectWithRetry();
+  };
+
+  /**
    * Gracefully close the MongoDB connection. M9 / hardening-medium-low
    * also clears any pending retry timer so the Node process exits
-   * cleanly.
+   * cleanly. The reconnect listener is deregistered first so the
+   * 'disconnected' event emitted by mongoose.disconnect() does not
+   * trigger a new connection cycle.
    */
   async disconnect(): Promise<void> {
+    this.shuttingDown = true;
+    this.removingListeners = true;
+    mongoose.connection.removeListener('disconnected', this.onDisconnected);
+    this.removingListeners = false;
     if (this.pendingRetry) {
       clearTimeout(this.pendingRetry);
       this.pendingRetry = null;
     }
     await mongoose.disconnect();
     this.logger.log('MongoDB connection closed');
+  }
+
+  /**
+   * NestJS lifecycle hook invoked during `app.close()` teardown, before
+   * MongooseModule disposes its own connection. Marks the service as
+   * shutting down and closes the connection so no reconnect cycle can
+   * keep the event loop alive after shutdown.
+   */
+  async onModuleDestroy(): Promise<void> {
+    await this.disconnect();
   }
 
   /**
