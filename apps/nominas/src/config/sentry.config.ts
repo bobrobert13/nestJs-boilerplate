@@ -7,8 +7,22 @@ const logger = new Logger('Sentry');
 /** Default performance sampling rate applied when the env var is absent/invalid. */
 const DEFAULT_TRACES_SAMPLE_RATE = 1;
 
+/**
+ * Resolves the package version for the release tag. Reads package.json
+ * at runtime (inlined by webpack in prod builds) because
+ * `npm_package_version` is only set under npm scripts.
+ */
+function resolvePackageVersion(): string {
+  try {
+    const pkg = require('../../../../package.json') as { version?: string };
+    return pkg.version || '0.0.1';
+  } catch {
+    return '0.0.1';
+  }
+}
+
 /** Release tag sent with every event (issue grouping/version tracking). */
-const RELEASE = process.env.npm_package_version || '0.0.1';
+const RELEASE = process.env.npm_package_version || resolvePackageVersion();
 
 /**
  * Sentry options resolved from environment variables.

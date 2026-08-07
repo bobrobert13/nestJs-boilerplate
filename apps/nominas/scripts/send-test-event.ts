@@ -27,8 +27,12 @@ async function main(): Promise<void> {
   Sentry.init({
     dsn,
     environment: process.env.SENTRY_ENVIRONMENT ?? 'diagnostic',
+    // Same semantics as initSentry(): trim + || so empty/whitespace
+    // values fall through instead of sending an empty release.
     release:
-      process.env.SENTRY_RELEASE ?? process.env.npm_package_version ?? '0.0.1',
+      process.env.SENTRY_RELEASE?.trim() ||
+      process.env.npm_package_version ||
+      '0.0.1',
     debug: true,
   });
 
