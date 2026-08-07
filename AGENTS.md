@@ -443,6 +443,7 @@ Agrupadas por paquete:
 ✓ SENTRY_TRACES_SAMPLE_RATE=1                             # number between 0 and 1
 ✓ SENTRY_RELEASE=                                          # issue grouping tag; defaults to package version
 ✓ SENTRY_DEBUG=false                                      # SDK transport logging for troubleshooting
+✓ SENTRY_ENABLE_LOGS=true                                 # forward AppLogger entries to the Logs panel
 
 # ── AI Providers (optional — provider chosen at runtime) ──
 ✓ OPENAI_API_KEY=
@@ -454,6 +455,22 @@ Agrupadas por paquete:
 # ── Dynamic Schema ──
 ✓ DYNAMIC_SCHEMA_LEGACY=false
 ```
+
+### Observabilidad — GlitchTip (Sentry-compatible)
+
+La app reporta a GlitchTip usando el SDK `@sentry/nestjs`; solo el DSN cambia respecto a Sentry SaaS.
+
+| Panel | Cómo se alimenta |
+|-------|------------------|
+| Issues | Capture hook del `DatabaseExceptionFilter` → `captureException()` |
+| Performance | `tracesSampleRate` + `nestIntegration()` + `@SentryTraced()` en `ScraperService.scrape` y `DynamicSchemaService.generateSchemaFrom{Text,Image}` |
+| Logs | `AppLogger` (global vía `app.useLogger`) → sink `emitSentryLog()`; PII redactada antes de salir; toggle `SENTRY_ENABLE_LOGS` |
+
+**Uptime monitors (sin código — config en la UI de GlitchTip):**
+
+1. UI → "Create a New Uptime Monitor": tipo **GET**, URL `https://<dominio-publico>/api/health`, expected status **200**, intervalo sugerido 5 min, asociar a un proyecto con alertas de email.
+2. Solo aplica a instancias públicas (no localhost); cada chequeo cuenta como evento de la suscripción.
+3. Alternativa **Heartbeat** para redes privadas: la app envía un ping periódico a la URL provista por GlitchTip — infraestructura disponible vía `CronModule` (no implementado).
 
 ### tsconfig Paths (paquetes registrados)
 
