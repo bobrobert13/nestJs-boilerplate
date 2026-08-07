@@ -145,6 +145,12 @@ describe('EnvValidation — Sentry (observability)', () => {
     expect(out.SENTRY_DEBUG).toBe('false');
   });
 
+  it('defaults SENTRY_ENABLE_LOGS to "true" when unset', () => {
+    process.env.NODE_ENV = 'development';
+    const out = validateEnv({});
+    expect(out.SENTRY_ENABLE_LOGS).toBe('true');
+  });
+
   it('throws when SENTRY_TRACES_SAMPLE_RATE is not a number', () => {
     process.env.NODE_ENV = 'development';
     expect(() => validateEnv({ SENTRY_TRACES_SAMPLE_RATE: 'abc' })).toThrow(

@@ -2,7 +2,6 @@ export * from './base-adapter.interface';
 export * from './database-exception.filter';
 export * from './http-error.handler';
 export * from './logger';
-export * from './logger/app-logger.service';
 export * from './security/ssrf-guard';
 export * from './dto/pagination.dto';
 export * from './decorators/raw-response.decorator';

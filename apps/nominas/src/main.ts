@@ -6,9 +6,11 @@ import { AppModule } from './app.module';
 import {
   attachSentryErrorHandler,
   captureException,
+  emitSentryLog,
   initSentry,
 } from './config/sentry.config';
 import {
+  AppLogger,
   DatabaseExceptionFilter,
   BootstrapLogger,
   LogCategory,
@@ -24,6 +26,11 @@ async function bootstrap() {
   const startTime = Date.now();
   const port = process.env.PORT ?? 3000;
   const app = await NestFactory.create(AppModule);
+
+  // GlitchTip Logs — route all Nest logs through AppLogger (PII scrubbed)
+  // and forward them to Sentry as structured logs (no-op when disabled).
+  AppLogger.setExternalSink(emitSentryLog);
+  app.useLogger(new AppLogger());
 
   BootstrapLogger.step('NestFactory created', Date.now() - startTime);
 

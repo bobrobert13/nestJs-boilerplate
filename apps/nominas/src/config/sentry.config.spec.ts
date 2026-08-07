@@ -3,6 +3,7 @@ import {
   attachSentryErrorHandler,
   buildSentryOptions,
   captureException,
+  emitSentryLog,
   initSentry,
   parseTracesSampleRate,
 } from './sentry.config';
@@ -13,6 +14,14 @@ jest.mock('@sentry/nestjs', () => ({
   captureException: jest.fn(),
   nestIntegration: jest.fn(() => ({ name: 'Nest' })),
   setupExpressErrorHandler: jest.fn(),
+  logger: {
+    trace: jest.fn(),
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+    fatal: jest.fn(),
+  },
 }));
 
 /** Well-formed DSN shape accepted by the Sentry SDK. */
@@ -97,6 +106,7 @@ describe('initSentry', () => {
     delete process.env.SENTRY_TRACES_SAMPLE_RATE;
     delete process.env.SENTRY_DEBUG;
     delete process.env.SENTRY_RELEASE;
+    delete process.env.SENTRY_ENABLE_LOGS;
     jest.clearAllMocks();
   });
 
@@ -154,6 +164,17 @@ describe('initSentry', () => {
     initSentry();
     expect(jest.mocked(Sentry.init).mock.calls[0][0]?.debug).toBe(true);
   });
+
+  it('enables structured logs by default, disables with SENTRY_ENABLE_LOGS=false', () => {
+    process.env.SENTRY_DSN = VALID_DSN;
+    initSentry();
+    expect(jest.mocked(Sentry.init).mock.calls[0][0]?.enableLogs).toBe(true);
+
+    jest.clearAllMocks();
+    process.env.SENTRY_ENABLE_LOGS = 'false';
+    initSentry();
+    expect(jest.mocked(Sentry.init).mock.calls[0][0]?.enableLogs).toBe(false);
+  });
 });
 
 describe('captureException', () => {
@@ -200,5 +221,47 @@ describe('attachSentryErrorHandler', () => {
     attachSentryErrorHandler(app, false);
 
     expect(Sentry.setupExpressErrorHandler).not.toHaveBeenCalled();
+  });
+});
+
+describe('emitSentryLog', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('maps each level to the matching Sentry.logger method', () => {
+    jest.mocked(Sentry.isEnabled).mockReturnValue(true);
+
+    emitSentryLog('trace', 't');
+    emitSentryLog('debug', 'd');
+    emitSentryLog('info', 'i');
+    emitSentryLog('warn', 'w');
+    emitSentryLog('error', 'e');
+    emitSentryLog('fatal', 'f');
+
+    expect(Sentry.logger.trace).toHaveBeenCalledWith('t', undefined);
+    expect(Sentry.logger.debug).toHaveBeenCalledWith('d', undefined);
+    expect(Sentry.logger.info).toHaveBeenCalledWith('i', undefined);
+    expect(Sentry.logger.warn).toHaveBeenCalledWith('w', undefined);
+    expect(Sentry.logger.error).toHaveBeenCalledWith('e', undefined);
+    expect(Sentry.logger.fatal).toHaveBeenCalledWith('f', undefined);
+  });
+
+  it('attaches the context as an attribute when provided', () => {
+    jest.mocked(Sentry.isEnabled).mockReturnValue(true);
+
+    emitSentryLog('info', 'hello', 'ScraperService');
+
+    expect(Sentry.logger.info).toHaveBeenCalledWith('hello', {
+      context: 'ScraperService',
+    });
+  });
+
+  it('is a no-op when the SDK is not initialized', () => {
+    jest.mocked(Sentry.isEnabled).mockReturnValue(false);
+
+    emitSentryLog('error', 'boom');
+
+    expect(Sentry.logger.error).not.toHaveBeenCalled();
   });
 });

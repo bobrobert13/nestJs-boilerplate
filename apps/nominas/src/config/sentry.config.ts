@@ -1,6 +1,7 @@
 import { Logger } from '@nestjs/common';
 import type { INestApplication } from '@nestjs/common';
 import * as Sentry from '@sentry/nestjs';
+import type { LogLevel } from '@common/common';
 
 const logger = new Logger('Sentry');
 
@@ -112,10 +113,51 @@ export function initSentry(): boolean {
     ...options,
     release: process.env.SENTRY_RELEASE?.trim() || RELEASE,
     debug: process.env.SENTRY_DEBUG?.trim() === 'true',
+    // GlitchTip Logs panel: structured logs via the standard envelope
+    // endpoint (enabled by default; disable with SENTRY_ENABLE_LOGS=false).
+    enableLogs: process.env.SENTRY_ENABLE_LOGS?.trim() !== 'false',
     integrations: [Sentry.nestIntegration()],
   });
   logger.log(`Sentry enabled (environment: ${options.environment})`);
   return true;
+}
+
+/**
+ * Forwards an application log entry to Sentry/GlitchTip as a structured
+ * log. No-op when the SDK is disabled. Used as the {@link LogSink} of
+ * `AppLogger` so PII is already scrubbed before reaching this point.
+ *
+ * @param level - Severity level (Sentry log levels).
+ * @param message - Scrubbed log message.
+ * @param context - Optional Nest logger context (attached as attribute).
+ */
+export function emitSentryLog(
+  level: LogLevel,
+  message: string,
+  context?: string,
+): void {
+  if (!Sentry.isEnabled()) return;
+  const attributes = context ? { context } : undefined;
+
+  switch (level) {
+    case 'trace':
+      Sentry.logger.trace(message, attributes);
+      break;
+    case 'debug':
+      Sentry.logger.debug(message, attributes);
+      break;
+    case 'warn':
+      Sentry.logger.warn(message, attributes);
+      break;
+    case 'error':
+      Sentry.logger.error(message, attributes);
+      break;
+    case 'fatal':
+      Sentry.logger.fatal(message, attributes);
+      break;
+    default:
+      Sentry.logger.info(message, attributes);
+  }
 }
 
 /**

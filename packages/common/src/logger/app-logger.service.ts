@@ -15,8 +15,48 @@ const KV_REDACTION = /(email|password|token)=([^\s,;]+)/gi;
 const EMAIL_PATTERN = /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/gi;
 const REDACTED = '[REDACTED]';
 
+/** Severity levels forwarded to the external log sink. */
+export type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal';
+
+/**
+ * External sink receiving already-scrubbed log entries (e.g. an
+ * observability backend). Must never throw — failures are swallowed.
+ */
+export type LogSink = (
+  level: LogLevel,
+  message: string,
+  context?: string,
+) => void;
+
 @Injectable({ scope: Scope.DEFAULT })
 export class AppLogger extends ConsoleLogger {
+  /** Process-wide sink shared by every AppLogger instance. */
+  private static externalSink: LogSink | undefined;
+
+  /**
+   * Registers the process-wide external log sink (or clears it with
+   * `undefined`). Kept SDK-agnostic: the wiring lives in the app layer.
+   *
+   * @param sink - The sink to forward scrubbed log entries to.
+   */
+  public static setExternalSink(sink: LogSink | undefined): void {
+    AppLogger.externalSink = sink;
+  }
+
+  /**
+   * Forwards a scrubbed entry to the external sink. A failing sink
+   * never breaks application logging.
+   */
+  private forward(level: LogLevel, message: unknown, context?: string): void {
+    const sink = AppLogger.externalSink;
+    if (!sink || typeof message !== 'string') return;
+    try {
+      sink(level, message, context);
+    } catch {
+      // A failing sink must never break application logging.
+    }
+  }
+
   private scrub(input: unknown): unknown {
     if (typeof input !== 'string') return input;
     return input
@@ -24,34 +64,34 @@ export class AppLogger extends ConsoleLogger {
       .replace(EMAIL_PATTERN, '[EMAIL]');
   }
 
+  /** Logs at info level: scrubs PII, prints, and forwards to the sink. */
   override log(message: unknown, ...optionalParams: unknown[]): void {
-    super.log(
-      this.scrub(message) as string,
-      ...optionalParams.map((p) => this.scrub(p)),
-    );
+    const scrubbed = this.scrub(message) as string;
+    super.log(scrubbed, ...optionalParams.map((p) => this.scrub(p)));
+    this.forward('info', scrubbed, this.context);
   }
+  /** Logs at warn level: scrubs PII, prints, and forwards to the sink. */
   override warn(message: unknown, ...optionalParams: unknown[]): void {
-    super.warn(
-      this.scrub(message) as string,
-      ...optionalParams.map((p) => this.scrub(p)),
-    );
+    const scrubbed = this.scrub(message) as string;
+    super.warn(scrubbed, ...optionalParams.map((p) => this.scrub(p)));
+    this.forward('warn', scrubbed, this.context);
   }
+  /** Logs at error level: scrubs PII, prints, and forwards to the sink. */
   override error(message: unknown, ...optionalParams: unknown[]): void {
-    super.error(
-      this.scrub(message) as string,
-      ...optionalParams.map((p) => this.scrub(p)),
-    );
+    const scrubbed = this.scrub(message) as string;
+    super.error(scrubbed, ...optionalParams.map((p) => this.scrub(p)));
+    this.forward('error', scrubbed, this.context);
   }
+  /** Logs at debug level: scrubs PII, prints, and forwards to the sink. */
   override debug(message: unknown, ...optionalParams: unknown[]): void {
-    super.debug(
-      this.scrub(message) as string,
-      ...optionalParams.map((p) => this.scrub(p)),
-    );
+    const scrubbed = this.scrub(message) as string;
+    super.debug(scrubbed, ...optionalParams.map((p) => this.scrub(p)));
+    this.forward('debug', scrubbed, this.context);
   }
+  /** Logs at verbose level: scrubs PII, prints, and forwards to the sink. */
   override verbose(message: unknown, ...optionalParams: unknown[]): void {
-    super.verbose(
-      this.scrub(message) as string,
-      ...optionalParams.map((p) => this.scrub(p)),
-    );
+    const scrubbed = this.scrub(message) as string;
+    super.verbose(scrubbed, ...optionalParams.map((p) => this.scrub(p)));
+    this.forward('trace', scrubbed, this.context);
   }
 }
