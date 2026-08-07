@@ -1,8 +1,10 @@
 import { NestFactory, Reflector } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import * as Sentry from '@sentry/nestjs';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
+import { initSentry } from './config/sentry.config';
 import {
   DatabaseExceptionFilter,
   BootstrapLogger,
@@ -12,6 +14,10 @@ import {
 } from '@common/common';
 
 async function bootstrap() {
+  // Sentry — env-driven init (no-op without SENTRY_DSN). Must run before
+  // NestFactory.create so the SDK can instrument app startup.
+  const sentryEnabled = initSentry();
+
   const startTime = Date.now();
   const port = process.env.PORT ?? 3000;
   const app = await NestFactory.create(AppModule);
@@ -79,7 +85,7 @@ async function bootstrap() {
   // PR4 — final-gate startup line.
   BootstrapLogger.log(
     LogCategory.SECURITY,
-    `✅ Helmet: enabled · CSP: strict · CORS: explicit · trust-proxy: ${trustProxyHops}`,
+    `✅ Helmet: enabled · CSP: strict · CORS: explicit · trust-proxy: ${trustProxyHops} · Sentry: ${sentryEnabled ? 'enabled' : 'disabled'}`,
   );
 
   // Global pipes & filters
@@ -124,6 +130,14 @@ async function bootstrap() {
 
   // Graceful shutdown
   app.enableShutdownHooks();
+
+  await app.init();
+
+  // Sentry — Express-level error handler captures exceptions that escape
+  // the Nest exception layer. Registered after init(), before listen().
+  if (sentryEnabled) {
+    Sentry.setupExpressErrorHandler(app);
+  }
 
   await app.listen(port);
 

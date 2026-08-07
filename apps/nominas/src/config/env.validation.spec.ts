@@ -117,3 +117,42 @@ describe('EnvValidation — L1 (MONGODB_URI in production)', () => {
     expect(out.MONGODB_URI).toBeDefined();
   });
 });
+
+describe('EnvValidation — Sentry (observability)', () => {
+  const originalEnv = { ...process.env };
+
+  afterEach(() => {
+    process.env = { ...originalEnv };
+  });
+
+  it('does not throw when SENTRY_DSN is missing (optional feature)', () => {
+    process.env.NODE_ENV = 'development';
+    expect(() => validateEnv({})).not.toThrow();
+  });
+
+  it('accepts a valid SENTRY_DSN and SENTRY_TRACES_SAMPLE_RATE', () => {
+    process.env.NODE_ENV = 'development';
+    const out = validateEnv({
+      SENTRY_DSN: 'https://publickey@o0.ingest.sentry.io/0',
+      SENTRY_TRACES_SAMPLE_RATE: '0.25',
+    });
+    expect(out.SENTRY_DSN).toBe('https://publickey@o0.ingest.sentry.io/0');
+  });
+
+  it('throws when SENTRY_TRACES_SAMPLE_RATE is not a number', () => {
+    process.env.NODE_ENV = 'development';
+    expect(() => validateEnv({ SENTRY_TRACES_SAMPLE_RATE: 'abc' })).toThrow(
+      /SENTRY_TRACES_SAMPLE_RATE/,
+    );
+  });
+
+  it('throws when SENTRY_TRACES_SAMPLE_RATE is outside [0, 1]', () => {
+    process.env.NODE_ENV = 'development';
+    expect(() => validateEnv({ SENTRY_TRACES_SAMPLE_RATE: '-0.5' })).toThrow(
+      /SENTRY_TRACES_SAMPLE_RATE/,
+    );
+    expect(() => validateEnv({ SENTRY_TRACES_SAMPLE_RATE: '2' })).toThrow(
+      /SENTRY_TRACES_SAMPLE_RATE/,
+    );
+  });
+});

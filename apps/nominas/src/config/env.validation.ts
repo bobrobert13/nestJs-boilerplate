@@ -139,6 +139,21 @@ export function validateEnv(config: Record<string, any>): Record<string, any> {
     validated.RESEND_FROM_EMAIL ?? 'onboarding@resend.dev';
   validated.RESEND_FROM_NAME = validated.RESEND_FROM_NAME ?? 'My App';
 
+  // ── Sentry (observability — optional) ────────────────────────
+  if (!validated.SENTRY_DSN || String(validated.SENTRY_DSN).trim() === '') {
+    logger.warn(
+      'SENTRY_DSN is not set. Sentry error reporting will be disabled.',
+    );
+  }
+  if (validated.SENTRY_TRACES_SAMPLE_RATE !== undefined) {
+    const rate = Number(validated.SENTRY_TRACES_SAMPLE_RATE);
+    if (!Number.isFinite(rate) || rate < 0 || rate > 1) {
+      errors.push(
+        `SENTRY_TRACES_SAMPLE_RATE must be a number between 0 and 1 (got "${validated.SENTRY_TRACES_SAMPLE_RATE}")`,
+      );
+    }
+  }
+
   // ── AI Providers (all optional — provider is chosen at runtime) ──
   // Each key enables its respective provider. No defaults.
 
