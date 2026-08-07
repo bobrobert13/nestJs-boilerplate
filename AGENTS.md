@@ -545,6 +545,24 @@ APP_PORT=4000 MONGO_PORT=28018 ./docker-test.sh
 - **Auth es demo** — `@common/auth` tiene un stub. Nuevos módulos de auth deben implementar un servicio real
 - **Paquetes sin `tsconfig.json` path** — `auth`, `resend`, `serve-static` no están en tsconfig paths. Si se necesita importarlos, agregar el path
 
+### Herramienta MCP — Codegraph (Exploración de Código)
+
+El proyecto tiene un índice Codegraph (`.codegraph/codegraph.db`). Si el agente dispone del MCP `codegraph`, debe usarlo como **primera opción** para entender código antes de buscar manualmente con Grep/Read.
+
+| Uso | Detalle |
+|-----|---------|
+| Herramienta | `codegraph_explore` (MCP server: `codegraph`) |
+| Parámetros | `query` (símbolos, archivos o pregunta en lenguaje natural) + `projectPath` (ruta absoluta del repo) |
+| Devuelve | Código fuente verbatim de los símbolos relevantes agrupados por archivo + blast radius (callers, tests que los cubren) |
+
+**Reglas de uso:**
+
+1. **Llamar primero** antes de explorar o editar: entender arquitectura, localizar código o conocer los símbolos que se van a cambiar.
+2. **No re-leer archivos ya devueltos** por `codegraph_explore` — el código mostrado es verbatim del disco, equivalente a un Read.
+3. **Consultar blast radius** antes de editar: la respuesta indica callers y tests afectados; actualizar/verificar esos puntos.
+4. **Query efectivo**: nombrar símbolos o archivos (`AuthService loginUser`, `usuarios.service.ts`), o preguntar en lenguaje natural (`how does JWT validation work`).
+5. **Fallback**: si el MCP no está disponible o el índice está desactualizado, usar Grep/Read/LSP convencionales.
+
 ### Reglas para el Modelo de IA
 
 1. **Contexto mínimo**: Antes de tocar cualquier archivo, leer:
@@ -749,7 +767,7 @@ Cada spec de dominio referencia su documentación asociada:
 **Para un agente IA:**
 
 1. **Entender un módulo** → `openspec/specs/{domain}/spec.md` (contrato) + `packages/{domain}/README.md` (uso)
-2. **Encontrar código** → `packages/{name}/src/` (implementación), `apps/nominas/src/modules/{name}/` (módulos app)
+2. **Encontrar código** → MCP `codegraph_explore` si está disponible (ver sección 8); fallback: `packages/{name}/src/` (implementación), `apps/nominas/src/modules/{name}/` (módulos app)
 3. **Ver cambios activos** → `openspec/changes/` (cambios en progreso)
 4. **Ver historial** → `openspec/changes/archive/` (cambios completados)
 5. **Buscar env vars** → `AGENTS.md` sección 6 (todas las variables agrupadas)
