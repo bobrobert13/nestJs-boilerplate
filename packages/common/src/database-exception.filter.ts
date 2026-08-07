@@ -24,8 +24,13 @@ export class DatabaseExceptionFilter implements ExceptionFilter {
 
   catch(exception: unknown, host: ArgumentsHost) {
     // Report before responding: the exception is consumed here, so an
-    // Express-level error handler would never see it.
-    this.capture(exception);
+    // Express-level error handler would never see it. A failing hook
+    // must never break the response contract.
+    try {
+      this.capture(exception);
+    } catch (error) {
+      this.logger.warn(`Capture hook failed: ${String(error)}`);
+    }
 
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
