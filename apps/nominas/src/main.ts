@@ -1,10 +1,13 @@
 import { NestFactory, Reflector } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import * as Sentry from '@sentry/nestjs';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
-import { initSentry } from './config/sentry.config';
+import {
+  attachSentryErrorHandler,
+  captureException,
+  initSentry,
+} from './config/sentry.config';
 import {
   DatabaseExceptionFilter,
   BootstrapLogger,
@@ -96,7 +99,11 @@ async function bootstrap() {
       transform: true,
     }),
   );
-  app.useGlobalFilters(new DatabaseExceptionFilter());
+  app.useGlobalFilters(
+    // Reports every consumed exception to Sentry (no-op when disabled);
+    // the response contract stays with DatabaseExceptionFilter.
+    new DatabaseExceptionFilter((exception) => captureException(exception)),
+  );
 
   // Global interceptors & middleware
   app.useGlobalInterceptors(new ResponseInterceptor(app.get(Reflector)));
@@ -133,11 +140,9 @@ async function bootstrap() {
 
   await app.init();
 
-  // Sentry — Express-level error handler captures exceptions that escape
-  // the Nest exception layer. Registered after init(), before listen().
-  if (sentryEnabled) {
-    Sentry.setupExpressErrorHandler(app);
-  }
+  // Sentry — Express-level safety net for errors escaping the Nest
+  // exception layer (pre-router middleware). Registered after init().
+  attachSentryErrorHandler(app, sentryEnabled);
 
   await app.listen(port);
 

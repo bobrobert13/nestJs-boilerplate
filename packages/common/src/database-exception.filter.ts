@@ -13,7 +13,20 @@ import mongoose from 'mongoose';
 export class DatabaseExceptionFilter implements ExceptionFilter {
   private readonly logger = new Logger(DatabaseExceptionFilter.name);
 
+  /**
+   * @param capture - Optional hook invoked with every caught exception
+   * (e.g. error-reporting SDKs). Defaults to a no-op so the filter
+   * works standalone in tests and other apps.
+   */
+  constructor(
+    private readonly capture: (exception: unknown) => void = () => {},
+  ) {}
+
   catch(exception: unknown, host: ArgumentsHost) {
+    // Report before responding: the exception is consumed here, so an
+    // Express-level error handler would never see it.
+    this.capture(exception);
+
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();

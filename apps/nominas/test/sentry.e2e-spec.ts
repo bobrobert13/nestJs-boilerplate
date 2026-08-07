@@ -4,10 +4,16 @@ import { Test } from '@nestjs/testing';
 import * as Sentry from '@sentry/nestjs';
 import request from 'supertest';
 import { DatabaseExceptionFilter, ResponseInterceptor } from '@common/common';
-import { initSentry } from '../src/config/sentry.config';
+import {
+  attachSentryErrorHandler,
+  captureException,
+  initSentry,
+} from '../src/config/sentry.config';
 
 jest.mock('@sentry/nestjs', () => ({
   init: jest.fn(),
+  isEnabled: jest.fn(() => false),
+  captureException: jest.fn(),
   nestIntegration: jest.fn(() => ({ name: 'Nest' })),
   setupExpressErrorHandler: jest.fn(),
 }));
@@ -15,21 +21,23 @@ jest.mock('@sentry/nestjs', () => ({
 /** Ad-hoc route that throws a generic (non-HTTP) error at runtime. */
 @Controller('boom')
 class BoomController {
-  @Get()
   /** Throws a runtime error so the exception filter chain is exercised. */
+  @Get()
   throwError(): never {
     throw new Error('boom');
   }
 }
 
 /** Mirrors the global wiring from `main.ts` for a minimal test app. */
-async function createBoomApp(): Promise<INestApplication> {
+async function createBoomApp(
+  capture?: (exception: unknown) => void,
+): Promise<INestApplication> {
   const moduleRef = await Test.createTestingModule({
     controllers: [BoomController],
   }).compile();
 
   const app = moduleRef.createNestApplication();
-  app.useGlobalFilters(new DatabaseExceptionFilter());
+  app.useGlobalFilters(new DatabaseExceptionFilter(capture));
   app.useGlobalInterceptors(new ResponseInterceptor(app.get(Reflector)));
   await app.init();
   return app;
@@ -48,11 +56,13 @@ describe('Sentry integration (e2e contract)', () => {
     process.env = originalEnv;
   });
 
-  it('initSentry() returns false and registers no express handler without SENTRY_DSN', async () => {
+  it('initSentry() returns false without SENTRY_DSN and no express handler is registered', async () => {
     expect(initSentry()).toBe(false);
 
     const app = await createBoomApp();
-    // main.ts registers the Sentry handler only when initSentry() is true.
+    // Same conditional wiring as main.ts.
+    attachSentryErrorHandler(app, false);
+
     const res = await request(app.getHttpServer()).get('/boom');
     expect(res.status).toBe(500);
     expect(res.body).toEqual({
@@ -63,13 +73,14 @@ describe('Sentry integration (e2e contract)', () => {
     await app.close();
   });
 
-  it('initSentry() returns true and the express handler is registered before listen', async () => {
+  it('filter-handled exceptions are captured and the 500 contract is preserved', async () => {
     process.env.SENTRY_DSN = 'https://publickey@o0.ingest.sentry.io/0';
+    jest.mocked(Sentry.isEnabled).mockReturnValue(true);
     expect(initSentry()).toBe(true);
 
-    const app = await createBoomApp();
-    // Same call order as main.ts: app.init() → Sentry.setupExpressErrorHandler.
-    Sentry.setupExpressErrorHandler(app);
+    const app = await createBoomApp((exception) => captureException(exception));
+    // Same call order as main.ts: app.init() → attachSentryErrorHandler.
+    attachSentryErrorHandler(app, true);
 
     const res = await request(app.getHttpServer()).get('/boom');
     expect(res.status).toBe(500);
@@ -78,6 +89,11 @@ describe('Sentry integration (e2e contract)', () => {
       statusCode: 500,
       message: 'Internal server error',
     });
+    // The consumed exception reached Sentry before the response was sent.
+    expect(Sentry.captureException).toHaveBeenCalledTimes(1);
+    expect(Sentry.captureException).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'boom' }),
+    );
     expect(Sentry.setupExpressErrorHandler).toHaveBeenCalledWith(app);
     await app.close();
   });

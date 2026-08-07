@@ -1,4 +1,5 @@
 import { Logger } from '@nestjs/common';
+import type { INestApplication } from '@nestjs/common';
 import * as Sentry from '@sentry/nestjs';
 
 const logger = new Logger('Sentry');
@@ -88,4 +89,34 @@ export function initSentry(): boolean {
   });
   logger.log(`Sentry enabled (environment: ${options.environment})`);
   return true;
+}
+
+/**
+ * Captures an exception with Sentry only when the SDK is enabled.
+ * Safe to call before `initSentry()` — no-op in dev/test.
+ *
+ * @param exception - The exception to report.
+ */
+export function captureException(exception: unknown): void {
+  if (Sentry.isEnabled()) {
+    Sentry.captureException(exception);
+  }
+}
+
+/**
+ * Registers the Express-level Sentry error handler when Sentry is
+ * enabled. Acts as a safety net for errors escaping the Nest
+ * exception layer (e.g. pre-router middleware); handler exceptions
+ * are reported via the `DatabaseExceptionFilter` capture hook.
+ *
+ * @param app - The initialized Nest application.
+ * @param enabled - Whether Sentry was initialized at bootstrap.
+ */
+export function attachSentryErrorHandler(
+  app: INestApplication,
+  enabled: boolean,
+): void {
+  if (enabled) {
+    Sentry.setupExpressErrorHandler(app);
+  }
 }

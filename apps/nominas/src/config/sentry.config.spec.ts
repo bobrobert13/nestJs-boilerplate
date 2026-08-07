@@ -1,13 +1,18 @@
 import * as Sentry from '@sentry/nestjs';
 import {
+  attachSentryErrorHandler,
   buildSentryOptions,
+  captureException,
   initSentry,
   parseTracesSampleRate,
 } from './sentry.config';
 
 jest.mock('@sentry/nestjs', () => ({
   init: jest.fn(),
+  isEnabled: jest.fn(() => false),
+  captureException: jest.fn(),
   nestIntegration: jest.fn(() => ({ name: 'Nest' })),
+  setupExpressErrorHandler: jest.fn(),
 }));
 
 /** Well-formed DSN shape accepted by the Sentry SDK. */
@@ -113,5 +118,52 @@ describe('initSentry', () => {
     });
     expect(options?.integrations).toBeDefined();
     expect(Sentry.nestIntegration).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('captureException', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('forwards the exception to Sentry when the SDK is enabled', () => {
+    jest.mocked(Sentry.isEnabled).mockReturnValue(true);
+    const boom = new Error('boom');
+
+    captureException(boom);
+
+    expect(Sentry.captureException).toHaveBeenCalledTimes(1);
+    expect(Sentry.captureException).toHaveBeenCalledWith(boom);
+  });
+
+  it('is a no-op when the SDK is not initialized', () => {
+    jest.mocked(Sentry.isEnabled).mockReturnValue(false);
+
+    captureException(new Error('boom'));
+
+    expect(Sentry.captureException).not.toHaveBeenCalled();
+  });
+});
+
+describe('attachSentryErrorHandler', () => {
+  const app = {
+    use: jest.fn(),
+  } as unknown as import('@nestjs/common').INestApplication;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('registers the express error handler when Sentry is enabled', () => {
+    attachSentryErrorHandler(app, true);
+
+    expect(Sentry.setupExpressErrorHandler).toHaveBeenCalledTimes(1);
+    expect(Sentry.setupExpressErrorHandler).toHaveBeenCalledWith(app);
+  });
+
+  it('does nothing when Sentry is disabled', () => {
+    attachSentryErrorHandler(app, false);
+
+    expect(Sentry.setupExpressErrorHandler).not.toHaveBeenCalled();
   });
 });

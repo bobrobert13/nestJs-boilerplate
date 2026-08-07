@@ -146,6 +146,14 @@ describe('EnvValidation — Sentry (observability)', () => {
     );
   });
 
+  it('treats empty or whitespace SENTRY_TRACES_SAMPLE_RATE as unset', () => {
+    process.env.NODE_ENV = 'development';
+    expect(() => validateEnv({ SENTRY_TRACES_SAMPLE_RATE: '' })).not.toThrow();
+    expect(() =>
+      validateEnv({ SENTRY_TRACES_SAMPLE_RATE: '   ' }),
+    ).not.toThrow();
+  });
+
   it('throws when SENTRY_TRACES_SAMPLE_RATE is outside [0, 1]', () => {
     process.env.NODE_ENV = 'development';
     expect(() => validateEnv({ SENTRY_TRACES_SAMPLE_RATE: '-0.5' })).toThrow(

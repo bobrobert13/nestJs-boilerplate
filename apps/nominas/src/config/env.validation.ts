@@ -145,7 +145,10 @@ export function validateEnv(config: Record<string, any>): Record<string, any> {
       'SENTRY_DSN is not set. Sentry error reporting will be disabled.',
     );
   }
-  if (validated.SENTRY_TRACES_SAMPLE_RATE !== undefined) {
+  if (
+    validated.SENTRY_TRACES_SAMPLE_RATE !== undefined &&
+    String(validated.SENTRY_TRACES_SAMPLE_RATE).trim() !== ''
+  ) {
     const rate = Number(validated.SENTRY_TRACES_SAMPLE_RATE);
     if (!Number.isFinite(rate) || rate < 0 || rate > 1) {
       errors.push(
