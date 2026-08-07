@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { SentryTraced } from '@sentry/nestjs';
 import { DocumentContent, DocumentProcessorService } from '@common/documents';
 import { GeneratedSchema } from '@common/ai';
 import { SchemaCompilerService } from './schema-compiler.service';
@@ -54,8 +55,10 @@ export class DynamicSchemaService {
   // ───────── Source → Schema (no compile, no persist) ─────────
 
   /**
-   * generateSchemaFromText method.
+   * Generates a schema from raw text via the AI text adapter.
+   * Traced as `dynamic-schema.fromText` when Sentry is enabled.
    */
+  @SentryTraced('dynamic-schema.fromText')
   async generateSchemaFromText(
     text: string,
     provider?: string,
@@ -77,8 +80,10 @@ export class DynamicSchemaService {
   }
 
   /**
-   * generateSchemaFromImage method.
+   * Generates a schema from an image via the AI image adapter.
+   * Traced as `dynamic-schema.fromImage` when Sentry is enabled.
    */
+  @SentryTraced('dynamic-schema.fromImage')
   async generateSchemaFromImage(
     imageData: string,
     provider?: string,

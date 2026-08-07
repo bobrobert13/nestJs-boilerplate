@@ -5,6 +5,7 @@ import {
   NotFoundException,
   Optional,
 } from '@nestjs/common';
+import { SentryTraced } from '@sentry/nestjs';
 import { SsrfGuard } from '@common/common';
 import {
   IScraperStrategy,
@@ -50,7 +51,10 @@ export class ScraperService {
    * @param strategyName Optional strategy name override.
    * @returns The persisted result document.
    * @throws NotFoundException if no strategy matches the URL.
+   *
+   * Traced as `scraper.scrape` when Sentry is enabled.
    */
+  @SentryTraced('scraper.scrape')
   async scrape(
     url: string,
     strategyName?: string,
