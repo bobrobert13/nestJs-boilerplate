@@ -95,6 +95,8 @@ describe('initSentry', () => {
     delete process.env.SENTRY_DSN;
     delete process.env.SENTRY_ENVIRONMENT;
     delete process.env.SENTRY_TRACES_SAMPLE_RATE;
+    delete process.env.SENTRY_DEBUG;
+    delete process.env.SENTRY_RELEASE;
     jest.clearAllMocks();
   });
 
@@ -118,6 +120,39 @@ describe('initSentry', () => {
     });
     expect(options?.integrations).toBeDefined();
     expect(Sentry.nestIntegration).toHaveBeenCalledTimes(1);
+  });
+
+  it('sends a release (package version) with every init', () => {
+    process.env.SENTRY_DSN = VALID_DSN;
+    initSentry();
+
+    const options = jest.mocked(Sentry.init).mock.calls[0][0];
+    expect(options?.release).toBeTruthy();
+    expect(typeof options?.release).toBe('string');
+  });
+
+  it('honors SENTRY_RELEASE and ignores whitespace-only values', () => {
+    process.env.SENTRY_DSN = VALID_DSN;
+    process.env.SENTRY_RELEASE = '1.2.3';
+    initSentry();
+    expect(jest.mocked(Sentry.init).mock.calls[0][0]?.release).toBe('1.2.3');
+
+    jest.clearAllMocks();
+    process.env.SENTRY_RELEASE = '   ';
+    initSentry();
+    expect(jest.mocked(Sentry.init).mock.calls[0][0]?.release).not.toBe('   ');
+    expect(jest.mocked(Sentry.init).mock.calls[0][0]?.release).toBeTruthy();
+  });
+
+  it('enables debug mode only when SENTRY_DEBUG=true', () => {
+    process.env.SENTRY_DSN = VALID_DSN;
+    initSentry();
+    expect(jest.mocked(Sentry.init).mock.calls[0][0]?.debug).toBe(false);
+
+    jest.clearAllMocks();
+    process.env.SENTRY_DEBUG = 'true';
+    initSentry();
+    expect(jest.mocked(Sentry.init).mock.calls[0][0]?.debug).toBe(true);
   });
 });
 

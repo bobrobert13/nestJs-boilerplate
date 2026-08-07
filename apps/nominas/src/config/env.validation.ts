@@ -156,6 +156,7 @@ export function validateEnv(config: Record<string, any>): Record<string, any> {
       );
     }
   }
+  validated.SENTRY_DEBUG = validated.SENTRY_DEBUG ?? 'false';
 
   // ── AI Providers (all optional — provider is chosen at runtime) ──
   // Each key enables its respective provider. No defaults.

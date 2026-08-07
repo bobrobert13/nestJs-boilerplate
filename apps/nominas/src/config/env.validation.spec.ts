@@ -139,6 +139,12 @@ describe('EnvValidation — Sentry (observability)', () => {
     expect(out.SENTRY_DSN).toBe('https://publickey@o0.ingest.sentry.io/0');
   });
 
+  it('defaults SENTRY_DEBUG to "false" when unset', () => {
+    process.env.NODE_ENV = 'development';
+    const out = validateEnv({});
+    expect(out.SENTRY_DEBUG).toBe('false');
+  });
+
   it('throws when SENTRY_TRACES_SAMPLE_RATE is not a number', () => {
     process.env.NODE_ENV = 'development';
     expect(() => validateEnv({ SENTRY_TRACES_SAMPLE_RATE: 'abc' })).toThrow(

@@ -7,6 +7,9 @@ const logger = new Logger('Sentry');
 /** Default performance sampling rate applied when the env var is absent/invalid. */
 const DEFAULT_TRACES_SAMPLE_RATE = 1;
 
+/** Release tag sent with every event (issue grouping/version tracking). */
+const RELEASE = process.env.npm_package_version || '0.0.1';
+
 /**
  * Sentry options resolved from environment variables.
  * Subset of `@sentry/nestjs` `NodeClientOptions` managed by this module.
@@ -66,9 +69,17 @@ export function buildSentryOptions(
  * Initializes the Sentry SDK from `process.env` (runs before
  * `ConfigModule` validation, so env is read directly).
  *
+ * The DSN may point to Sentry SaaS or any Sentry-compatible backend
+ * (e.g. GlitchTip) — only the DSN changes.
+ *
  * Without `SENTRY_DSN` the SDK is never initialized and the function
  * returns `false` — zero side effects in dev/test. The "disabled"
  * warning is emitted once by `validateEnv` (RESEND pattern).
+ *
+ * GlitchTip note: sessions require a `release`; the SDK discards them
+ * otherwise. `release` defaults to the package version and can be
+ * overridden with `SENTRY_RELEASE`. `SENTRY_DEBUG=true` enables SDK
+ * transport logging for troubleshooting.
  *
  * Note (bundled builds): with webpack/ts-node, `express` is always
  * loaded before this runs, so the SDK logs a one-time "express is
@@ -85,6 +96,8 @@ export function initSentry(): boolean {
 
   Sentry.init({
     ...options,
+    release: process.env.SENTRY_RELEASE?.trim() || RELEASE,
+    debug: process.env.SENTRY_DEBUG?.trim() === 'true',
     integrations: [Sentry.nestIntegration()],
   });
   logger.log(`Sentry enabled (environment: ${options.environment})`);
