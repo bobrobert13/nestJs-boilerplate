@@ -129,4 +129,27 @@ describe('AppLogger external sink (GlitchTip logs)', () => {
     expect(() => logger.log('no sink')).not.toThrow();
     expect(cap.getOutput()).toContain('no sink');
   });
+
+  it('resolves the caller context from the trailing param (global override path)', () => {
+    // Production path: app.useLogger(new AppLogger()) has no context;
+    // Nest appends the caller context of `new Logger('X')` as the last
+    // optional parameter.
+    const sink = jest.fn();
+    AppLogger.setExternalSink(sink);
+    const bare = new AppLogger();
+
+    bare.log('mapped route', 'RoutesResolver');
+
+    expect(sink).toHaveBeenCalledWith('info', 'mapped route', 'RoutesResolver');
+  });
+
+  it('prefers the instance context over the trailing param', () => {
+    const sink = jest.fn();
+    AppLogger.setExternalSink(sink);
+    const logger = new AppLogger('OwnCtx');
+
+    logger.log('message', 'TrailingCtx');
+
+    expect(sink).toHaveBeenCalledWith('info', 'message', 'OwnCtx');
+  });
 });

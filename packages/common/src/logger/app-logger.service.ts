@@ -57,6 +57,18 @@ export class AppLogger extends ConsoleLogger {
     }
   }
 
+  /**
+   * Resolves the caller context. When this logger is the global
+   * override (`app.useLogger`), Nest appends the caller context of
+   * `new Logger('X')` instances as the last optional parameter —
+   * same convention as `ConsoleLogger.printMessage`.
+   */
+  private resolveContext(params: unknown[]): string | undefined {
+    if (this.context) return this.context;
+    const last = params[params.length - 1];
+    return typeof last === 'string' ? last : undefined;
+  }
+
   private scrub(input: unknown): unknown {
     if (typeof input !== 'string') return input;
     return input
@@ -68,30 +80,30 @@ export class AppLogger extends ConsoleLogger {
   override log(message: unknown, ...optionalParams: unknown[]): void {
     const scrubbed = this.scrub(message) as string;
     super.log(scrubbed, ...optionalParams.map((p) => this.scrub(p)));
-    this.forward('info', scrubbed, this.context);
+    this.forward('info', scrubbed, this.resolveContext(optionalParams));
   }
   /** Logs at warn level: scrubs PII, prints, and forwards to the sink. */
   override warn(message: unknown, ...optionalParams: unknown[]): void {
     const scrubbed = this.scrub(message) as string;
     super.warn(scrubbed, ...optionalParams.map((p) => this.scrub(p)));
-    this.forward('warn', scrubbed, this.context);
+    this.forward('warn', scrubbed, this.resolveContext(optionalParams));
   }
   /** Logs at error level: scrubs PII, prints, and forwards to the sink. */
   override error(message: unknown, ...optionalParams: unknown[]): void {
     const scrubbed = this.scrub(message) as string;
     super.error(scrubbed, ...optionalParams.map((p) => this.scrub(p)));
-    this.forward('error', scrubbed, this.context);
+    this.forward('error', scrubbed, this.resolveContext(optionalParams));
   }
   /** Logs at debug level: scrubs PII, prints, and forwards to the sink. */
   override debug(message: unknown, ...optionalParams: unknown[]): void {
     const scrubbed = this.scrub(message) as string;
     super.debug(scrubbed, ...optionalParams.map((p) => this.scrub(p)));
-    this.forward('debug', scrubbed, this.context);
+    this.forward('debug', scrubbed, this.resolveContext(optionalParams));
   }
   /** Logs at verbose level: scrubs PII, prints, and forwards to the sink. */
   override verbose(message: unknown, ...optionalParams: unknown[]): void {
     const scrubbed = this.scrub(message) as string;
     super.verbose(scrubbed, ...optionalParams.map((p) => this.scrub(p)));
-    this.forward('trace', scrubbed, this.context);
+    this.forward('trace', scrubbed, this.resolveContext(optionalParams));
   }
 }
