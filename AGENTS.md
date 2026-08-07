@@ -437,9 +437,12 @@ Agrupadas por paquete:
 ✓ RESEND_REPLY_TO=
 
 # ── Sentry (optional — disabled without a DSN) ──
+# Sentry-compatible: el DSN puede apuntar a Sentry SaaS o a GlitchTip.
 ✓ SENTRY_DSN=                                              # set to enable error reporting
 ✓ SENTRY_ENVIRONMENT=                                     # defaults to NODE_ENV, then "development"
 ✓ SENTRY_TRACES_SAMPLE_RATE=1                             # number between 0 and 1
+✓ SENTRY_RELEASE=                                          # issue grouping tag; defaults to package version
+✓ SENTRY_DEBUG=false                                      # SDK transport logging for troubleshooting
 
 # ── AI Providers (optional — provider chosen at runtime) ──
 ✓ OPENAI_API_KEY=
