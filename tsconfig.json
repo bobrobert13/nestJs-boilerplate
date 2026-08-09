@@ -30,7 +30,8 @@
       "@common/documents": ["packages/documents/src/index.ts"],
       "@common/auth": ["packages/auth/src/index.ts"],
       "@common/resend": ["packages/resend/src/index.ts"],
-      "@common/serve-static": ["packages/serve-static/src/index.ts"]
+      "@common/serve-static": ["packages/serve-static/src/index.ts"],
+      "@common/bunny": ["packages/bunny/src/index.ts"]
     },
     "types": ["node"]
   }

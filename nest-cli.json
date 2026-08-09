@@ -82,6 +82,15 @@
       "compilerOptions": {
         "tsConfigPath": "packages/documents/tsconfig.json"
       }
+    },
+    "bunny": {
+      "type": "library",
+      "root": "packages/bunny",
+      "entryFile": "index",
+      "sourceRoot": "packages/bunny/src",
+      "compilerOptions": {
+        "tsConfigPath": "packages/bunny/tsconfig.json"
+      }
     }
   }
 }

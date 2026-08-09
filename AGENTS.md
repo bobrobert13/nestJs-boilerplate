@@ -68,6 +68,7 @@ graph TB
         DOCS["@common/documents<br/>PDF/DOCX Extraction"]
         RESEND["@common/resend<br/>Email + Newsletter"]
         SS["@common/serve-static<br/>EJS + TailwindCSS"]
+        BUNNY["@common/bunny<br/>Edge Storage"]
     end
 
     NOMINAS --> AUTH
@@ -77,6 +78,7 @@ graph TB
     NOMINAS --> DOCS
     NOMINAS --> RESEND
     NOMINAS --> SS
+    NOMINAS --> BUNNY
     USUARIOS --> DB
     DYNAMIC --> AI
     DYNAMIC --> DOCS
@@ -84,6 +86,7 @@ graph TB
     RESEND --> RESEND_SVC["Resend API<br/>(external)"]
     PW --> CHROMIUM["Chromium<br/>(Docker)"]
     AI --> LLM_API["OpenAI · Anthropic ·<br/>Gemini · Moonshot · MiniMax"]
+    BUNNY --> BUNNY_API["bunny.net<br/>Edge Storage API"]
 ```
 
 ```mermaid
@@ -214,6 +217,7 @@ Si un agente IA necesita entender cómo funciona un módulo, DEBE leer primero:
 | [@common/playwright](packages/playwright/README.md) | ✅ | ✅ | — | ✅ | complete |
 | [@common/resend](packages/resend/README.md) | ✅ | ✅ | — | ✅ | complete |
 | [@common/serve-static](packages/serve-static/README.md) | ✅ | ✅ | — | ✅ | complete |
+| [@common/bunny](packages/bunny/README.md) | ✅ | ✅ | — | ✅ | complete |
 
 > ✅ = completo · ⚠️ = parcial · ❌ = ausente · — = no aplica · \* = creado recientemente
 
@@ -237,6 +241,7 @@ graph LR
         HTTP["@common/http"]
         DOCS["@common/documents"]
         SS["@common/serve-static"]
+        BUNNY["@common/bunny"]
     end
 ```
 
@@ -289,6 +294,12 @@ graph LR
 - **Ubicación:** `packages/serve-static/`
 - **Incluye:** `ServeStaticService.render()`, layouts, partials, TailwindCSS CDN, caché 60s
 - **Falta:** ejemplos de templates
+
+#### `@common/bunny` — Edge Storage
+- **Ubicación:** `packages/bunny/`
+- **Dependencias:** `@bunny.net/storage-sdk`
+- **Incluye:** `BunnyStorageService` (upload, download, list, delete, metadata, public URLs)
+- **Regiones:** Falkenstein (default), London, New York, Los Angeles, Singapore, Stockholm, Sao Paulo, Johannesburg, Sydney
 
 #### `scraper` — Web Scraper (app module)
 - **Ubicación:** `apps/nominas/src/modules/scraper/`
@@ -451,6 +462,12 @@ Agrupadas por paquete:
 ✓ GEMINI_API_KEY=
 ✓ MOONSHOT_API_KEY=
 ✓ MINIMAX_API_KEY=
+
+# ── Bunny.net Storage (optional — disabled without credentials) ──
+⚠️ BUNNY_STORAGE_ZONE_NAME=                              # required for storage operations
+⚠️ BUNNY_STORAGE_ACCESS_KEY=                           # required for storage operations
+✓ BUNNY_STORAGE_REGION=falkenstein                      # falkenstein|london|newyork|losangeles|singapore|stockholm|saopaulo|johannesburg|sydney
+✓ BUNNY_CDN_URL=                                        # pull zone URL for public file access
 
 # ── Dynamic Schema ──
 ✓ DYNAMIC_SCHEMA_LEGACY=false
@@ -742,6 +759,7 @@ Ver `openspec/changes/dynamic-schema-pipeline-hardening/proposal.md` para los 16
 | `@common/playwright` | ✅ | ✅ (expandido) | ✅ | complete |
 | `@common/resend` | ✅ | ✅ | ✅ | complete |
 | `@common/serve-static` | ✅ | ✅ (expandido) | ✅ | complete |
+| `@common/bunny` | ✅ | — | ✅ | complete |
 | `apps/nominas` | ✅ (nuevo) | — | ⚠️ | partial |
 | `dynamic-schema` (apps) | ✅ | ✅ | ⚠️ | **complete** |
 
@@ -776,6 +794,7 @@ Cada spec de dominio referencia su documentación asociada:
 | HTTP | `openspec/specs/http/spec.md` | `packages/http/README.md` | `packages/http/src/` |
 | Playwright | `openspec/specs/playwright/spec.md` | `packages/playwright/README.md` | `packages/playwright/src/` |
 | Serve Static | `openspec/specs/serve-static/spec.md` | `packages/serve-static/README.md` | `packages/serve-static/src/` |
+| Bunny Storage | — | `packages/bunny/README.md` | `packages/bunny/src/` |
 | Dynamic Schema | `openspec/specs/dynamic-schema/spec.md` | `apps/nominas/src/modules/dynamic-schema/README.md` | `apps/nominas/src/modules/dynamic-schema/` |
 | scraper | — | `apps/nominas/src/modules/scraper/README.md` | `apps/nominas/src/modules/scraper/` |
 | health | — | — | `apps/nominas/src/modules/health/` |
@@ -873,10 +892,11 @@ score_pct  = (score_raw / 22.5) × 100
 | 7 | `@common/http` | 3 | 3 | 3 | 2 | — | 2 | 19.0 | **84%** | 🟢 Production |
 | 8 | `@common/resend` | 3 | 3 | 3 | 2 | 2 | 3 | 22.5 | **100%** | 🟢 Production |
 | 9 | `@common/serve-static` | 3 | 3 | 3 | 2 | — | 2 | 19.0 | **84%** | 🟢 Production |
-| 10 | `dynamic-schema` (apps) | 3 | 3 | 2 | 0 | 2 | 3 | 20.0 | **89%** | 🟢 Production |
-| 11 | `usuarios` (apps) | — | 3 | 0 | 1 | 2 | 2 | 11.0 | **49%** | 🟠 Needs Work |
-| 12 | `scraper` (apps) | — | 3 | 1 | 0 | 2 | 2 | 11.5 | **51%** | 🟠 Needs Work |
-| 13 | `health` (apps) | — | — | 0 | 0 | 1 | 1 | 2.0 | **9%** | 🔴 Critical |
+| 10 | `@common/bunny` | — | 3 | 3 | 2 | — | 2 | 15.0 | **67%** | 🟡 Adequate |
+| 11 | `dynamic-schema` (apps) | 3 | 3 | 2 | 0 | 2 | 3 | 20.0 | **89%** | 🟢 Production |
+| 12 | `usuarios` (apps) | — | 3 | 0 | 1 | 2 | 2 | 11.0 | **49%** | 🟠 Needs Work |
+| 13 | `scraper` (apps) | — | 3 | 1 | 0 | 2 | 2 | 11.5 | **51%** | 🟠 Needs Work |
+| 14 | `health` (apps) | — | — | 0 | 0 | 1 | 1 | 2.0 | **9%** | 🔴 Critical |
 
 > **Niveles:** 🟢 Production (≥75%) · 🟡 Adequate (50–74%) · 🟠 Needs Work (25–49%) · 🔴 Critical (<25%)
 
@@ -893,6 +913,7 @@ score_pct  = (score_raw / 22.5) × 100
 @common/http          ███   ███    ███    ██░     —       ██░
 @common/resend        ███   ███    ███    ██░     ██░     ███
 @common/serve-static  ███   ███    ███    ██░     —       ██░
+@common/bunny          —    ███    ███    ██░     —       ██░
 dynamic-schema        ███   ███    ██░    ░░░     ██░     ███
 usuarios               —    ███    ░░░    █░░     ██░     ██░
 scraper                —    ███    █░░    ░░░     ██░     ██░
